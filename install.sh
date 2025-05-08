@@ -7,11 +7,79 @@ prepare() {
 run_commands() {
   echo "Step $1"
   case $1 in
+    "Setup")
+      if ! grep -q '^root:' /etc/shadow; then
+        passwd root
+      fi
+
+      uci set system.@system[0].zonename='Asia/Tehran'
+      uci set system.@system[0].timezone='<+0330>-3:30'
+      uci set system.@system[0].hostname="$(awk '{print $1}' /tmp/sysinfo/model)"
+      uci commit system
+      /etc/init.d/system reload
+
+      uci set network.lan.dns='208.67.222.2 94.140.14.140 8.8.8.8'
+      if uci get network.wan >/dev/null 2>&1; then
+        uci set network.wan.peerdns='0'
+        uci set network.wan.dns='208.67.222.2 94.140.14.140 8.8.8.8'
+      fi
+      if uci get network.wan6 >/dev/null 2>&1; then
+        uci set network.wan6.peerdns='0'
+        uci set network.wan6.dns='2620:0:ccc::2 2a10:50c0::1:ff 2001:4860:4860::8888'
+      fi
+      if uci get network.wanb >/dev/null 2>&1; then
+        uci set network.wanb.peerdns='0'
+        uci set network.wanb.dns='208.67.222.2 94.140.14.140 8.8.8.8'
+      fi
+      if uci get network.wanb6 >/dev/null 2>&1; then
+        uci set network.wanb6.peerdns='0'
+        uci set network.wanb6.dns='2620:0:ccc::2 2a10:50c0::1:ff 2001:4860:4860::8888'
+      fi
+      uci commit network
+      /etc/init.d/network restart
+
+      uci set dhcp.lan.leasetime='12h'
+      uci add_list dhcp.lan.dhcp_option='6,208.67.222.2,94.140.14.140,8.8.8.8'
+      uci commit dhcp
+      /etc/init.d/dnsmasq restart
+
+      if uci get wireless >/dev/null 2>&1; then
+        read -r -p "Enter Your WIFI SSID: " WIFI_SSID
+        read -r -p "Enter Your WIFI Password: " WIFI_PASSWORD
+        if [ "$(uci get wireless.radio0.channel)" != "auto" ]; then
+          uci set wireless.radio0.disabled='0'
+          wifi up radio0
+          uci set wireless.radio0.channel='auto'
+          uci set wireless.@wifi-iface[0].ssid="$WIFI_SSID"
+          uci set wireless.@wifi-iface[0].key="$WIFI_PASSWORD"
+          uci set wireless.@wifi-iface[0].encryption='psk-mixed'
+          uci commit wireless
+          wifi reload
+        fi
+        if [ "$(uci get wireless.radio1.channel)" != "auto" ]; then
+          uci set wireless.radio1.disabled='0'
+          wifi up radio1
+          uci set wireless.radio1.channel='auto'
+          uci set wireless.@wifi-iface[1].ssid="$WIFI_SSID"
+          uci set wireless.@wifi-iface[1].key="$WIFI_PASSWORD"
+          uci set wireless.@wifi-iface[1].encryption='psk-mixed'
+          uci commit wireless
+          wifi reload
+        fi
+      fi
+
+      LAN_IPADDR="$(uci get network.lan.ipaddr)"
+      read -r -p "Enter Your Router IP [$LAN_IPADDR]: " CUSTOM_LAN_IPADDR
+      uci set network.lan.ipaddr="${CUSTOM_LAN_IPADDR:-$LAN_IPADDR}"
+      uci set network.lan.netmask='255.255.255.0'
+      uci commit network
+      /etc/init.d/network restart
+      ;;
     "Upgrade")
       opkg list-upgradable | cut -f 1 -d ' ' | xargs opkg upgrade
       ;;
     "Recommended")
-      opkg install openssh-sftp-server iperf3 htop nload
+      opkg install openssh-sftp-server curl iperf3 htop nload
       ;;
     "LoadBalancer")
       opkg install kmod-macvlan mwan3 luci-app-mwan3 iptables-nft ip6tables-nft
@@ -421,7 +489,7 @@ EOF
 menu() {
   PS3="Enter Your Option: "
   OPTIONS=(
-    "Upgrade" "Recommended" "LoadBalancer" "QoS" "AdGuard" "Passwall" "WapPlus" "Hiddify" "USB-WAN" "USB-Storage" "Extend-Storage" "Swap" "Quit"
+    "Setup" "Upgrade" "Recommended" "LoadBalancer" "QoS" "AdGuard" "Passwall" "WapPlus" "Hiddify" "USB-WAN" "USB-Storage" "Extend-Storage" "Swap" "Quit"
   )
   select CHOICE in "${OPTIONS[@]}"; do
     run_commands "$CHOICE"
