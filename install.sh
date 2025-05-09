@@ -2,8 +2,9 @@
 
 prepare() {
   opkg update
-  IPV4_DNS="208.67.222.2 94.140.14.140 8.8.8.8"
-  IPV6_DNS="2620:0:ccc::2 2a10:50c0::1:ff 2001:4860:4860::8888"
+  IPV4_DNS="208.67.222.2"
+  IPV6_DNS="2620:0:ccc::2"
+  REMOTE_DNS="1.1.1.1"
   LAN_IPADDR="$(uci get network.lan.ipaddr)"
 }
 
@@ -38,9 +39,9 @@ run_commands() {
         /etc/init.d/network restart
       fi
 
-      if [ "$(uci get dhcp.lan.dhcp_option)" != "6,${IPV4_DNS// /,} 42,${LAN_IPADDR}" ]; then
+      if [ "$(uci get dhcp.lan.dhcp_option)" != "6,${IPV4_DNS} 42,${LAN_IPADDR}" ]; then
         uci set dhcp.lan.leasetime='12h'
-        uci set dhcp.lan.dhcp_option="6,${IPV4_DNS// /,} 42,${LAN_IPADDR}"
+        uci set dhcp.lan.dhcp_option="6,${IPV4_DNS} 42,${LAN_IPADDR}"
         uci commit dhcp
         /etc/init.d/dnsmasq restart
       fi
@@ -103,7 +104,7 @@ run_commands() {
       for pkg in /tmp/passwall/*.ipk; do opkg install "$pkg"; done
       wget -O /tmp/passwall2.ipk "$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | grep "browser_download_url" | grep -o 'https://[^"]*luci-[^_]*_luci-app-passwall2_[^_]*_all\.ipk' | head -n1)"
       opkg install /tmp/passwall2.ipk
-      cat << 'EOF' > /etc/config/passwall2
+      cat << EOF > /etc/config/passwall2
 config nodes 'Splitter'
 	option remarks 'Splitter'
 	option type 'Xray'
@@ -150,7 +151,7 @@ config global
 	option direct_dns_protocol 'auto'
 	option direct_dns_query_strategy 'UseIP'
 	option remote_dns_protocol 'tcp'
-	option remote_dns '208.67.222.2'
+	option remote_dns "$REMOTE_DNS"
 	option remote_dns_query_strategy 'UseIPv4'
 	option dns_hosts 'cloudflare-dns.com 1.1.1.1
 dns.google.com 8.8.8.8'
@@ -221,6 +222,8 @@ config shunt_rules 'Direct'
 	option remarks 'Direct'
 	option ip_list 'geoip:ir
 geoip:private
+$IPV4_DNS
+$IPV6_DNS
 192.0.0.0/8'
 	option domain_list 'geosite:ir
 domain:ir
@@ -291,14 +294,14 @@ EOF
       mv /tmp/warp-plus /usr/bin/warp
       chmod +x /usr/bin/warp
 
-      cat << 'EOF' > /etc/init.d/warp
+      cat << EOF > /etc/init.d/warp
 #!/bin/sh /etc/rc.common
 START=91
 USE_PROCD=1
 
 start_service() {
     procd_open_instance
-    procd_set_param command /usr/bin/warp --scan --gool --dns 208.67.222.2 --bind 0.0.0.0:8086
+    procd_set_param command /usr/bin/warp --scan --gool --dns $REMOTE_DNS --bind 0.0.0.0:8086
     procd_set_param stdout 1
     procd_set_param stderr 1
     procd_set_param respawn
@@ -307,7 +310,7 @@ start_service() {
 EOF
       chmod +x /etc/init.d/warp
 
-      cat << 'EOF' > /etc/hotplug.d/iface/99-warp
+      cat << EOF > /etc/hotplug.d/iface/99-warp
 #!/bin/sh
 [ "$INTERFACE" = "wan" ] || [ "$INTERFACE" = "wan6" ] || exit 0
 service warp restart
@@ -362,7 +365,7 @@ EOF
       mv /tmp/HiddifyCli /usr/bin/hiddify
       chmod +x /usr/bin/hiddify
 
-      cat << 'EOF' > /etc/init.d/hiddify
+      cat << EOF > /etc/init.d/hiddify
 #!/bin/sh /etc/rc.common
 START=91
 USE_PROCD=1
@@ -378,18 +381,18 @@ start_service() {
 EOF
       chmod +x /etc/init.d/hiddify
 
-      cat << 'EOF' > /etc/hotplug.d/iface/99-hiddify
+      cat << EOF > /etc/hotplug.d/iface/99-hiddify
 #!/bin/sh
 [ "$INTERFACE" = "wan" ] || [ "$INTERFACE" = "wan6" ] || exit 0
 service hiddify restart
 EOF
       chmod +x /etc/hotplug.d/iface/99-hiddify
 
-      cat << 'EOF' > /root/config.conf
+      cat << EOF > /root/config.conf
 socks://127.0.0.1:8086
 EOF
 
-      cat << 'EOF' > /root/setting.conf
+      cat << EOF > /root/setting.conf
 {
   "region": "other",
   "block-ads": false,
@@ -398,9 +401,9 @@ EOF
   "log-level": "warn",
   "resolve-destination": false,
   "ipv6-mode": "ipv4_only",
-  "remote-dns-address": "udp://208.67.222.2",
+  "remote-dns-address": "udp://$REMOTE_DNS",
   "remote-dns-domain-strategy": "",
-  "direct-dns-address": "208.67.222.2",
+  "direct-dns-address": "$IPV4_DNS",
   "direct-dns-domain-strategy": "",
   "mixed-port": 12334,
   "tproxy-port": 12335,
