@@ -181,12 +181,12 @@ config global
 	option direct_dns_protocol 'auto'
 	option direct_dns_query_strategy 'UseIP'
 	option remote_dns_protocol 'tcp'
-	option remote_dns '127.0.0.1:16450'
+	option remote_dns '208.67.222.2'
 	option remote_dns_query_strategy 'UseIPv4'
 	option dns_hosts 'cloudflare-dns.com 1.1.1.1
 dns.google.com 8.8.8.8'
 	option log_node '1'
-	option loglevel 'warning'
+	option loglevel 'error'
 	option write_ipset_direct '1'
 	option remote_dns_detour 'remote'
 	option remote_fakedns '0'
@@ -201,9 +201,9 @@ config global_delay
 
 config global_forwarding
 	option tcp_no_redir_ports 'disable'
-	option udp_no_redir_ports '1:65535'
-	option tcp_redir_ports '22,25,53,143,465,587,853,993,995,80,443'
-	option udp_redir_ports '80,443'
+	option udp_no_redir_ports 'disable'
+	option tcp_redir_ports '22,25,53,143,465,587,853,993,995,80,443,9339'
+	option udp_redir_ports '22,25,53,143,465,587,853,993,995,80,443,9339'
 	option accept_icmp '0'
 	option use_nft '1'
 	option tcp_proxy_way 'redirect'
@@ -219,7 +219,7 @@ config global_other
 	option show_node_info '1'
 
 config global_rules
-	option auto_update '0'
+	option auto_update '1'
 	option geosite_update '1'
 	option geoip_update '1'
 	option v2ray_location_asset '/usr/share/v2ray/'
@@ -250,10 +250,10 @@ config global_singbox
 config shunt_rules 'Direct'
 	option network 'tcp,udp'
 	option remarks 'Direct'
-	option ip_list '#geoip:ir
-#geoip:private
+	option ip_list 'geoip:ir
+geoip:private
 192.0.0.0/8'
-	option domain_list '#geosite:category-ir
+	option domain_list 'geosite:ir
 domain:ir
 domain:dl.playstation.net
 domain:upenlod.pw
@@ -264,7 +264,10 @@ domain:pinsvc.net'
 config shunt_rules 'Block'
 	option remarks 'Block'
 	option network 'tcp,udp'
-	option domain_list '#geosite:category-ads-all
+	option domain_list 'geosite:category-ads-all
+geosite:malware
+geosite:phishing
+geosite:cryptominers
 domain:googletagmanager.com
 domain:webengage.com
 domain:yandex.ru
@@ -275,6 +278,8 @@ domain:sentry-cdn.com
 domain:doubleclick.net
 domain:adservice.google.com
 domain:analytics.pinterest.com'
+	option ip_list 'geoip:malware
+geoip:phishing'
 EOF
 
       curl -L -o /usr/share/v2ray/geoip.dat https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geoip.dat
@@ -417,8 +422,8 @@ EOF
 
       cat << 'EOF' > /root/setting.conf
 {
-  "region": "ir",
-  "block-ads": true,
+  "region": "other",
+  "block-ads": false,
   "use-xray-core-when-possible": false,
   "execute-config-as-is": false,
   "log-level": "warn",
@@ -435,7 +440,7 @@ EOF
   "mtu": 9000,
   "strict-route": true,
   "connection-test-url": "http://cp.cloudflare.com",
-  "url-test-interval": 600,
+  "url-test-interval": 300,
   "enable-clash-api": true,
   "clash-api-port": 16756,
   "enable-tun": false,
