@@ -13,6 +13,6 @@ opkg install bash
 Running the script:
 
 ```shell
-wget https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh
-bash install.sh
+wget -O /tmp/install.sh https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh
+bash /tmp/install.sh
 ```
