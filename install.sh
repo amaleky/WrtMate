@@ -25,22 +25,14 @@ run_commands() {
 
       if [ "$(uci get network.lan.dns)" != "$IPV4_DNS" ]; then
         uci set network.lan.dns="$IPV4_DNS"
-        if uci get network.wan >/dev/null 2>&1; then
-          uci set network.wan.peerdns='0'
-          uci set network.wan.dns="$IPV4_DNS"
-        fi
-        if uci get network.wan6 >/dev/null 2>&1; then
-          uci set network.wan6.peerdns='0'
-          uci set network.wan6.dns="$IPV6_DNS"
-        fi
-        if uci get network.wanb >/dev/null 2>&1; then
-          uci set network.wanb.peerdns='0'
-          uci set network.wanb.dns="$IPV4_DNS"
-        fi
-        if uci get network.wanb6 >/dev/null 2>&1; then
-          uci set network.wanb6.peerdns='0'
-          uci set network.wanb6.dns="$IPV6_DNS"
-        fi
+        for INTERFACE_V4 in $(uci show network | grep "proto='dhcp'" | cut -d. -f2 | cut -d= -f1); do
+          uci set network.${INTERFACE_V4}.peerdns='0'
+          uci set network.${INTERFACE_V4}.dns="$IPV4_DNS"
+        done
+        for INTERFACE_V6 in $(uci show network | grep "proto='dhcpv6'" | cut -d. -f2 | cut -d= -f1); do
+          uci set network.${INTERFACE_V6}.peerdns='0'
+          uci set network.${INTERFACE_V6}.dns="$IPV6_DNS"
+        done
         uci commit network
         /etc/init.d/network restart
       fi
@@ -448,8 +440,8 @@ EOF
           uci add_list firewall.@zone[-1].network="${SECOND_INTERFACE_NAME}6"
           uci commit firewall
           /etc/init.d/firewall restart
-          uci set network.wan.metric='1'
-          uci set network.wan6.metric='1'
+          uci set network.wan.metric='0'
+          uci set network.wan6.metric='0'
           uci set network.@device[0].ports="$(uci get network.@device[0].ports | sed "s/\b$SECOND_INTERFACE_PORT\b//g" | tr -s ' ')"
           uci set network.${SECOND_INTERFACE_NAME}=interface
           uci set network.${SECOND_INTERFACE_NAME}.proto='dhcp'
