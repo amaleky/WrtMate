@@ -103,32 +103,9 @@ run_commands() {
       uci commit qos
       /etc/init.d/qos restart
       ;;
-    "AdGuard")
-      opkg install adguardhome
-      service adguardhome enable
-      service adguardhome restart
-      NET_ADDR=$(/sbin/ip -o -4 addr list br-lan | awk 'NR==1{ split($4, ip_addr, "/"); print ip_addr[1]; exit }')
-      NET_ADDR6=$(/sbin/ip -o -6 addr list br-lan scope global | awk '$4 ~ /^fd|^fc/ { split($4, ip_addr, "/"); print ip_addr[1]; exit }')
-      uci set dhcp.@dnsmasq[0].port="54"
-      uci set dhcp.@dnsmasq[0].domain="lan"
-      uci set dhcp.@dnsmasq[0].local="/lan/"
-      uci set dhcp.@dnsmasq[0].expandhosts="1"
-      uci set dhcp.@dnsmasq[0].cachesize="0"
-      uci set dhcp.@dnsmasq[0].noresolv="1"
-      uci -q del dhcp.@dnsmasq[0].server
-      uci -q del dhcp.lan.dhcp_option
-      uci -q del dhcp.lan.dns
-      uci add_list dhcp.lan.dhcp_option='3,'"${NET_ADDR}"
-      uci add_list dhcp.lan.dhcp_option='6,'"${NET_ADDR}"
-      uci add_list dhcp.lan.dhcp_option='15,'"lan"
-      uci add_list dhcp.lan.dns="$NET_ADDR6"
-      uci commit dhcp
-      service dnsmasq restart
-      service odhcpd restart
-      ;;
     "Passwall")
       opkg remove dnsmasq
-      opkg install dnsmasq-full curl unzip
+      opkg install dnsmasq-full kmod-nft-socket kmod-nft-tproxy curl unzip
       wget -O /tmp/packages.zip https://github.com/xiaorouji/openwrt-passwall2/releases/latest/download/passwall_packages_ipk_$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2).zip
       unzip /tmp/packages.zip -d /tmp/passwall
       for pkg in /tmp/passwall/*.ipk; do opkg install "$pkg"; done
@@ -534,6 +511,29 @@ EOF
         reboot
       fi
       ;;
+    "AdGuard")
+      opkg install adguardhome
+      service adguardhome enable
+      service adguardhome restart
+      NET_ADDR=$(/sbin/ip -o -4 addr list br-lan | awk 'NR==1{ split($4, ip_addr, "/"); print ip_addr[1]; exit }')
+      NET_ADDR6=$(/sbin/ip -o -6 addr list br-lan scope global | awk '$4 ~ /^fd|^fc/ { split($4, ip_addr, "/"); print ip_addr[1]; exit }')
+      uci set dhcp.@dnsmasq[0].port="54"
+      uci set dhcp.@dnsmasq[0].domain="lan"
+      uci set dhcp.@dnsmasq[0].local="/lan/"
+      uci set dhcp.@dnsmasq[0].expandhosts="1"
+      uci set dhcp.@dnsmasq[0].cachesize="0"
+      uci set dhcp.@dnsmasq[0].noresolv="1"
+      uci -q del dhcp.@dnsmasq[0].server
+      uci -q del dhcp.lan.dhcp_option
+      uci -q del dhcp.lan.dns
+      uci add_list dhcp.lan.dhcp_option='3,'"${NET_ADDR}"
+      uci add_list dhcp.lan.dhcp_option='6,'"${NET_ADDR}"
+      uci add_list dhcp.lan.dhcp_option='15,'"lan"
+      uci add_list dhcp.lan.dns="$NET_ADDR6"
+      uci commit dhcp
+      service dnsmasq restart
+      service odhcpd restart
+      ;;
     "Swap")
       opkg install zram-swap
       ;;
@@ -547,7 +547,7 @@ EOF
 menu() {
   PS3="Enter Your Option: "
   OPTIONS=(
-    "Setup" "Upgrade" "Recommended" "QoS" "AdGuard" "Passwall" "WapPlus" "Hiddify" "Multi-WAN" "USB-WAN" "USB-Storage" "Swap" "Quit"
+    "Setup" "Upgrade" "Recommended" "QoS" "Passwall" "WapPlus" "Hiddify" "Multi-WAN" "USB-WAN" "USB-Storage" "AdGuard" "Swap" "Quit"
   )
   select CHOICE in "${OPTIONS[@]}"; do
     run_commands "$CHOICE"
