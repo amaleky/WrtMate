@@ -8,40 +8,49 @@ run_commands() {
   echo "Step $1"
   case $1 in
     "Setup")
-      if ! grep -q '^root:' /etc/shadow; then
+      read -r -p "Do You Want To Change Root Password? (yes/No): " CHANGE_PASSWORD
+      if [[ "$CHANGE_PASSWORD" == "yes" ]]; then
         passwd root
       fi
 
-      uci set system.@system[0].zonename='Asia/Tehran'
-      uci set system.@system[0].timezone='<+0330>-3:30'
-      uci set system.@system[0].hostname="$(awk '{print $1}' /tmp/sysinfo/model)"
-      uci commit system
-      /etc/init.d/system reload
+      if [ "$(uci get system.@system[0].timezone)" != "<+0330>-3:30" ]; then
+        uci set system.@system[0].zonename='Asia/Tehran'
+        uci set system.@system[0].timezone='<+0330>-3:30'
+        uci set system.@system[0].hostname="$(awk '{print $1}' /tmp/sysinfo/model)"
+        uci commit system
+        /etc/init.d/system reload
+      fi
 
-      uci set network.lan.dns='208.67.222.2 94.140.14.140 8.8.8.8'
-      if uci get network.wan >/dev/null 2>&1; then
-        uci set network.wan.peerdns='0'
-        uci set network.wan.dns='208.67.222.2 94.140.14.140 8.8.8.8'
+      IPV4_DNS="208.67.222.2 94.140.14.140 8.8.8.8"
+      IPV6_DNS="2620:0:ccc::2 2a10:50c0::1:ff 2001:4860:4860::8888"
+      if [ "$(uci get network.lan.dns)" != "$IPV4_DNS" ]; then
+        uci set network.lan.dns="$IPV4_DNS"
+        if uci get network.wan >/dev/null 2>&1; then
+          uci set network.wan.peerdns='0'
+          uci set network.wan.dns="$IPV4_DNS"
+        fi
+        if uci get network.wan6 >/dev/null 2>&1; then
+          uci set network.wan6.peerdns='0'
+          uci set network.wan6.dns="$IPV6_DNS"
+        fi
+        if uci get network.wanb >/dev/null 2>&1; then
+          uci set network.wanb.peerdns='0'
+          uci set network.wanb.dns="$IPV4_DNS"
+        fi
+        if uci get network.wanb6 >/dev/null 2>&1; then
+          uci set network.wanb6.peerdns='0'
+          uci set network.wanb6.dns="$IPV6_DNS"
+        fi
+        uci commit network
+        /etc/init.d/network restart
       fi
-      if uci get network.wan6 >/dev/null 2>&1; then
-        uci set network.wan6.peerdns='0'
-        uci set network.wan6.dns='2620:0:ccc::2 2a10:50c0::1:ff 2001:4860:4860::8888'
-      fi
-      if uci get network.wanb >/dev/null 2>&1; then
-        uci set network.wanb.peerdns='0'
-        uci set network.wanb.dns='208.67.222.2 94.140.14.140 8.8.8.8'
-      fi
-      if uci get network.wanb6 >/dev/null 2>&1; then
-        uci set network.wanb6.peerdns='0'
-        uci set network.wanb6.dns='2620:0:ccc::2 2a10:50c0::1:ff 2001:4860:4860::8888'
-      fi
-      uci commit network
-      /etc/init.d/network restart
 
-      uci set dhcp.lan.leasetime='12h'
-      uci add_list dhcp.lan.dhcp_option='6,208.67.222.2,94.140.14.140,8.8.8.8'
-      uci commit dhcp
-      /etc/init.d/dnsmasq restart
+      if [ "$(uci get dhcp.lan.dhcp_option)" != "6,208.67.222.2,94.140.14.140,8.8.8.8" ]; then
+        uci set dhcp.lan.leasetime='12h'
+        uci set dhcp.lan.dhcp_option='6,208.67.222.2,94.140.14.140,8.8.8.8'
+        uci commit dhcp
+        /etc/init.d/dnsmasq restart
+      fi
 
       if uci get wireless >/dev/null 2>&1; then
         read -r -p "Enter Your WIFI SSID: " WIFI_SSID
@@ -70,13 +79,18 @@ run_commands() {
 
       LAN_IPADDR="$(uci get network.lan.ipaddr)"
       read -r -p "Enter Your Router IP [$LAN_IPADDR]: " CUSTOM_LAN_IPADDR
-      uci set network.lan.ipaddr="${CUSTOM_LAN_IPADDR:-$LAN_IPADDR}"
-      uci set network.lan.netmask='255.255.255.0'
-      uci commit network
-      /etc/init.d/network restart
+      if [ -n "$CUSTOM_LAN_IPADDR" ]; then
+        uci set network.lan.ipaddr="$CUSTOM_LAN_IPADDR"
+        uci set network.lan.netmask='255.255.255.0'
+        uci commit network
+        /etc/init.d/network restart
+      fi
       ;;
     "Upgrade")
-      opkg list-upgradable | cut -f 1 -d ' ' | xargs opkg upgrade
+      UPGRADABLE_PACKAGES=$(opkg list-upgradable | cut -f 1 -d ' ')
+      if [ -n "$UPGRADABLE_PACKAGES" ]; then
+        echo "$UPGRADABLE_PACKAGES" | xargs opkg upgrade
+      fi
       ;;
     "Recommended")
       opkg install openssh-sftp-server curl iperf3 htop nload
@@ -261,9 +275,9 @@ domain:adservice.google.com
 domain:analytics.pinterest.com'
 EOF
 
-      mkdir /usr/share/xray/
-      curl -L -o /usr/share/xray/geoip.dat https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geoip.dat
-      curl -L -o /usr/share/xray/geosite.dat https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geosite.dat
+      mkdir /usr/share/v2ray/
+      curl -L -o /usr/share/v2ray/geoip.dat https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geoip.dat
+      curl -L -o /usr/share/v2ray/geosite.dat https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geosite.dat
       ;;
     "WapPlus")
       opkg install unzip
@@ -453,7 +467,7 @@ EOF
       uci set fstab.@global[0].check_fs='1'
       uci commit fstab
       service fstab boot
-      read -r -p "Do You Want To Extend Storage? (yes/no): " EXTEND_STORAGE
+      read -r -p "Do You Want To Extend Storage? (Yes/no): " EXTEND_STORAGE
       if [[ "$EXTEND_STORAGE" != "no" ]]; then
         opkg install block-mount kmod-fs-ext4 e2fsprogs parted
         parted -s /dev/sda -- mklabel gpt mkpart extroot 2048s -2048s
