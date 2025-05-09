@@ -100,6 +100,11 @@ run_commands() {
       ;;
     "QoS")
       opkg install luci-app-qos
+      uci set qos.wan.enabled='1'
+      uci set qos.wan.download='40960'
+      uci set qos.wan.upload='40960'
+      uci commit qos
+      /etc/init.d/qos restart
       ;;
     "AdGuard")
       opkg install adguardhome
