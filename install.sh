@@ -2,6 +2,8 @@
 
 prepare() {
   opkg update
+  IPV4_DNS="208.67.222.2 94.140.14.140 8.8.8.8"
+  IPV6_DNS="2620:0:ccc::2 2a10:50c0::1:ff 2001:4860:4860::8888"
 }
 
 run_commands() {
@@ -21,8 +23,6 @@ run_commands() {
         /etc/init.d/system reload
       fi
 
-      IPV4_DNS="208.67.222.2 94.140.14.140 8.8.8.8"
-      IPV6_DNS="2620:0:ccc::2 2a10:50c0::1:ff 2001:4860:4860::8888"
       if [ "$(uci get network.lan.dns)" != "$IPV4_DNS" ]; then
         uci set network.lan.dns="$IPV4_DNS"
         if uci get network.wan >/dev/null 2>&1; then
@@ -94,9 +94,6 @@ run_commands() {
       ;;
     "Recommended")
       opkg install openssh-sftp-server curl iperf3 htop nload
-      ;;
-    "LoadBalancer")
-      opkg install kmod-macvlan mwan3 luci-app-mwan3 iptables-nft ip6tables-nft
       ;;
     "QoS")
       opkg install luci-app-qos
@@ -280,7 +277,6 @@ domain:adservice.google.com
 domain:analytics.pinterest.com'
 EOF
 
-      mkdir /usr/share/v2ray/
       curl -L -o /usr/share/v2ray/geoip.dat https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geoip.dat
       curl -L -o /usr/share/v2ray/geosite.dat https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geosite.dat
       ;;
@@ -461,6 +457,43 @@ EOF
       service hiddify enable
       service hiddify restart
       ;;
+    "Multi-WAN")
+      read -r -p "Enter Your Second Interface: " SECOND_INTERFACE_NAME
+      if [ -n "$SECOND_INTERFACE_NAME" ]; then
+        read -r -p "Enter Second Interface PORT: " SECOND_INTERFACE_PORT
+        if [ -n "$SECOND_INTERFACE_PORT" ]; then
+          uci add_list firewall.@zone[-1].network="${SECOND_INTERFACE_NAME}"
+          uci add_list firewall.@zone[-1].network="${SECOND_INTERFACE_NAME}6"
+          uci commit firewall
+          /etc/init.d/firewall restart
+          uci set network.wan.metric='1'
+          uci set network.wan6.metric='1'
+          uci set network.@device[0].ports="$(uci get network.@device[0].ports | sed "s/\b$SECOND_INTERFACE_PORT\b//g" | tr -s ' ')"
+          uci set network.${SECOND_INTERFACE_NAME}=interface
+          uci set network.${SECOND_INTERFACE_NAME}.proto='dhcp'
+          uci set network.${SECOND_INTERFACE_NAME}.device="$SECOND_INTERFACE_PORT"
+          uci set network.globals.packet_steering='1'
+          uci set network.${SECOND_INTERFACE_NAME}.metric='1'
+          uci set network.${SECOND_INTERFACE_NAME}.peerdns='0'
+          uci set network.${SECOND_INTERFACE_NAME}.dns="$IPV4_DNS"
+          uci set network.${SECOND_INTERFACE_NAME}6=interface
+          uci set network.${SECOND_INTERFACE_NAME}6.proto='dhcpv6'
+          uci set network.${SECOND_INTERFACE_NAME}6.device="$SECOND_INTERFACE_PORT"
+          uci set network.${SECOND_INTERFACE_NAME}6.reqaddress='try'
+          uci set network.${SECOND_INTERFACE_NAME}6.reqprefix='auto'
+          uci set network.${SECOND_INTERFACE_NAME}6.norelease='1'
+          uci set network.${SECOND_INTERFACE_NAME}6.metric='1'
+          uci set network.${SECOND_INTERFACE_NAME}6.peerdns='0'
+          uci set network.${SECOND_INTERFACE_NAME}6.dns="$IPV6_DNS"
+          uci commit network
+          /etc/init.d/network restart
+        fi
+      fi
+      read -r -p "Do You Need a Load Balancer? (yes/No): " INSTALL_LOAD_BALANCER
+      if [[ "$INSTALL_LOAD_BALANCER" == "yes" ]]; then
+        opkg install kmod-macvlan mwan3 luci-app-mwan3 iptables-nft ip6tables-nft
+      fi
+      ;;
     "USB-WAN")
       opkg install comgt-ncm kmod-usb-net-huawei-cdc-ncm usb-modeswitch kmod-usb-serial kmod-usb-serial-option kmod-usb-serial-wwan comgt-ncm luci-proto-3g luci-proto-ncm luci-proto-qmi kmod-usb-net-huawei-cdc-ncm usb-modeswitch
       ;;
@@ -509,7 +542,7 @@ EOF
 menu() {
   PS3="Enter Your Option: "
   OPTIONS=(
-    "Setup" "Upgrade" "Recommended" "LoadBalancer" "QoS" "AdGuard" "Passwall" "WapPlus" "Hiddify" "USB-WAN" "USB-Storage" "Swap" "Quit"
+    "Setup" "Upgrade" "Recommended" "QoS" "AdGuard" "Passwall" "WapPlus" "Hiddify" "Multi-WAN" "USB-WAN" "USB-Storage" "Swap" "Quit"
   )
   select CHOICE in "${OPTIONS[@]}"; do
     run_commands "$CHOICE"
