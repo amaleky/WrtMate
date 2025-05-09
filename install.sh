@@ -45,7 +45,7 @@ run_commands() {
         /etc/init.d/dnsmasq restart
       fi
 
-      if uci get wireless >/dev/null 2>&1; then
+      if uci get wireless >/dev/null 2>&1 && [ "$(uci get wireless.radio0.channel)" != "auto" ]; then
         read -r -p "Enter Your WIFI SSID: " WIFI_SSID
         read -r -p "Enter Your WIFI Password: " WIFI_PASSWORD
         if [ "$(uci get wireless.radio0.channel)" != "auto" ]; then
