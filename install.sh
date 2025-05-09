@@ -227,6 +227,25 @@ $IPV6_DNS
 192.0.0.0/8'
 	option domain_list 'geosite:ir
 domain:ir
+# messengers
+domain:slack.com
+domain:live.com
+domain:live.net
+domain:microsoftonline.com
+domain:meet.google.com
+domain:whatsapp.com
+domain:mail.google.com
+domain:linkedin.com
+domain:licdn.com
+# games
+domain:pvp.net
+domain:riotcdn.net
+domain:riotgames.com
+domain:leagueoflegends.com
+domain:callofduty.com
+domain:activision.com
+domain:callofdutyleague.com
+# download
 domain:dl.playstation.net
 domain:upenlod.pw
 domain:ptp
