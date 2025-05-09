@@ -4,6 +4,7 @@ prepare() {
   opkg update
   IPV4_DNS="208.67.222.2 94.140.14.140 8.8.8.8"
   IPV6_DNS="2620:0:ccc::2 2a10:50c0::1:ff 2001:4860:4860::8888"
+  LAN_IPADDR="$(uci get network.lan.ipaddr)"
 }
 
 run_commands() {
@@ -37,9 +38,9 @@ run_commands() {
         /etc/init.d/network restart
       fi
 
-      if [ "$(uci get dhcp.lan.dhcp_option)" != "6,208.67.222.2,94.140.14.140,8.8.8.8" ]; then
+      if [ "$(uci get dhcp.lan.dhcp_option)" != "6,${IPV4_DNS// /,} 42,${LAN_IPADDR}" ]; then
         uci set dhcp.lan.leasetime='12h'
-        uci set dhcp.lan.dhcp_option='6,208.67.222.2,94.140.14.140,8.8.8.8'
+        uci set dhcp.lan.dhcp_option="6,${IPV4_DNS// /,} 42,${LAN_IPADDR}"
         uci commit dhcp
         /etc/init.d/dnsmasq restart
       fi
@@ -69,7 +70,6 @@ run_commands() {
         fi
       fi
 
-      LAN_IPADDR="$(uci get network.lan.ipaddr)"
       read -r -p "Enter Your Router IP [$LAN_IPADDR]: " CUSTOM_LAN_IPADDR
       if [ -n "$CUSTOM_LAN_IPADDR" ]; then
         uci set network.lan.ipaddr="$CUSTOM_LAN_IPADDR"
