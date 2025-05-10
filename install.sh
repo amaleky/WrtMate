@@ -92,6 +92,8 @@ run_commands() {
       opkg install luci-app-sqm
       ;;
     "Passwall")
+      read -r -p "Do You Want To Install Hiddify? (Yes/no): " HIDDIFY_INSTALL
+      read -r -p "Do You Want To Install WARP? (Yes/no): " WARP_INSTALL
       opkg remove dnsmasq
       opkg install dnsmasq-full kmod-nft-socket kmod-nft-tproxy curl unzip
       wget -O /tmp/packages.zip https://github.com/xiaorouji/openwrt-passwall2/releases/latest/download/passwall_packages_ipk_$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2).zip
@@ -270,45 +272,45 @@ EOF
 
       curl -L -o /usr/share/v2ray/geoip.dat https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geoip.dat
       curl -L -o /usr/share/v2ray/geosite.dat https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geosite.dat
-      ;;
-    "WapPlus")
-      opkg install unzip
-      case "$(uname -m)" in
-        x86_64)
-          DETECTED_ARCH="amd64"
-          ;;
-        aarch64)
-          DETECTED_ARCH="arm64"
-          ;;
-        armv7l|armv7)
-          DETECTED_ARCH="arm7"
-          ;;
-        mips)
-          DETECTED_ARCH="mips"
-          ;;
-        mipsel)
-          DETECTED_ARCH="mipsle"
-          ;;
-        mips64)
-          DETECTED_ARCH="mips64"
-          ;;
-        mips64el)
-          DETECTED_ARCH="mips64le"
-          ;;
-        riscv64)
-          DETECTED_ARCH="riscv64"
-          ;;
-        *)
-          echo "Unsupported cpu architecture"
-          exit 1
-          ;;
-      esac
-      wget -O /tmp/warp.zip https://github.com/bepass-org/warp-plus/releases/latest/download/warp-plus_linux-$DETECTED_ARCH.zip
-      unzip /tmp/warp.zip -d /tmp
-      mv /tmp/warp-plus /usr/bin/warp
-      chmod +x /usr/bin/warp
 
-      cat << EOF > /etc/init.d/warp
+      if [[ "$WARP_INSTALL" != "no" ]]; then
+        opkg install unzip
+        case "$(uname -m)" in
+          x86_64)
+            DETECTED_ARCH="amd64"
+            ;;
+          aarch64)
+            DETECTED_ARCH="arm64"
+            ;;
+          armv7l|armv7)
+            DETECTED_ARCH="arm7"
+            ;;
+          mips)
+            DETECTED_ARCH="mips"
+            ;;
+          mipsel)
+            DETECTED_ARCH="mipsle"
+            ;;
+          mips64)
+            DETECTED_ARCH="mips64"
+            ;;
+          mips64el)
+            DETECTED_ARCH="mips64le"
+            ;;
+          riscv64)
+            DETECTED_ARCH="riscv64"
+            ;;
+          *)
+            echo "Unsupported cpu architecture"
+            exit 1
+            ;;
+        esac
+        wget -O /tmp/warp.zip https://github.com/bepass-org/warp-plus/releases/latest/download/warp-plus_linux-$DETECTED_ARCH.zip
+        unzip /tmp/warp.zip -d /tmp
+        mv /tmp/warp-plus /usr/bin/warp
+        chmod +x /usr/bin/warp
+
+        cat << EOF > /etc/init.d/warp
 #!/bin/sh /etc/rc.common
 START=91
 USE_PROCD=1
@@ -322,64 +324,65 @@ start_service() {
     procd_close_instance
 }
 EOF
-      chmod +x /etc/init.d/warp
+        chmod +x /etc/init.d/warp
 
-      cat << EOF > /etc/hotplug.d/iface/99-warp
+        cat << EOF > /etc/hotplug.d/iface/99-warp
 #!/bin/sh
 [ "$INTERFACE" = "wan" ] || [ "$INTERFACE" = "wan6" ] || exit 0
 service warp restart
 EOF
-      chmod +x /etc/hotplug.d/iface/99-warp
+        chmod +x /etc/hotplug.d/iface/99-warp
 
-      service warp enable
-      service warp restart
-      ;;
-    "Hiddify")
-      case "$(uname -m)" in
-        i386|i686)
-          DETECTED_ARCH="386"
-          ;;
-        x86_64)
-          DETECTED_ARCH="amd64"
-          ;;
-        aarch64)
-          DETECTED_ARCH="arm64"
-          ;;
-        armv5l)
-          DETECTED_ARCH="armv5"
-          ;;
-        armv6l)
-          DETECTED_ARCH="armv6"
-          ;;
-        armv7l|armv7)
-          DETECTED_ARCH="armv7"
-          ;;
-        mips)
-          DETECTED_ARCH="mips"
-          ;;
-        mipsel)
-          DETECTED_ARCH="mipsel"
-          ;;
-        mips64)
-          DETECTED_ARCH="mips64"
-          ;;
-        mips64el)
-          DETECTED_ARCH="mips64el"
-          ;;
-        s390x)
-          DETECTED_ARCH="s390x"
-          ;;
-        *)
-          echo "Unsupported cpu architecture"
-          exit 1
-          ;;
-      esac
-      wget -O /tmp/hiddify.tar.gz https://github.com/hiddify/hiddify-core/releases/latest/download/hiddify-cli-linux-$DETECTED_ARCH.tar.gz
-      tar -xvzf /tmp/hiddify.tar.gz -C /tmp
-      mv /tmp/HiddifyCli /usr/bin/hiddify
-      chmod +x /usr/bin/hiddify
+        service warp enable
+        service warp restart
+      fi
 
-      cat << EOF > /etc/init.d/hiddify
+      if [[ "$HIDDIFY_INSTALL" != "no" ]]; then
+        case "$(uname -m)" in
+          i386|i686)
+            DETECTED_ARCH="386"
+            ;;
+          x86_64)
+            DETECTED_ARCH="amd64"
+            ;;
+          aarch64)
+            DETECTED_ARCH="arm64"
+            ;;
+          armv5l)
+            DETECTED_ARCH="armv5"
+            ;;
+          armv6l)
+            DETECTED_ARCH="armv6"
+            ;;
+          armv7l|armv7)
+            DETECTED_ARCH="armv7"
+            ;;
+          mips)
+            DETECTED_ARCH="mips"
+            ;;
+          mipsel)
+            DETECTED_ARCH="mipsel"
+            ;;
+          mips64)
+            DETECTED_ARCH="mips64"
+            ;;
+          mips64el)
+            DETECTED_ARCH="mips64el"
+            ;;
+          s390x)
+            DETECTED_ARCH="s390x"
+            ;;
+          *)
+            echo "Unsupported cpu architecture"
+            exit 1
+            ;;
+        esac
+        wget -O /tmp/hiddify.tar.gz https://github.com/hiddify/hiddify-core/releases/latest/download/hiddify-cli-linux-$DETECTED_ARCH.tar.gz
+        tar -xvzf /tmp/hiddify.tar.gz -C /tmp
+        mv /tmp/HiddifyCli /usr/bin/hiddify
+        chmod +x /usr/bin/hiddify
+
+        cat << EOF > /etc/init.d/hiddify
 #!/bin/sh /etc/rc.common
 START=91
 USE_PROCD=1
@@ -393,20 +396,20 @@ start_service() {
     procd_close_instance
 }
 EOF
-      chmod +x /etc/init.d/hiddify
+        chmod +x /etc/init.d/hiddify
 
-      cat << EOF > /etc/hotplug.d/iface/99-hiddify
+        cat << EOF > /etc/hotplug.d/iface/99-hiddify
 #!/bin/sh
 [ "$INTERFACE" = "wan" ] || [ "$INTERFACE" = "wan6" ] || exit 0
 service hiddify restart
 EOF
-      chmod +x /etc/hotplug.d/iface/99-hiddify
+        chmod +x /etc/hotplug.d/iface/99-hiddify
 
-      cat << EOF > /root/config.conf
+        cat << EOF > /root/config.conf
 socks://127.0.0.1:8086
 EOF
 
-      cat << EOF > /root/setting.conf
+        cat << EOF > /root/setting.conf
 {
   "region": "other",
   "block-ads": false,
@@ -445,8 +448,9 @@ EOF
 }
 EOF
 
-      service hiddify enable
-      service hiddify restart
+        service hiddify enable
+        service hiddify restart
+      fi
       ;;
     "Multi-WAN")
       read -r -p "Enter Your Second Interface: " SECOND_INTERFACE_NAME
@@ -556,7 +560,7 @@ EOF
 menu() {
   PS3="Enter Your Option: "
   OPTIONS=(
-    "Setup" "Upgrade" "Recommended" "SQM" "Passwall" "WapPlus" "Hiddify" "Multi-WAN" "USB-WAN" "USB-Storage" "AdGuard" "Swap" "Quit"
+    "Setup" "Upgrade" "Recommended" "SQM" "Passwall" "Multi-WAN" "USB-WAN" "USB-Storage" "AdGuard" "Swap" "Quit"
   )
   select CHOICE in "${OPTIONS[@]}"; do
     run_commands "$CHOICE"
