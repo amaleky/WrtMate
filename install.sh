@@ -89,7 +89,7 @@ run_commands() {
       opkg remove dnsmasq
       opkg install dnsmasq-full kmod-nft-socket kmod-nft-tproxy curl unzip
       wget -O /tmp/packages.zip https://github.com/xiaorouji/openwrt-passwall2/releases/latest/download/passwall_packages_ipk_$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2).zip
-      unzip /tmp/packages.zip -d /tmp/passwall
+      unzip -o /tmp/packages.zip -d /tmp/passwall
       for pkg in /tmp/passwall/*.ipk; do opkg install "$pkg"; done
       wget -O /tmp/passwall2.ipk "$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | grep "browser_download_url" | grep -o 'https://[^"]*luci-[^_]*_luci-app-passwall2_[^_]*_all\.ipk' | head -n1)"
       opkg install /tmp/passwall2.ipk
@@ -298,7 +298,7 @@ EOF
             ;;
         esac
         wget -O /tmp/warp.zip https://github.com/bepass-org/warp-plus/releases/latest/download/warp-plus_linux-$DETECTED_ARCH.zip
-        unzip /tmp/warp.zip -d /tmp
+        unzip -o /tmp/warp.zip -d /tmp
         mv /tmp/warp-plus /usr/bin/warp
         chmod +x /usr/bin/warp
 
