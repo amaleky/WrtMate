@@ -396,10 +396,11 @@ EOF
 service hiddify restart
 EOF
         chmod +x /etc/hotplug.d/iface/99-hiddify
-
-        cat << EOF > /root/config.conf
+        if [[ ! -e /root/config.conf ]]; then
+          cat << EOF > /root/config.conf
 socks://127.0.0.1:8086
 EOF
+        fi
 
         cat << EOF > /root/setting.conf
 {
