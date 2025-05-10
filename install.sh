@@ -444,6 +444,8 @@ EOF
         service hiddify enable
         service hiddify restart
       fi
+      uci commit passwall2
+      service passwall2 restart
       ;;
     "Multi-WAN")
       read -r -p "Enter Your Second Interface: " SECOND_INTERFACE_NAME
