@@ -88,13 +88,8 @@ run_commands() {
     "Recommended")
       opkg install openssh-sftp-server curl iperf3 htop nload
       ;;
-    "QoS")
-      opkg install luci-app-qos
-      uci set qos.wan.enabled='1'
-      uci set qos.wan.download='40960'
-      uci set qos.wan.upload='40960'
-      uci commit qos
-      /etc/init.d/qos restart
+    "SQM")
+      opkg install luci-app-sqm
       ;;
     "Passwall")
       opkg remove dnsmasq
@@ -561,7 +556,7 @@ EOF
 menu() {
   PS3="Enter Your Option: "
   OPTIONS=(
-    "Setup" "Upgrade" "Recommended" "QoS" "Passwall" "WapPlus" "Hiddify" "Multi-WAN" "USB-WAN" "USB-Storage" "AdGuard" "Swap" "Quit"
+    "Setup" "Upgrade" "Recommended" "SQM" "Passwall" "WapPlus" "Hiddify" "Multi-WAN" "USB-WAN" "USB-Storage" "AdGuard" "Swap" "Quit"
   )
   select CHOICE in "${OPTIONS[@]}"; do
     run_commands "$CHOICE"
