@@ -49,26 +49,18 @@ run_commands() {
       if uci get wireless >/dev/null 2>&1 && [ "$(uci get wireless.radio0.channel)" != "auto" ]; then
         read -r -p "Enter Your WIFI SSID: " WIFI_SSID
         read -r -p "Enter Your WIFI Password: " WIFI_PASSWORD
-        if [ "$(uci get wireless.radio0.channel)" != "auto" ]; then
-          uci set wireless.radio0.disabled='0'
-          wifi up radio0
-          uci set wireless.radio0.channel='auto'
-          uci set wireless.@wifi-iface[0].ssid="$WIFI_SSID"
-          uci set wireless.@wifi-iface[0].key="$WIFI_PASSWORD"
-          uci set wireless.@wifi-iface[0].encryption='psk-mixed'
-          uci commit wireless
-          wifi reload
-        fi
-        if [ "$(uci get wireless.radio1.channel)" != "auto" ]; then
-          uci set wireless.radio1.disabled='0'
-          wifi up radio1
-          uci set wireless.radio1.channel='auto'
-          uci set wireless.@wifi-iface[1].ssid="$WIFI_SSID"
-          uci set wireless.@wifi-iface[1].key="$WIFI_PASSWORD"
-          uci set wireless.@wifi-iface[1].encryption='psk-mixed'
-          uci commit wireless
-          wifi reload
-        fi
+        for device in $(uci show wireless | grep device= | awk -F"'" '{print $2}'); do
+          uci set wireless.${device}.disabled='0'
+          wifi up ${device}
+          uci set wireless.${device}.channel='auto'
+        done
+        for i in $(seq 0 $(($(uci show wireless | grep -c 'wifi-iface') - 1))); do
+          uci set wireless.@wifi-iface[$i].ssid="$WIFI_SSID"
+          uci set wireless.@wifi-iface[$i].key="$WIFI_PASSWORD"
+          uci set wireless.@wifi-iface[$i].encryption='psk-mixed'
+        done
+        uci commit wireless
+        wifi reload
       fi
 
       read -r -p "Enter Your Router IP [$LAN_IPADDR]: " CUSTOM_LAN_IPADDR
