@@ -235,6 +235,8 @@ domain:callofduty.com
 domain:activision.com
 domain:callofdutyleague.com
 # download
+domain:speedtest.net
+domain:speed.cloudflare.com
 domain:dl.playstation.net
 domain:upenlod.pw
 domain:ptp
