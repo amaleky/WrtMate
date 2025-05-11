@@ -545,6 +545,13 @@ EOF
     "Swap")
       opkg install zram-swap
       ;;
+    "IRQ")
+      opkg install luci-app-irqbalance
+      uci set irqbalance.irqbalance.enabled='1'
+      uci commit irqbalance
+      /etc/init.d/irqbalance enable
+      /etc/init.d/irqbalance restart
+      ;;
     *)
       exit 0
       ;;
@@ -555,7 +562,7 @@ EOF
 menu() {
   PS3="Enter Your Option: "
   OPTIONS=(
-    "Setup" "Upgrade" "Recommended" "SQM" "Passwall" "Multi-WAN" "USB-WAN" "USB-Storage" "AdGuard" "Swap" "Quit"
+    "Setup" "Upgrade" "Recommended" "SQM" "Passwall" "Multi-WAN" "USB-WAN" "USB-Storage" "AdGuard" "Swap" "IRQ" "Quit"
   )
   select CHOICE in "${OPTIONS[@]}"; do
     run_commands "$CHOICE"
