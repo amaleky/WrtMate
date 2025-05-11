@@ -72,9 +72,24 @@ run_commands() {
       fi
       ;;
     "Upgrade")
+      opkg install jq curl
+      . /etc/openwrt_release
+      LATEST_VERSION=$(curl -s "https://downloads.openwrt.org/.versions.json" | jq -r ".stable_version")
+      if [[ "$LATEST_VERSION" != "$DISTRIB_RELEASE" ]]; then
+        read -r -p "Do You Want To Upgrade Firmware? (yes/No): " FIRMWARE_UPGRADE
+        if [[ "$FIRMWARE_UPGRADE" == "yes" ]]; then
+          DEVICE_ID=$(awk '{print tolower($0)}' /tmp/sysinfo/model | tr ' ' '_')
+          FILE_NAME=$(curl -s "https://downloads.openwrt.org/releases/${LATEST_VERSION}/targets/${DISTRIB_TARGET}/profiles.json" | jq -r --arg id "$DEVICE_ID" '.profiles[$id].images | map(select(.type == "sysupgrade")) | sort_by((.name | contains("squashfs")) | not) | .[0].name')
+          DOWNLOAD_URL="https://downloads.openwrt.org/releases/${LATEST_VERSION}/targets/${DISTRIB_TARGET}/${FILE_NAME}"
+          wget -O /tmp/firmware.bin "${DOWNLOAD_URL}" && sysupgrade -n -v /tmp/firmware.bin
+        fi
+      fi
+
       UPGRADABLE_PACKAGES=$(opkg list-upgradable | cut -f 1 -d ' ')
       if [ -n "$UPGRADABLE_PACKAGES" ]; then
-        echo "$UPGRADABLE_PACKAGES" | xargs opkg upgrade
+        for PACKAGE in $UPGRADABLE_PACKAGES; do
+          opkg upgrade "$PACKAGE"
+        done
       fi
       ;;
     "Recommended")
