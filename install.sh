@@ -4,7 +4,7 @@ prepare() {
   opkg update
   IPV4_DNS="208.67.222.2"
   IPV6_DNS="2620:0:ccc::2"
-  REMOTE_DNS="1.1.1.1"
+  REMOTE_DNS="208.67.220.2"
   LAN_IPADDR="$(uci get network.lan.ipaddr)"
 }
 
