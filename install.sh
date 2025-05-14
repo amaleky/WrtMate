@@ -193,7 +193,7 @@ config global_other
 	option show_node_info '1'
 
 config global_rules
-	option auto_update '1'
+	option auto_update '0'
 	option geosite_update '1'
 	option geoip_update '1'
 	option v2ray_location_asset '/usr/share/v2ray/'
@@ -277,8 +277,16 @@ domain:analytics.pinterest.com'
 geoip:phishing'
 EOF
 
-      curl -L -o /usr/share/v2ray/geoip.dat https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geoip.dat
-      curl -L -o /usr/share/v2ray/geosite.dat https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geosite.dat
+      if [ ! -f "/root/geo-update.sh" ]; then
+        cat << EOF > /root/geo-update.sh
+        rm -f /tmp/geoip /tmp/geosite.dat
+curl -L -o /tmp/geoip.dat https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geoip.dat && mv /tmp/geoip.dat /usr/share/v2ray/geoip.dat
+curl -L -o /tmp/geosite.dat https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geosite.dat && mv /tmp/geosite.dat /usr/share/v2ray/geosite.dat
+EOF
+        chmod +x /root/geo-update.sh
+        echo "0 6 * * 0 /root/geo-update.sh" >> /etc/crontabs/root
+        /root/geo-update.sh
+      fi
 
       if [[ "$WARP_INSTALL" != "no" ]]; then
         opkg install unzip
