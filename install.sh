@@ -5,6 +5,7 @@ prepare() {
   IPV4_DNS="208.67.222.2"
   IPV6_DNS="2620:0:ccc::2"
   REMOTE_DNS="208.67.220.2"
+  NTP_SERVER="216.239.35.0"
   LAN_IPADDR="$(uci get network.lan.ipaddr)"
 }
 
@@ -26,7 +27,8 @@ run_commands() {
       fi
 
       if [ "$(uci get network.lan.dns)" != "$IPV4_DNS" ]; then
-        uci set network.lan.dns="$IPV4_DNS"
+        uci del network.lan.dns
+        uci add_list network.lan.dns="$IPV4_DNS"
         for INTERFACE_V4 in $(uci show network | grep "proto='dhcp'" | cut -d. -f2 | cut -d= -f1); do
           uci set network.${INTERFACE_V4}.peerdns='0'
           uci set network.${INTERFACE_V4}.dns="$IPV4_DNS"
@@ -39,9 +41,11 @@ run_commands() {
         /etc/init.d/network restart
       fi
 
-      if [ "$(uci get dhcp.lan.dhcp_option)" != "6,${IPV4_DNS} 42,${LAN_IPADDR}" ]; then
+      if [ "$(uci get dhcp.lan.dhcp_option)" != "6,${IPV4_DNS} 42,${NTP_SERVER}" ]; then
         uci set dhcp.lan.leasetime='12h'
-        uci set dhcp.lan.dhcp_option="6,${IPV4_DNS} 42,${LAN_IPADDR}"
+        uci del dhcp.lan.dhcp_option
+        uci add_list dhcp.lan.dhcp_option="6,${IPV4_DNS}"
+        uci add_list dhcp.lan.dhcp_option="42,${NTP_SERVER}"
         uci commit dhcp
         /etc/init.d/dnsmasq restart
       fi
@@ -228,6 +232,7 @@ config shunt_rules 'Direct'
 geoip:private
 $IPV4_DNS
 $IPV6_DNS
+$NTP_SERVER
 192.0.0.0/8'
 	option domain_list 'geosite:ir
 domain:ir
