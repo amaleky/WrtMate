@@ -117,9 +117,10 @@ config nodes 'Splitter'
 	option remarks 'Splitter'
 	option type 'Xray'
 	option protocol '_shunt'
-	option Direct '_direct'
 	option Block '_blackhole'
-	option default_node 'Hiddify'
+	option Sanction 'Hiddify'
+	option Censor 'WarpPlus'
+	option default_node '_direct'
 	option domainStrategy 'IPOnDemand'
 	option domainMatcher 'hybrid'
 	option preproxy_enabled '0'
@@ -136,12 +137,24 @@ config nodes 'Hiddify'
 	option tcpMptcp '0'
 	option tcpNoDelay '0'
 
-config nodes 'Warp'
-	option remarks 'Warp'
+config nodes 'WarpPlus'
+	option remarks 'WarpPlus'
 	option type 'Xray'
 	option protocol 'socks'
 	option address '127.0.0.1'
 	option port '8086'
+	option tls '0'
+	option transport 'raw'
+	option tcp_guise 'none'
+	option tcpMptcp '0'
+	option tcpNoDelay '0'
+
+config nodes 'WarpPsiphon'
+	option remarks 'WarpPsiphon'
+	option type 'Xray'
+	option protocol 'socks'
+	option address '127.0.0.1'
+	option port '8087'
 	option tls '0'
 	option transport 'raw'
 	option tcp_guise 'none'
@@ -163,7 +176,7 @@ config global
 	option remote_dns_query_strategy 'UseIPv4'
 	option dns_hosts 'cloudflare-dns.com 1.1.1.1
 dns.google.com 8.8.8.8'
-	option log_node '1'
+	option log_node '0'
 	option loglevel 'error'
 	option write_ipset_direct '1'
 	option remote_dns_detour 'remote'
@@ -225,42 +238,6 @@ config global_singbox
 	option geosite_path '/usr/share/singbox/geosite.db'
 	option geosite_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-sing-box-rules@release/geosite.db'
 
-config shunt_rules 'Direct'
-	option network 'tcp,udp'
-	option remarks 'Direct'
-	option ip_list 'geoip:ir
-geoip:private
-$IPV4_DNS
-$IPV6_DNS
-$NTP_SERVER
-192.0.0.0/8'
-	option domain_list 'geosite:ir
-domain:ir
-# messengers
-domain:slack.com
-domain:live.com
-domain:live.net
-domain:microsoftonline.com
-domain:meet.google.com
-domain:whatsapp.com
-domain:mail.google.com
-domain:linkedin.com
-domain:licdn.com
-# games
-domain:pvp.net
-domain:riotcdn.net
-domain:riotgames.com
-domain:leagueoflegends.com
-domain:callofduty.com
-domain:activision.com
-domain:callofdutyleague.com
-# download
-domain:dl.playstation.net
-domain:upenlod.pw
-domain:ptp
-domain:local
-domain:pinsvc.net'
-
 config shunt_rules 'Block'
 	option remarks 'Block'
 	option network 'tcp,udp'
@@ -280,6 +257,29 @@ domain:adservice.google.com
 domain:analytics.pinterest.com'
 	option ip_list 'geoip:malware
 geoip:phishing'
+
+config shunt_rules 'Sanction'
+	option remarks 'Sanction'
+	option network 'tcp,udp'
+	option domain_list 'geosite:sanctioned
+domain:io
+domain:dev
+domain:youtube.com
+domain:googlevideo.com
+domain:ggpht.com
+domain:ytimg.com'
+	option ip_list 'geoip:openai'
+
+config shunt_rules 'Censor'
+	option remarks 'Censor'
+	option network 'tcp,udp'
+	option domain_list 'geosite:nsfw
+geosite:social
+domain:30nama.com
+domain:digimoviez.com
+domain:zarfilm.com'
+	option ip_list 'geoip:netflix
+geoip:telegram'
 EOF
 
       if [ ! -f "/root/geo-update.sh" ]; then
@@ -330,21 +330,37 @@ EOF
         mv /tmp/warp-plus /usr/bin/warp
         chmod +x /usr/bin/warp
 
-        cat << EOF > /etc/init.d/warp
+        cat << EOF > /etc/init.d/warp-plus
 #!/bin/sh /etc/rc.common
 START=91
 USE_PROCD=1
 
 start_service() {
     procd_open_instance
-    procd_set_param command /usr/bin/warp --scan --gool --dns $REMOTE_DNS --bind 0.0.0.0:8086
+    procd_set_param command /usr/bin/warp --scan --dns $IPV4_DNS --bind 0.0.0.0:8086
     procd_set_param stdout 1
     procd_set_param stderr 1
     procd_set_param respawn
     procd_close_instance
 }
 EOF
-        chmod +x /etc/init.d/warp
+        chmod +x /etc/init.d/warp-plus
+
+        cat << EOF > /etc/init.d/warp-psiphon
+#!/bin/sh /etc/rc.common
+START=91
+USE_PROCD=1
+
+start_service() {
+    procd_open_instance
+    procd_set_param command /usr/bin/warp --scan --cfon --country GB --dns $IPV4_DNS --bind 0.0.0.0:8087
+    procd_set_param stdout 1
+    procd_set_param stderr 1
+    procd_set_param respawn
+    procd_close_instance
+}
+EOF
+        chmod +x /etc/init.d/warp-psiphon
 
         cat << EOF > /etc/hotplug.d/iface/99-warp
 #!/bin/sh
@@ -353,8 +369,10 @@ service warp restart
 EOF
         chmod +x /etc/hotplug.d/iface/99-warp
 
-        service warp enable
-        service warp restart
+        service warp-plus enable
+        service warp-plus restart
+        service warp-psiphon enable
+        service warp-psiphon restart
       fi
 
       if [[ "$HIDDIFY_INSTALL" != "no" ]]; then
@@ -426,7 +444,7 @@ EOF
         chmod +x /etc/hotplug.d/iface/99-hiddify
         if [[ ! -e /root/config.conf ]]; then
           cat << EOF > /root/config.conf
-socks://127.0.0.1:8086
+socks://127.0.0.1:8087
 EOF
         fi
 
@@ -449,7 +467,7 @@ EOF
   "tun-implementation": "gvisor",
   "mtu": 9000,
   "strict-route": true,
-  "connection-test-url": "http://cp.cloudflare.com",
+  "connection-test-url": "http://www.gstatic.com/generate_204",
   "url-test-interval": 300,
   "enable-clash-api": true,
   "clash-api-port": 16756,
