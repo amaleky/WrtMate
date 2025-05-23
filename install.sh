@@ -241,10 +241,10 @@ config global_singbox
 config shunt_rules 'Block'
 	option remarks 'Block'
 	option network 'tcp,udp'
-	option domain_list 'geosite:category-ads-all
-geosite:malware
-geosite:phishing
-geosite:cryptominers
+	option domain_list 'ext:geosite.dat:category-ads-all
+ext:geosite.dat:malware
+ext:geosite.dat:phishing
+ext:geosite.dat:cryptominers
 domain:googletagmanager.com
 domain:webengage.com
 domain:yandex.ru
@@ -255,37 +255,45 @@ domain:sentry-cdn.com
 domain:doubleclick.net
 domain:adservice.google.com
 domain:analytics.pinterest.com'
-	option ip_list 'geoip:malware
-geoip:phishing'
+	option ip_list 'ext:security-ip.dat:malware
+ext:security-ip.dat:phishing'
 
 config shunt_rules 'Sanction'
 	option remarks 'Sanction'
 	option network 'tcp,udp'
-	option domain_list 'geosite:sanctioned
+	option domain_list 'ext:geosite.dat:sanctioned
 domain:io
 domain:dev
+domain:googleapis.com
 domain:youtube.com
 domain:googlevideo.com
 domain:ggpht.com
 domain:ytimg.com'
-	option ip_list 'geoip:openai'
+	option ip_list 'ext:geoip-services.dat:openai'
 
 config shunt_rules 'Censor'
 	option remarks 'Censor'
 	option network 'tcp,udp'
-	option domain_list 'geosite:nsfw
-geosite:social
+	option domain_list 'ext:geosite.dat:nsfw
+ext:geosite.dat:social
+domain:v2ray.com
+domain:hiddify.com
+domain:leakfa.com
+domain:radiojavan.com
+domain:rjassets.com
+domain:rjapp-content.app
 domain:30nama.com
 domain:digimoviez.com
 domain:zarfilm.com'
-	option ip_list 'geoip:netflix
-geoip:telegram'
+	option ip_list 'ext:geoip-services.dat:netflix
+ext:geoip-services.dat:telegram'
 EOF
 
       if [ ! -f "/root/geo-update.sh" ]; then
+        curl -L -o /tmp/geoip.dat https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geoip.dat && mv /tmp/geoip.dat /usr/share/v2ray/geoip.dat
         cat << EOF > /root/geo-update.sh
-        rm -f /tmp/geoip /tmp/geosite.dat
-curl -L -o /tmp/geoip.dat https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geoip.dat && mv /tmp/geoip.dat /usr/share/v2ray/geoip.dat
+curl -L -o /tmp/security-ip.dat https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/security-ip.dat && mv /tmp/security-ip.dat /usr/share/v2ray/security-ip.dat
+curl -L -o /tmp/geoip-services.dat https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geoip-services.dat && mv /tmp/geoip-services.dat /usr/share/v2ray/geoip-services.dat
 curl -L -o /tmp/geosite.dat https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geosite.dat && mv /tmp/geosite.dat /usr/share/v2ray/geosite.dat
 EOF
         chmod +x /root/geo-update.sh
