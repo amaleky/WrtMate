@@ -548,8 +548,22 @@ EOF
       uci set fstab.@global[0].check_fs='1'
       uci commit fstab
       /etc/init.d/fstab boot
-      read -r -p "Do You Want To Use USB as Router Storage? (Yes/no): " EXTEND_STORAGE
-      if [[ "$EXTEND_STORAGE" != "no" ]]; then
+      read -r -p "Do You Want To Access USB Data Using SMB? (Yes/no): " SMB_CONFIG
+      if [[ "$SMB_CONFIG" != "no" ]]; then
+        opkg install luci-app-samba4
+        uci add samba4 sambashare
+        uci set samba4.@sambashare[-1].name='Share'
+        uci set samba4.@sambashare[-1].path='/mnt/sda1'
+        uci set samba4.@sambashare[-1].read_only='no'
+        uci set samba4.@sambashare[-1].guest_ok='yes'
+        uci set samba4.@sambashare[-1].create_mask='0666'
+        uci set samba4.@sambashare[-1].dir_mask='0777'
+        uci commit samba4
+        /etc/init.d/samba4 restart
+        chmod -R 777 /mnt/sda1
+      fi
+      read -r -p "Do You Want To Use USB as Router Storage? (yes/No): " EXTEND_STORAGE
+      if [[ "$EXTEND_STORAGE" == "yes" ]]; then
         opkg install block-mount kmod-fs-ext4 e2fsprogs parted
         parted -s /dev/sda -- mklabel gpt mkpart extroot 2048s -2048s
         DEVICE="$(block info | sed -n -e '/MOUNT="\S*\/overlay"/s/:\s.*$//p')"
