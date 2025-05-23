@@ -99,9 +99,6 @@ run_commands() {
     "Recommended")
       opkg install openssh-sftp-server curl iperf3 htop nload
       ;;
-    "SQM")
-      opkg install luci-app-sqm
-      ;;
     "Passwall")
       read -r -p "Do You Want To Install Hiddify? (Yes/no): " HIDDIFY_INSTALL
       read -r -p "Do You Want To Install WARP? (Yes/no): " WARP_INSTALL
@@ -289,16 +286,16 @@ domain:zarfilm.com'
 ext:geoip-services.dat:telegram'
 EOF
 
-      if [ ! -f "/root/geo-update.sh" ]; then
+      if [ ! -f "/usr/share/v2ray/geo-update.sh" ]; then
         curl -L -o /tmp/geoip.dat https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geoip.dat && mv /tmp/geoip.dat /usr/share/v2ray/geoip.dat
-        cat << EOF > /root/geo-update.sh
+        cat << EOF > /usr/share/v2ray/geo-update.sh
 curl -L -o /tmp/security-ip.dat https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/security-ip.dat && mv /tmp/security-ip.dat /usr/share/v2ray/security-ip.dat
 curl -L -o /tmp/geoip-services.dat https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geoip-services.dat && mv /tmp/geoip-services.dat /usr/share/v2ray/geoip-services.dat
 curl -L -o /tmp/geosite.dat https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geosite.dat && mv /tmp/geosite.dat /usr/share/v2ray/geosite.dat
 EOF
-        chmod +x /root/geo-update.sh
-        echo "0 6 * * 0 /root/geo-update.sh" >> /etc/crontabs/root
-        /root/geo-update.sh
+        chmod +x /usr/share/v2ray/geo-update.sh
+        echo "0 6 * * 0 /usr/share/v2ray/geo-update.sh" >> /etc/crontabs/root
+        /usr/share/v2ray/geo-update.sh
       fi
 
       if [[ "$WARP_INSTALL" != "no" ]]; then
@@ -335,8 +332,8 @@ EOF
         esac
         wget -O /tmp/warp.zip https://github.com/bepass-org/warp-plus/releases/latest/download/warp-plus_linux-$DETECTED_ARCH.zip
         unzip -o /tmp/warp.zip -d /tmp
-        mv /tmp/warp-plus /usr/bin/warp
-        chmod +x /usr/bin/warp
+        mv /tmp/warp-plus /usr/bin/warp-plus
+        chmod +x /usr/bin/warp-plus
 
         cat << EOF > /etc/init.d/warp-plus
 #!/bin/sh /etc/rc.common
@@ -345,7 +342,7 @@ USE_PROCD=1
 
 start_service() {
     procd_open_instance
-    procd_set_param command /usr/bin/warp --scan --dns $IPV4_DNS --bind 0.0.0.0:8086
+    procd_set_param command /usr/bin/warp-plus --scan --dns $IPV4_DNS --bind 0.0.0.0:8086
     procd_set_param stdout 1
     procd_set_param stderr 1
     procd_set_param respawn
@@ -361,7 +358,7 @@ USE_PROCD=1
 
 start_service() {
     procd_open_instance
-    procd_set_param command /usr/bin/warp --scan --cfon --country GB --dns $IPV4_DNS --bind 0.0.0.0:8087
+    procd_set_param command /usr/bin/warp-plus --scan --cfon --country GB --dns $IPV4_DNS --bind 0.0.0.0:8087
     procd_set_param stdout 1
     procd_set_param stderr 1
     procd_set_param respawn
@@ -373,14 +370,15 @@ EOF
         cat << EOF > /etc/hotplug.d/iface/99-warp
 #!/bin/sh
 [ "$INTERFACE" = "wan" ] || [ "$INTERFACE" = "wan6" ] || exit 0
-service warp restart
+/etc/init.d/warp-plus restart
+/etc/init.d/warp-psiphon restart
 EOF
         chmod +x /etc/hotplug.d/iface/99-warp
 
-        service warp-plus enable
-        service warp-plus restart
-        service warp-psiphon enable
-        service warp-psiphon restart
+        /etc/init.d/warp-plus enable
+        /etc/init.d/warp-plus restart
+        /etc/init.d/warp-psiphon enable
+        /etc/init.d/warp-psiphon restart
       fi
 
       if [[ "$HIDDIFY_INSTALL" != "no" ]]; then
@@ -425,38 +423,39 @@ EOF
         esac
         wget -O /tmp/hiddify.tar.gz https://github.com/hiddify/hiddify-core/releases/latest/download/hiddify-cli-linux-$DETECTED_ARCH.tar.gz
         tar -xvzf /tmp/hiddify.tar.gz -C /tmp
-        mv /tmp/HiddifyCli /usr/bin/hiddify
-        chmod +x /usr/bin/hiddify
+        mv /tmp/HiddifyCli /usr/bin/hiddify-cli
+        chmod +x /usr/bin/hiddify-cli
+        mkdir /root/hiddify/
 
-        cat << EOF > /etc/init.d/hiddify
+        cat << EOF > /etc/init.d/hiddify-cli
 #!/bin/sh /etc/rc.common
 START=91
 USE_PROCD=1
 
 start_service() {
     procd_open_instance
-    procd_set_param command /usr/bin/hiddify run -c /root/config.conf -d /root/setting.conf
+    procd_set_param command /usr/bin/hiddify-cli run -c /root/hiddify/configs.conf -d /root/hiddify/settings.conf
     procd_set_param stdout 1
     procd_set_param stderr 1
     procd_set_param respawn
     procd_close_instance
 }
 EOF
-        chmod +x /etc/init.d/hiddify
+        chmod +x /etc/init.d/hiddify-cli
 
         cat << EOF > /etc/hotplug.d/iface/99-hiddify
 #!/bin/sh
 [ "$INTERFACE" = "wan" ] || [ "$INTERFACE" = "wan6" ] || exit 0
-service hiddify restart
+/etc/init.d/hiddify-cli restart
 EOF
         chmod +x /etc/hotplug.d/iface/99-hiddify
-        if [[ ! -e /root/config.conf ]]; then
-          cat << EOF > /root/config.conf
+        if [[ ! -e /root/hiddify/configs.conf ]]; then
+          cat << EOF > /root/hiddify/configs.conf
 socks://127.0.0.1:8087
 EOF
         fi
 
-        cat << EOF > /root/setting.conf
+        cat << EOF > /root/hiddify/settings.conf
 {
   "region": "other",
   "block-ads": false,
@@ -495,11 +494,11 @@ EOF
 }
 EOF
 
-        service hiddify enable
-        service hiddify restart
+        /etc/init.d/hiddify-cli enable
+        /etc/init.d/hiddify-cli restart
       fi
       uci commit passwall2
-      service passwall2 restart
+      /etc/init.d/passwall2 restart
       ;;
     "Multi-WAN")
       read -r -p "Enter Your Second Interface: " SECOND_INTERFACE_NAME
@@ -548,7 +547,7 @@ EOF
       uci set fstab.@mount[-1].enabled='1'
       uci set fstab.@global[0].check_fs='1'
       uci commit fstab
-      service fstab boot
+      /etc/init.d/fstab boot
       read -r -p "Do You Want To Extend Storage? (Yes/no): " EXTEND_STORAGE
       if [[ "$EXTEND_STORAGE" != "no" ]]; then
         opkg install block-mount kmod-fs-ext4 e2fsprogs parted
@@ -575,8 +574,8 @@ EOF
       ;;
     "AdGuard")
       opkg install adguardhome
-      service adguardhome enable
-      service adguardhome restart
+      /etc/init.d/adguardhome enable
+      /etc/init.d/adguardhome restart
       NET_ADDR=$(/sbin/ip -o -4 addr list br-lan | awk 'NR==1{ split($4, ip_addr, "/"); print ip_addr[1]; exit }')
       NET_ADDR6=$(/sbin/ip -o -6 addr list br-lan scope global | awk '$4 ~ /^fd|^fc/ { split($4, ip_addr, "/"); print ip_addr[1]; exit }')
       uci set dhcp.@dnsmasq[0].port="54"
@@ -593,11 +592,14 @@ EOF
       uci add_list dhcp.lan.dhcp_option='15,'"lan"
       uci add_list dhcp.lan.dns="$NET_ADDR6"
       uci commit dhcp
-      service dnsmasq restart
-      service odhcpd restart
+      /etc/init.d/dnsmasq restart
+      /etc/init.d/odhcpd restart
       ;;
     "Swap")
       opkg install zram-swap
+      ;;
+    "SQM")
+      opkg install luci-app-sqm
       ;;
     "IRQ")
       opkg install luci-app-irqbalance
@@ -616,7 +618,7 @@ EOF
 menu() {
   PS3="Enter Your Option: "
   OPTIONS=(
-    "Setup" "Upgrade" "Recommended" "SQM" "Passwall" "Multi-WAN" "USB-WAN" "USB-Storage" "AdGuard" "Swap" "IRQ" "Quit"
+    "Setup" "Upgrade" "Recommended" "Passwall" "Multi-WAN" "USB-WAN" "USB-Storage" "AdGuard" "Swap" "SQM" "IRQ" "Quit"
   )
   select CHOICE in "${OPTIONS[@]}"; do
     run_commands "$CHOICE"
