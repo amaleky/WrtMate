@@ -367,7 +367,7 @@ start_service() {
 EOF
         chmod +x /etc/init.d/warp-psiphon
 
-        cat << EOF > /etc/hotplug.d/iface/99-warp
+        cat << 'EOF' > /etc/hotplug.d/iface/99-warp
 #!/bin/sh
 [ "$INTERFACE" = "wan" ] || [ "$INTERFACE" = "wan6" ] || exit 0
 /etc/init.d/warp-plus restart
@@ -443,7 +443,7 @@ start_service() {
 EOF
         chmod +x /etc/init.d/hiddify-cli
 
-        cat << EOF > /etc/hotplug.d/iface/99-hiddify
+        cat << 'EOF' > /etc/hotplug.d/iface/99-hiddify
 #!/bin/sh
 [ "$INTERFACE" = "wan" ] || [ "$INTERFACE" = "wan6" ] || exit 0
 /etc/init.d/hiddify-cli restart
