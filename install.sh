@@ -541,14 +541,14 @@ EOF
       opkg install comgt-ncm kmod-usb-net-huawei-cdc-ncm usb-modeswitch kmod-usb-serial kmod-usb-serial-option kmod-usb-serial-wwan comgt-ncm luci-proto-3g luci-proto-ncm luci-proto-qmi kmod-usb-net-huawei-cdc-ncm usb-modeswitch
       ;;
     "USB-Storage")
-      opkg install kmod-usb-storage kmod-usb-storage-uas usbutils block-mount e2fsprogs kmod-fs-ext4
+      opkg install kmod-usb-storage kmod-usb-storage-uas usbutils block-mount e2fsprogs kmod-fs-ext4 libblkid kmod-fs-exfat exfat-fsck
       mkfs.ext4 /dev/sda1
       block detect | uci import fstab
       uci set fstab.@mount[-1].enabled='1'
       uci set fstab.@global[0].check_fs='1'
       uci commit fstab
       /etc/init.d/fstab boot
-      read -r -p "Do You Want To Extend Storage? (Yes/no): " EXTEND_STORAGE
+      read -r -p "Do You Want To Use USB as Router Storage? (Yes/no): " EXTEND_STORAGE
       if [[ "$EXTEND_STORAGE" != "no" ]]; then
         opkg install block-mount kmod-fs-ext4 e2fsprogs parted
         parted -s /dev/sda -- mklabel gpt mkpart extroot 2048s -2048s
