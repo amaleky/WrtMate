@@ -584,8 +584,8 @@ EOF
         uci commit fstab
         mount ${DEVICE} /mnt
         tar -C ${MOUNT} -cvf - . | tar -C /mnt -xf -
-        reboot
       fi
+      reboot
       ;;
     "AdGuard")
       opkg install adguardhome
