@@ -169,7 +169,7 @@ config global
 	option direct_dns_protocol 'auto'
 	option direct_dns_query_strategy 'UseIP'
 	option remote_dns_protocol 'tcp'
-	option remote_dns "$REMOTE_DNS"
+	option remote_dns '208.67.220.2'
 	option remote_dns_query_strategy 'UseIPv4'
 	option dns_hosts 'cloudflare-dns.com 1.1.1.1
 dns.google.com 8.8.8.8'
@@ -238,19 +238,13 @@ config global_singbox
 config shunt_rules 'Block'
 	option remarks 'Block'
 	option network 'tcp,udp'
-	option domain_list 'ext:security.dat:category-ads-all
-ext:security.dat:malware
-ext:security.dat:phishing
-ext:security.dat:cryptominers
-domain:googletagmanager.com
+	option domain_list 'geosite:category-public-tracker
+geosite:category-ads-all
+geosite:malware
+geosite:phishing
+geosite:cryptominers
+geosite:yandex
 domain:webengage.com
-domain:yandex.ru
-domain:analytics.google.com
-domain:bugsnag.com
-domain:getsentry.com
-domain:sentry-cdn.com
-domain:doubleclick.net
-domain:adservice.google.com
 domain:analytics.pinterest.com'
 	option ip_list 'ext:security-ip.dat:malware
 ext:security-ip.dat:phishing'
@@ -258,30 +252,30 @@ ext:security-ip.dat:phishing'
 config shunt_rules 'Sanction'
 	option remarks 'Sanction'
 	option network 'tcp,udp'
-	option domain_list 'ext:geosite.dat:sanctioned
-domain:io
+	option domain_list 'geosite:category-entertainment
+geosite:category-ai-!cn
+geosite:category-dev
+geosite:sanctioned
+domain:one.one.one.one
 domain:dev
-domain:googleapis.com
-domain:youtube.com
-domain:googlevideo.com
-domain:ggpht.com
-domain:ytimg.com'
-	option ip_list 'ext:geoip-services.dat:openai'
+domain:io'
+	option ip_list 'ext:geoip-services.dat:openai
+1.1.1.1
+1.0.0.1
+2606:4700:4700::1111
+2606:4700:4700::1001'
 
 config shunt_rules 'Censor'
 	option remarks 'Censor'
 	option network 'tcp,udp'
-	option domain_list 'ext:geosite.dat:nsfw
-ext:geosite.dat:social
+	option domain_list 'geosite:category-anticensorship
+geosite:social
+geosite:nsfw
 domain:v2ray.com
-domain:hiddify.com
 domain:leakfa.com
-domain:ooni.org
-domain:torproject.org
 domain:radiojavan.com
 domain:rjassets.com
 domain:rjapp-content.app
-domain:tmdb.org
 domain:30nama.com
 domain:digimoviez.com
 domain:zarfilm.com'
@@ -293,7 +287,6 @@ EOF
         curl -L -o /tmp/geoip.dat https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geoip.dat && mv /tmp/geoip.dat /usr/share/v2ray/geoip.dat
         cat << EOF > /usr/share/v2ray/geo-update.sh
 curl -L -o /tmp/security-ip.dat https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/security-ip.dat && mv /tmp/security-ip.dat /usr/share/v2ray/security-ip.dat
-curl -L -o /tmp/security.dat https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/security.dat && mv /tmp/security.dat /usr/share/v2ray/security.dat
 curl -L -o /tmp/geoip-services.dat https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geoip-services.dat && mv /tmp/geoip-services.dat /usr/share/v2ray/geoip-services.dat
 curl -L -o /tmp/geosite.dat https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geosite.dat && mv /tmp/geosite.dat /usr/share/v2ray/geosite.dat
 EOF
