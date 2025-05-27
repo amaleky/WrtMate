@@ -6,24 +6,44 @@
 # License: MIT
 #
 # Usage:
-#   bash -c "$(wget -cO- https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/install.sh)"
+#   bash -c "$(wget -cO- https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh)"
 #
 # For more information, see the README.md
 
-prepare() {
-  opkg update
-  opkg install jq curl
-  IPV4_DNS="208.67.222.2"
-  IPV6_DNS="2620:0:ccc::2"
-  NTP_SERVER="216.239.35.0"
-  LAN_IPADDR="$(uci get network.lan.ipaddr)"
+set -euo pipefail
+
+# Global variables
+IPV4_DNS="208.67.222.2"
+IPV6_DNS="2620:0:ccc::2"
+NTP_SERVER="216.239.35.0"
+LAN_IPADDR="$(uci get network.lan.ipaddr 2>/dev/null || echo '192.168.1.1')"
+
+# Print a formatted message
+info() {
+  echo -e "\033[1;34m[INFO]\033[0m $1"
 }
 
+# Print an error message and exit
+error_exit() {
+  echo -e "\033[1;31m[ERROR]\033[0m $1" >&2
+  exit 1
+}
+
+# Prepare environment and check dependencies
+prepare() {
+  info "Updating package lists and installing dependencies..."
+  opkg update || error_exit "Failed to update package lists."
+  opkg install jq curl || error_exit "Failed to install required packages."
+}
+
+# Run commands for each menu option
 run_commands() {
-  echo "Step $1"
-  case $1 in
+  local step="$1"
+  info "Selected: $step"
+  case "$step" in
     "Setup")
-      read -r -p "Do You Want To Change Root Password? (yes/No): " CHANGE_PASSWORD
+      echo "Do You Want To Change Root Password? (yes/no)"
+      read -e -i "no" CHANGE_PASSWORD
       if [[ "$CHANGE_PASSWORD" == "yes" ]]; then
         passwd root
       fi
@@ -77,8 +97,9 @@ run_commands() {
         wifi reload
       fi
 
-      read -r -p "Enter Your Router IP [$LAN_IPADDR]: " CUSTOM_LAN_IPADDR
-      if [ -n "$CUSTOM_LAN_IPADDR" ]; then
+      echo "Enter Your Router IP [default: $LAN_IPADDR]: "
+      read -e -i "$LAN_IPADDR" CUSTOM_LAN_IPADDR
+      if [[ "$CUSTOM_LAN_IPADDR" != "$LAN_IPADDR" ]]; then
         uci set network.lan.ipaddr="$CUSTOM_LAN_IPADDR"
         uci set network.lan.netmask='255.255.255.0'
         uci commit network
@@ -87,48 +108,52 @@ run_commands() {
       ;;
     "Upgrade")
       . /etc/openwrt_release
-      LATEST_VERSION=$(curl -s "https://downloads.openwrt.org/.versions.json" | jq -r ".stable_version")
+      LATEST_VERSION=$(curl -s "https://downloads.openwrt.org/.versions.json" | jq -r ".stable_version") || error_exit "Failed to fetch latest OpenWrt version."
       if [[ "$LATEST_VERSION" != "$DISTRIB_RELEASE" ]]; then
-        read -r -p "Do You Want To Upgrade Firmware? (yes/No): " FIRMWARE_UPGRADE
+        echo "Do You Want To Upgrade Firmware? (yes/no)"
+        read -e -i "no" FIRMWARE_UPGRADE
         if [[ "$FIRMWARE_UPGRADE" == "yes" ]]; then
           DEVICE_ID=$(awk '{print tolower($0)}' /tmp/sysinfo/model | tr ' ' '_')
-          FILE_NAME=$(curl -s "https://downloads.openwrt.org/releases/${LATEST_VERSION}/targets/${DISTRIB_TARGET}/profiles.json" | jq -r --arg id "$DEVICE_ID" '.profiles[$id].images | map(select(.type == "sysupgrade")) | sort_by((.name | contains("squashfs")) | not) | .[0].name')
+          FILE_NAME=$(curl -s "https://downloads.openwrt.org/releases/${LATEST_VERSION}/targets/${DISTRIB_TARGET}/profiles.json" | jq -r --arg id "$DEVICE_ID" '.profiles[$id].images | map(select(.type == "sysupgrade")) | sort_by((.name | contains("squashfs")) | not) | .[0].name') || error_exit "Failed to fetch device profile."
           DOWNLOAD_URL="https://downloads.openwrt.org/releases/${LATEST_VERSION}/targets/${DISTRIB_TARGET}/${FILE_NAME}"
-          curl -L -o /tmp/firmware.bin "${DOWNLOAD_URL}" && sysupgrade -n -v /tmp/firmware.bin
+          curl -L -o /tmp/firmware.bin "${DOWNLOAD_URL}" || error_exit "Failed to download firmware."
+          sysupgrade -n -v /tmp/firmware.bin || error_exit "Failed to upgrade firmware."
         fi
       fi
 
       UPGRADABLE_PACKAGES=$(opkg list-upgradable | cut -f 1 -d ' ')
       if [ -n "$UPGRADABLE_PACKAGES" ]; then
         for PACKAGE in $UPGRADABLE_PACKAGES; do
-          opkg upgrade "$PACKAGE"
+          opkg upgrade "$PACKAGE" || error_exit "Failed to upgrade package $PACKAGE."
         done
       fi
       ;;
     "Recommended")
-      opkg install openssh-sftp-server iperf3 htop nload
+      opkg install openssh-sftp-server iperf3 htop nload || error_exit "Failed to install recommended packages."
       ;;
     "Passwall")
-      read -r -p "Do You Want To Install Hiddify? (Yes/no): " HIDDIFY_INSTALL
-      read -r -p "Do You Want To Install WARP? (Yes/no): " WARP_INSTALL
-      opkg remove dnsmasq
-      opkg install dnsmasq-full kmod-nft-socket kmod-nft-tproxy unzip
-      curl -L -o /tmp/packages.zip "https://github.com/xiaorouji/openwrt-passwall2/releases/latest/download/passwall_packages_ipk_$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2).zip"
+      echo "Do You Want To Install Hiddify? (yes/no)"
+      read -e -i "yes" HIDDIFY_INSTALL
+      echo "Do You Want To Install WARP? (yes/no)"
+      read -e -i "yes" WARP_INSTALL
+      opkg remove dnsmasq || error_exit "Failed to remove dnsmasq."
+      opkg install dnsmasq-full kmod-nft-socket kmod-nft-tproxy unzip || error_exit "Failed to install Passwall dependencies."
+      curl -L -o /tmp/packages.zip "https://github.com/xiaorouji/openwrt-passwall2/releases/latest/download/passwall_packages_ipk_$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2).zip" || error_exit "Failed to download Passwall packages."
       unzip -o /tmp/packages.zip -d /tmp/passwall
       for pkg in /tmp/passwall/*.ipk; do opkg install "$pkg"; done
-      curl -L -o /tmp/passwall2.ipk "$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | grep "browser_download_url" | grep -o 'https://[^"]*luci-[^_]*_luci-app-passwall2_[^_]*_all\.ipk' | head -n1)"
-      opkg install /tmp/passwall2.ipk
-      curl -L -o /etc/config/passwall2 "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/config/passwall2"
+      curl -L -o /tmp/passwall2.ipk "$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | grep "browser_download_url" | grep -o 'https://[^"]*luci-[^_]*_luci-app-passwall2_[^_]*_all\.ipk' | head -n1)" || error_exit "Failed to download Passwall2 package."
+      opkg install /tmp/passwall2.ipk || error_exit "Failed to install Passwall2."
+      curl -L -o /etc/config/passwall2 "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/config/passwall2" || error_exit "Failed to download passwall2 config."
 
       if [ ! -f "/usr/share/v2ray/geo-update.sh" ]; then
-        curl -L -o /usr/share/v2ray/geo-update.sh "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/usr/share/v2ray/geo-update.sh"
+        curl -L -o /usr/share/v2ray/geo-update.sh "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/usr/share/v2ray/geo-update.sh" || error_exit "Failed to download geo-update.sh."
         chmod +x /usr/share/v2ray/geo-update.sh
-        /usr/share/v2ray/geo-update.sh
-        curl -L -o /etc/crontabs/root "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/crontabs/root"
+        /usr/share/v2ray/geo-update.sh || error_exit "Failed to update geo data."
+        curl -L -o /etc/crontabs/root "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/crontabs/root" || error_exit "Failed to download crontab root."
       fi
 
       if [[ "$WARP_INSTALL" != "no" ]]; then
-        opkg install unzip
+        opkg install unzip || error_exit "Failed to install unzip."
         case "$(uname -m)" in
           x86_64) DETECTED_ARCH=amd64 ;;
           aarch64) DETECTED_ARCH=arm64 ;;
@@ -138,20 +163,20 @@ run_commands() {
           mips64) DETECTED_ARCH=mips64 ;;
           mips64el) DETECTED_ARCH=mips64le ;;
           riscv64) DETECTED_ARCH=riscv64 ;;
-          *) echo "Unsupported cpu architecture"; exit 1 ;;
+          *) error_exit "Unsupported CPU architecture." ;;
         esac
-        curl -L -o /tmp/warp.zip "https://github.com/bepass-org/warp-plus/releases/latest/download/warp-plus_linux-$DETECTED_ARCH.zip"
+        curl -L -o /tmp/warp.zip "https://github.com/bepass-org/warp-plus/releases/latest/download/warp-plus_linux-$DETECTED_ARCH.zip" || error_exit "Failed to download WARP zip."
         unzip -o /tmp/warp.zip -d /tmp
         mv /tmp/warp-plus /usr/bin/warp-plus
         chmod +x /usr/bin/warp-plus
 
-        curl -L -o /etc/init.d/warp-plus "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/init.d/warp-plus"
+        curl -L -o /etc/init.d/warp-plus "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/init.d/warp-plus" || error_exit "Failed to download warp-plus init script."
         chmod +x /etc/init.d/warp-plus
 
-        curl -L -o /etc/init.d/warp-psiphon "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/init.d/warp-psiphon"
+        curl -L -o /etc/init.d/warp-psiphon "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/init.d/warp-psiphon" || error_exit "Failed to download warp-psiphon init script."
         chmod +x /etc/init.d/warp-psiphon
 
-        curl -L -o /etc/hotplug.d/iface/99-warp "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/hotplug.d/iface/99-warp"
+        curl -L -o /etc/hotplug.d/iface/99-warp "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/hotplug.d/iface/99-warp" || error_exit "Failed to download 99-warp hotplug script."
         chmod +x /etc/hotplug.d/iface/99-warp
 
         /etc/init.d/warp-plus enable
@@ -171,25 +196,27 @@ run_commands() {
           armv7l|armv7) DETECTED_ARCH="armv7" ;;
           mips*) DETECTED_ARCH="$arch" ;;
           s390x) DETECTED_ARCH="s390x" ;;
-          *) echo "Unsupported cpu architecture"; exit 1 ;;
+          *) error_exit "Unsupported CPU architecture." ;;
         esac
-        curl -L -o /tmp/hiddify.tar.gz "https://github.com/hiddify/hiddify-core/releases/latest/download/hiddify-cli-linux-$DETECTED_ARCH.tar.gz"
+        curl -L -o /tmp/hiddify.tar.gz "https://github.com/hiddify/hiddify-core/releases/latest/download/hiddify-cli-linux-$DETECTED_ARCH.tar.gz" || error_exit "Failed to download Hiddify."
         tar -xvzf /tmp/hiddify.tar.gz -C /tmp
         mv /tmp/HiddifyCli /usr/bin/hiddify-cli
         chmod +x /usr/bin/hiddify-cli
-        mkdir /root/hiddify/
+        if [ ! -d /root/hiddify/ ]; then
+          mkdir /root/hiddify/
+        fi
 
-        curl -L -o /etc/init.d/hiddify-cli "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/init.d/hiddify-cli"
+        curl -L -o /etc/init.d/hiddify-cli "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/init.d/hiddify-cli" || error_exit "Failed to download hiddify-cli init script."
         chmod +x /etc/init.d/hiddify-cli
 
-        curl -L -o /etc/hotplug.d/iface/99-hiddify "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/hotplug.d/iface/99-hiddify"
+        curl -L -o /etc/hotplug.d/iface/99-hiddify "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/hotplug.d/iface/99-hiddify" || error_exit "Failed to download 99-hiddify hotplug script."
         chmod +x /etc/hotplug.d/iface/99-hiddify
 
         if [[ ! -e /root/hiddify/configs.conf ]]; then
-          curl -L -o /root/hiddify/configs.conf "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/root/hiddify/configs.conf"
+          curl -L -o /root/hiddify/configs.conf "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/root/hiddify/configs.conf" || error_exit "Failed to download hiddify configs."
         fi
 
-        curl -L -o /root/hiddify/settings.conf "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/root/hiddify/settings.conf"
+        curl -L -o /root/hiddify/settings.conf "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/root/hiddify/settings.conf" || error_exit "Failed to download hiddify settings."
 
         /etc/init.d/hiddify-cli enable
         /etc/init.d/hiddify-cli restart
@@ -229,25 +256,27 @@ run_commands() {
           /etc/init.d/network restart
         fi
       fi
-      read -r -p "Do You Need a Load Balancer? (yes/No): " INSTALL_LOAD_BALANCER
+      echo "Do You Need a Load Balancer? (yes/no)"
+      read -e -i "no" INSTALL_LOAD_BALANCER
       if [[ "$INSTALL_LOAD_BALANCER" == "yes" ]]; then
-        opkg install kmod-macvlan mwan3 luci-app-mwan3 iptables-nft ip6tables-nft
+        opkg install kmod-macvlan mwan3 luci-app-mwan3 iptables-nft ip6tables-nft || error_exit "Failed to install load balancer packages."
       fi
       ;;
     "USB-WAN")
-      opkg install comgt-ncm kmod-usb-net-huawei-cdc-ncm usb-modeswitch kmod-usb-serial kmod-usb-serial-option kmod-usb-serial-wwan comgt-ncm luci-proto-3g luci-proto-ncm luci-proto-qmi kmod-usb-net-huawei-cdc-ncm usb-modeswitch
+      opkg install comgt-ncm kmod-usb-net-huawei-cdc-ncm usb-modeswitch kmod-usb-serial kmod-usb-serial-option kmod-usb-serial-wwan comgt-ncm luci-proto-3g luci-proto-ncm luci-proto-qmi kmod-usb-net-huawei-cdc-ncm usb-modeswitch || error_exit "Failed to install USB-WAN packages."
       ;;
     "USB-Storage")
-      opkg install kmod-usb-storage kmod-usb-storage-uas usbutils block-mount e2fsprogs kmod-fs-ext4 libblkid kmod-fs-exfat exfat-fsck
-      mkfs.ext4 /dev/sda1
-      block detect | uci import fstab
+      opkg install kmod-usb-storage kmod-usb-storage-uas usbutils block-mount e2fsprogs kmod-fs-ext4 libblkid kmod-fs-exfat exfat-fsck || error_exit "Failed to install USB-Storage packages."
+      mkfs.ext4 /dev/sda1 || error_exit "Failed to format USB storage."
+      block detect | uci import fstab || error_exit "Failed to detect block devices."
       uci set fstab.@mount[-1].enabled='1'
       uci set fstab.@global[0].check_fs='1'
       uci commit fstab
-      /etc/init.d/fstab boot
-      read -r -p "Do You Want To Access USB Data Using SMB? (Yes/no): " SMB_CONFIG
+      /etc/init.d/fstab boot || error_exit "Failed to boot fstab."
+      echo "Do You Want To Access USB Data Using SMB? (yes/no)"
+      read -e -i "yes" SMB_CONFIG
       if [[ "$SMB_CONFIG" != "no" ]]; then
-        opkg install luci-app-samba4
+        opkg install luci-app-samba4 || error_exit "Failed to install Samba4."
         uci add samba4 sambashare
         uci set samba4.@sambashare[-1].name='Share'
         uci set samba4.@sambashare[-1].path='/mnt/sda1'
@@ -259,10 +288,11 @@ run_commands() {
         /etc/init.d/samba4 restart
         chmod -R 777 /mnt/sda1
       fi
-      read -r -p "Do You Want To Use USB as Router Storage? (yes/No): " EXTEND_STORAGE
+      echo "Do You Want To Use USB as Router Storage? (yes/no)"
+      read -e -i "no" EXTEND_STORAGE
       if [[ "$EXTEND_STORAGE" == "yes" ]]; then
-        opkg install block-mount kmod-fs-ext4 e2fsprogs parted
-        parted -s /dev/sda -- mklabel gpt mkpart extroot 2048s -2048s
+        opkg install block-mount kmod-fs-ext4 e2fsprogs parted || error_exit "Failed to install storage extension packages."
+        parted -s /dev/sda -- mklabel gpt mkpart extroot 2048s -2048s || error_exit "Failed to partition USB storage."
         DEVICE="$(block info | sed -n -e '/MOUNT="\S*\/overlay"/s/:\s.*$//p')"
         uci -q delete fstab.rwm
         uci set fstab.rwm="mount"
@@ -270,7 +300,7 @@ run_commands() {
         uci set fstab.rwm.target="/rwm"
         uci commit fstab
         DEVICE="/dev/sda1"
-        mkfs.ext4 -L extroot ${DEVICE}
+        mkfs.ext4 -L extroot ${DEVICE} || error_exit "Failed to format extroot."
         eval $(block info ${DEVICE} | grep -o -e 'UUID="\S*"')
         eval $(block info | grep -o -e 'MOUNT="\S*/overlay"')
         uci -q delete fstab.extroot
@@ -278,13 +308,13 @@ run_commands() {
         uci set fstab.extroot.uuid="${UUID}"
         uci set fstab.extroot.target="${MOUNT}"
         uci commit fstab
-        mount ${DEVICE} /mnt
-        tar -C ${MOUNT} -cvf - . | tar -C /mnt -xf -
+        mount ${DEVICE} /mnt || error_exit "Failed to mount extroot."
+        tar -C ${MOUNT} -cvf - . | tar -C /mnt -xf - || error_exit "Failed to copy overlay data."
       fi
       reboot
       ;;
     "AdGuard")
-      opkg install adguardhome
+      opkg install adguardhome || error_exit "Failed to install AdGuard Home."
       /etc/init.d/adguardhome enable
       /etc/init.d/adguardhome restart
       NET_ADDR=$(/sbin/ip -o -4 addr list br-lan | awk 'NR==1{ split($4, ip_addr, "/"); print ip_addr[1]; exit }')
@@ -307,31 +337,36 @@ run_commands() {
       /etc/init.d/odhcpd restart
       ;;
     "Swap")
-      opkg install zram-swap
+      opkg install zram-swap || error_exit "Failed to install zram-swap."
       ;;
     "SQM")
-      opkg install luci-app-sqm
+      opkg install luci-app-sqm || error_exit "Failed to install SQM."
       ;;
     "IRQ")
-      opkg install luci-app-irqbalance
+      opkg install luci-app-irqbalance || error_exit "Failed to install IRQ balance."
       uci set irqbalance.irqbalance.enabled='1'
       uci commit irqbalance
       /etc/init.d/irqbalance enable
       /etc/init.d/irqbalance restart
       ;;
     *)
-      exit 0
+      info "Invalid option."
       ;;
   esac
   menu
 }
 
+# Main menu for user interaction
 menu() {
   PS3="Enter Your Option: "
   OPTIONS=(
     "Setup" "Upgrade" "Recommended" "Passwall" "Multi-WAN" "USB-WAN" "USB-Storage" "AdGuard" "Swap" "SQM" "IRQ" "Quit"
   )
   select CHOICE in "${OPTIONS[@]}"; do
+    if [[ "$CHOICE" == "Quit" ]]; then
+      info "Exiting WrtMate installer."
+      exit 0
+    fi
     run_commands "$CHOICE"
   done
 }

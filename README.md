@@ -14,7 +14,7 @@
 
 To ensure optimal performance, your device should meet the following minimum specifications:
 
-- **RAM:** 512 MB
+- **RAM:** 500 MB
 - **Storage:** 100 MB available space
 - **CPU:** Dual-core processor
 
@@ -46,7 +46,7 @@ To install WrtMate on your OpenWrt device, follow these steps:
 3. **Run the installation script:**
 
    ```bash
-   bash -c "$(wget -cO- https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/install.sh)"
+   bash -c "$(wget -cO- https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh)"
    ```
 
 ## Usage
