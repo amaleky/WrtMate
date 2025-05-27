@@ -108,13 +108,13 @@ run_commands() {
       for pkg in /tmp/passwall/*.ipk; do opkg install "$pkg"; done
       curl -L -o /tmp/passwall2.ipk "$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | grep "browser_download_url" | grep -o 'https://[^"]*luci-[^_]*_luci-app-passwall2_[^_]*_all\.ipk' | head -n1)"
       opkg install /tmp/passwall2.ipk
-      curl -L -o /etc/config/passwall2 https://raw.githubusercontent.com/amaleky/WrtMate/main/src/etc/config/passwall2
+      curl -L -o /etc/config/passwall2 "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/config/passwall2"
 
       if [ ! -f "/usr/share/v2ray/geo-update.sh" ]; then
-        curl -L -o /usr/share/v2ray/geo-update.sh https://raw.githubusercontent.com/amaleky/WrtMate/main/src/usr/share/v2ray/geo-update.sh
+        curl -L -o /usr/share/v2ray/geo-update.sh "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/usr/share/v2ray/geo-update.sh"
         chmod +x /usr/share/v2ray/geo-update.sh
         /usr/share/v2ray/geo-update.sh
-        curl -L -o /etc/crontabs/root https://raw.githubusercontent.com/amaleky/WrtMate/main/src/etc/crontabs/root
+        curl -L -o /etc/crontabs/root "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/crontabs/root"
       fi
 
       if [[ "$WARP_INSTALL" != "no" ]]; then
@@ -135,13 +135,13 @@ run_commands() {
         mv /tmp/warp-plus /usr/bin/warp-plus
         chmod +x /usr/bin/warp-plus
 
-        curl -L -o /etc/init.d/warp-plus https://raw.githubusercontent.com/amaleky/WrtMate/main/src/etc/init.d/warp-plus
+        curl -L -o /etc/init.d/warp-plus "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/init.d/warp-plus"
         chmod +x /etc/init.d/warp-plus
 
-        curl -L -o /etc/init.d/warp-psiphon https://raw.githubusercontent.com/amaleky/WrtMate/main/src/etc/init.d/warp-psiphon
+        curl -L -o /etc/init.d/warp-psiphon "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/init.d/warp-psiphon"
         chmod +x /etc/init.d/warp-psiphon
 
-        curl -L -o /etc/hotplug.d/iface/99-warp https://raw.githubusercontent.com/amaleky/WrtMate/main/src/etc/hotplug.d/iface/99-warp
+        curl -L -o /etc/hotplug.d/iface/99-warp "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/hotplug.d/iface/99-warp"
         chmod +x /etc/hotplug.d/iface/99-warp
 
         /etc/init.d/warp-plus enable
@@ -169,17 +169,17 @@ run_commands() {
         chmod +x /usr/bin/hiddify-cli
         mkdir /root/hiddify/
 
-        curl -L -o /etc/init.d/hiddify-cli https://raw.githubusercontent.com/amaleky/WrtMate/main/src/etc/init.d/hiddify-cli
+        curl -L -o /etc/init.d/hiddify-cli "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/init.d/hiddify-cli"
         chmod +x /etc/init.d/hiddify-cli
 
-        curl -L -o /etc/hotplug.d/iface/99-hiddify https://raw.githubusercontent.com/amaleky/WrtMate/main/src/etc/hotplug.d/iface/99-hiddify
+        curl -L -o /etc/hotplug.d/iface/99-hiddify "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/hotplug.d/iface/99-hiddify"
         chmod +x /etc/hotplug.d/iface/99-hiddify
 
         if [[ ! -e /root/hiddify/configs.conf ]]; then
-          curl -L -o /root/hiddify/configs.conf https://raw.githubusercontent.com/amaleky/WrtMate/main/src/root/hiddify/configs.conf
+          curl -L -o /root/hiddify/configs.conf "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/root/hiddify/configs.conf"
         fi
 
-        curl -L -o /root/hiddify/settings.conf https://raw.githubusercontent.com/amaleky/WrtMate/main/src/root/hiddify/settings.conf
+        curl -L -o /root/hiddify/settings.conf "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/root/hiddify/settings.conf"
 
         /etc/init.d/hiddify-cli enable
         /etc/init.d/hiddify-cli restart
