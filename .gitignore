@@ -1,2 +1,7 @@
 .idea
 .vscode
+*.swp
+*.swo
+*.bak
+*.tmp
+.DS_Store

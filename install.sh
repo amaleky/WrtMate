@@ -1,4 +1,14 @@
 #!/bin/bash
+# WrtMate Installation Script
+# Automates OpenWrt setup and configuration
+#
+# Copyright (c) 2025 Alireza Maleky
+# License: MIT
+#
+# Usage:
+#   bash -c "$(wget -cO- https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/install.sh)"
+#
+# For more information, see the README.md
 
 prepare() {
   opkg update

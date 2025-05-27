@@ -1,6 +1,8 @@
 # WrtMate
 
-**WrtMate** is a utility designed to streamline the setup and management of OpenWrt-based routers. This project provides an installation script to automate the configuration process, ensuring a consistent and efficient deployment.
+![License](https://img.shields.io/github/license/amaleky/WrtMate)
+
+**WrtMate** is a utility designed to streamline the setup and management of OpenWrt-based routers. This project provides an script to automate the configuration process, ensuring a consistent and efficient deployment.
 
 ## Features
 
@@ -32,17 +34,20 @@ To install WrtMate on your OpenWrt device, follow these steps:
 
    ```bash
    ssh root@<your-router-ip>
+   ```
 
 2. **Install Bash shell:**
 
    ```bash
    opkg update
    opkg install bash
+   ```
 
 3. **Run the installation script:**
 
    ```bash
    bash -c "$(wget -cO- https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/install.sh)"
+   ```
 
 ## Usage
 
@@ -50,9 +55,12 @@ After installation, WrtMate will be configured on your device. You can manage yo
 
 ## Contributing
 
-Contributions are welcome! If you have suggestions, bug reports, or improvements, please open an issue or submit a pull request on the [GitHub repository](https://github.com/amaleky/WrtMate).
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## Code of Conduct
+
+This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md) to foster an open and welcoming environment.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](https://github.com/amaleky/WrtMate/blob/main/LICENSE) file for details.
-
+This project is licensed under the [MIT License](LICENSE).
