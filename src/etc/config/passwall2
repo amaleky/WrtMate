@@ -145,6 +145,8 @@ geosite:category-games
 geosite:category-dev
 geosite:sanctioned
 geosite:youtube
+domain:codeassist.google
+domain:mixpanel.com
 domain:one.one.one.one
 domain:cloudflare-dns.com
 domain:dns.google
@@ -154,6 +156,7 @@ domain:adguard.com
 domain:cleanbrowsing.org
 domain:opendns.com
 domain:dev
+domain:ai
 domain:io'
 	option ip_list 'ext:geoip-services.dat:openai
 208.67.220.2

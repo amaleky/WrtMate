@@ -1,3 +1,5 @@
 #!/bin/sh
-[ "$INTERFACE" = "wan" ] || [ "$INTERFACE" = "wan6" ] || exit 0
-/etc/init.d/hiddify-cli restart
+
+if [ "$INTERFACE" = "wan" ] || [ "$INTERFACE" = "wan6" ]; then
+  /etc/init.d/hiddify-cli restart
+fi

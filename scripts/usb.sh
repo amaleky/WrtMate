@@ -2,15 +2,15 @@
 # USB configuration for OpenWRT
 
 usb_wan_support() {
-  opkg install comgt-ncm kmod-usb-net-huawei-cdc-ncm usb-modeswitch kmod-usb-serial kmod-usb-serial-option kmod-usb-serial-wwan comgt-ncm luci-proto-3g luci-proto-ncm luci-proto-qmi kmod-usb-net-huawei-cdc-ncm usb-modeswitch || error "Failed to install USB-WAN packages."
+  ensure_packages "comgt-ncm kmod-usb-net-huawei-cdc-ncm usb-modeswitch kmod-usb-serial kmod-usb-serial-option kmod-usb-serial-wwan luci-proto-3g luci-proto-ncm luci-proto-qmi"
 }
 
 usb_storage_support() {
-  opkg install kmod-usb-storage kmod-usb-storage-uas usbutils block-mount e2fsprogs kmod-fs-ext4 libblkid kmod-fs-exfat exfat-fsck || error "Failed to install USB-Storage packages."
+  ensure_packages "kmod-usb-storage kmod-usb-storage-uas usbutils block-mount e2fsprogs kmod-fs-ext4 libblkid kmod-fs-exfat exfat-fsck"
 }
 
 configure_samba() {
-  opkg install luci-app-samba4 || error "Failed to install Samba4."
+  ensure_packages "luci-app-samba4"
   uci add samba4 sambashare
   uci set samba4.@sambashare[-1].name='Share'
   uci set samba4.@sambashare[-1].path='/mnt/sda1'
@@ -23,14 +23,41 @@ configure_samba() {
   chmod -R 777 /mnt/sda1
 }
 
+check_usb_device() {
+  if [ ! -b "/dev/sda" ]; then
+    error "No USB storage device found at /dev/sda"
+  fi
+
+  # Check if device is already mounted
+  if mount | grep -q "^/dev/sda1"; then
+    error "USB device is already mounted. Please unmount it first"
+  fi
+
+  # Check device size
+  local min_size_mb=100
+  local size_mb=$(blockdev --getsize64 /dev/sda | awk '{print int($1/1024/1024)}')
+  if [ "$size_mb" -lt "$min_size_mb" ]; then
+    error "USB device is too small. Minimum required size: ${min_size_mb}MB"
+  fi
+}
+
 extend_storage() {
+  check_usb_device
+
+  # Create partition table and partition
+  info "Creating partition table..."
+  parted -s /dev/sda mklabel gpt || error "Failed to create GPT label"
+  parted -s /dev/sda mkpart primary ext4 1MiB 100% || error "Failed to create partition"
+
   mkfs.ext4 /dev/sda1 || error "Failed to format USB storage."
   block detect | uci import fstab || error "Failed to detect block devices."
   uci set fstab.@mount[-1].enabled='1'
   uci set fstab.@global[0].check_fs='1'
   uci commit fstab
   /etc/init.d/fstab boot || error "Failed to boot fstab."
-  opkg install block-mount kmod-fs-ext4 e2fsprogs parted || error "Failed to install storage extension packages."
+
+  ensure_packages "block-mount kmod-fs-ext4 e2fsprogs parted"
+
   parted -s /dev/sda -- mklabel gpt mkpart extroot 2048s -2048s || error "Failed to partition USB storage."
   DEVICE="$(block info | sed -n -e '/MOUNT="\S*\/overlay"/s/:\s.*$//p')"
   uci -q delete fstab.rwm
@@ -51,23 +78,17 @@ extend_storage() {
   tar -C ${MOUNT} -cvf - . | tar -C /mnt -xf - || error "Failed to copy overlay data."
 }
 
-usb() {
-  echo "Do You Needs USB-WAN Support? (y/n)"
-  read -r -e -i "n" INSTALL_WAN
-  if [[ "$INSTALL_WAN" =~ ^[Yy] ]]; then
+main() {
+  if confirm "Do you need USB-WAN support?"; then
     usb_wan_support
   else
-    echo "Do You Want To Use USB as Router Storage? (y/n)"
-    read -r -e -i "n" EXTEND_STORAGE
-    if [[ "$EXTEND_STORAGE" =~ ^[Yy] ]]; then
+    if confirm "Do you want to use USB as router storage?"; then
       usb_storage_support
       extend_storage
       reboot
     fi
 
-    echo "Do You Want To Access USB Data Using SMB? (y/n)"
-    read -r -e -i "n" SMB_CONFIG
-    if [[ "$SMB_CONFIG" =~ ^[Yy] ]]; then
+    if confirm "Do you want to access USB data using SMB?"; then
       usb_storage_support
       configure_samba
       reboot
@@ -75,4 +96,4 @@ usb() {
   fi
 }
 
-usb
+main "$@"

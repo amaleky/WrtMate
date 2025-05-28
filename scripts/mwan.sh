@@ -3,71 +3,119 @@
 
 configure_firewall() {
   local interface_name="$1"
-  uci add_list firewall.@zone[-1].network="${interface_name}"
+  info "Configuring firewall for interface: $interface_name"
+
+  # Add IPv4 and IPv6 interfaces to firewall zone
+  uci add_list firewall.@zone[-1].network="$interface_name"
   uci add_list firewall.@zone[-1].network="${interface_name}6"
   uci commit firewall
+
   /etc/init.d/firewall restart
+  success "Firewall configured for interface: $interface_name"
 }
 
 configure_network_metrics() {
   local interface_port="$1"
+  info "Configuring network metrics..."
+
+  # Set primary WAN metrics
   uci set network.wan.metric='0'
   uci set network.wan6.metric='0'
-  uci set network.@device[0].ports="$(uci get network.@device[0].ports | sed "s/\b$interface_port\b//g" | tr -s ' ')"
+
+  # Update device ports
+  local current_ports
+  current_ports=$(uci get network.@device[0].ports)
+  local new_ports
+  new_ports=$(echo "$current_ports" | sed "s/\b$interface_port\b//g" | tr -s ' ')
+  uci set network.@device[0].ports="$new_ports"
+
+  success "Network metrics configured"
 }
 
-configure_ipv4_interface() {
-  local interface_name="$1"
-  local interface_port="$2"
+configure_interface() {
+  local name="$1"
+  local port="$2"
+  local ipv6="$3"
+  info "Configuring ${ipv6:+IPv6 }interface: $name"
 
-  uci set network.${interface_name}=interface
-  uci set network.${interface_name}.proto='dhcp'
-  uci set network.${interface_name}.device="$interface_port"
-  uci set network.globals.packet_steering='1'
-  uci set network.${interface_name}.metric='1'
-  uci set network.${interface_name}.peerdns='0'
-  uci set network.${interface_name}.dns="$(uci get network.wan.dns)"
-}
+  local suffix="${ipv6:+6}"
+  local proto="${ipv6:+dhcpv6}"
+  proto="${proto:-dhcp}"
 
-configure_ipv6_interface() {
-  local interface_name="$1"
-  local interface_port="$2"
+  # Common settings
+  uci set "network.${name}${suffix}=interface"
+  uci set "network.${name}${suffix}.proto=$proto"
+  uci set "network.${name}${suffix}.device=$port"
+  uci set "network.${name}${suffix}.metric=1"
+  uci set "network.${name}${suffix}.peerdns=0"
 
-  uci set network.${interface_name}6=interface
-  uci set network.${interface_name}6.proto='dhcpv6'
-  uci set network.${interface_name}6.device="$interface_port"
-  uci set network.${interface_name}6.reqaddress='try'
-  uci set network.${interface_name}6.reqprefix='auto'
-  uci set network.${interface_name}6.norelease='1'
-  uci set network.${interface_name}6.metric='1'
-  uci set network.${interface_name}6.peerdns='0'
-  uci set network.${interface_name}6.dns="$(uci get network.wan6.dns)"
+  if [ -n "$ipv6" ]; then
+    # IPv6-specific settings
+    uci set "network.${name}${suffix}.reqaddress=try"
+    uci set "network.${name}${suffix}.reqprefix=auto"
+    uci set "network.${name}${suffix}.norelease=1"
+    uci set "network.${name}${suffix}.dns=$(uci get network.wan6.dns)"
+  else
+    # IPv4-specific settings
+    uci set "network.globals.packet_steering=1"
+    uci set "network.${name}${suffix}.dns=$(uci get network.wan.dns)"
+  fi
+
+  success "Interface ${name}${suffix} configured"
 }
 
 install_load_balancer() {
-  opkg install kmod-macvlan mwan3 luci-app-mwan3 iptables-nft ip6tables-nft || error "Failed to install load balancer packages."
+  ensure_packages "kmod-macvlan mwan3 luci-app-mwan3 iptables-nft ip6tables-nft"
 }
 
-mwan() {
-  read -r -p "Enter Your Second Interface: " SECOND_INTERFACE_NAME
-  if [ -n "$SECOND_INTERFACE_NAME" ]; then
-    read -r -p "Enter Second Interface PORT: " SECOND_INTERFACE_PORT
-    if [ -n "$SECOND_INTERFACE_PORT" ]; then
-      configure_firewall "$SECOND_INTERFACE_NAME"
-      configure_network_metrics "$SECOND_INTERFACE_PORT"
-      configure_ipv4_interface "$SECOND_INTERFACE_NAME" "$SECOND_INTERFACE_PORT"
-      configure_ipv6_interface "$SECOND_INTERFACE_NAME" "$SECOND_INTERFACE_PORT"
+validate_input() {
+  local interface="$1"
+  local port="$2"
 
-      uci commit network
-      /etc/init.d/network restart
-    fi
+  # Validate interface name format
+  if ! [[ "$interface" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+    echo error "Invalid interface name format. Use only letters, numbers, underscore, and hyphen"
   fi
 
-  echo "Do You Need a Load Balancer? (y/n)"
-  read -r -e -i "n" INSTALL_LOAD_BALANCER
-  if [[ "$INSTALL_LOAD_BALANCER" =~ ^[Yy] ]]; then
+  # Check if the port (network device) exists
+  if [ ! -d "/sys/class/net/$port" ]; then
+    error "Network port '$port' does not exist on this system"
+  fi
+}
+
+configure_multiwan() {
+  local interface_name="$1"
+  local interface_port="$2"
+
+  validate_input "$interface_name" "$interface_port"
+
+  # Configure firewall
+  configure_firewall "$interface_name"
+
+  # Configure network settings
+  configure_network_metrics "$interface_port"
+  configure_interface "$interface_name" "$interface_port"        # IPv4
+  configure_interface "$interface_name" "$interface_port" "ipv6" # IPv6
+
+  # Apply changes
+  uci commit network
+  restart_network_services
+}
+
+main() {
+  # Get interface details
+  read -r -p "Enter second interface name: " interface_name
+  read -r -p "Enter second interface port: " interface_port
+
+  if [ -n "$interface_name" ] && [ -n "$interface_port" ]; then
+    configure_multiwan "$interface_name" "$interface_port"
+  fi
+
+  if confirm "Do you want to install load balancer?"; then
     install_load_balancer
   fi
+
+  success "Multi-WAN configuration completed successfully"
 }
 
-mwan
+main "$@"

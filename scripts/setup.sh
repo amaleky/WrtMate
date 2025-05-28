@@ -7,21 +7,21 @@ NTP_SERVER="216.239.35.0"
 LAN_IPADDR="$(uci get network.lan.ipaddr 2>/dev/null || echo '192.168.1.1')"
 
 check_firmware_version() {
-  . /etc/openwrt_release
   LATEST_VERSION=$(curl -s "https://downloads.openwrt.org/.versions.json" | jq -r ".stable_version") || error "Failed to fetch latest OpenWrt version."
   echo "$LATEST_VERSION"
 }
 
-download_firmware() {
-  local latest_version="$1"
-  DEVICE_ID=$(awk '{print tolower($0)}' /tmp/sysinfo/model | tr ' ' '_')
-  FILE_NAME=$(curl -s "https://downloads.openwrt.org/releases/${latest_version}/targets/${DISTRIB_TARGET}/profiles.json" | jq -r --arg id "$DEVICE_ID" '.profiles[$id].images | map(select(.type == "sysupgrade")) | sort_by((.name | contains("squashfs")) | not) | .[0].name') || error "Failed to fetch device profile."
-  DOWNLOAD_URL="https://downloads.openwrt.org/releases/${latest_version}/targets/${DISTRIB_TARGET}/${FILE_NAME}"
-  curl -L -o /tmp/firmware.bin "${DOWNLOAD_URL}" || error "Failed to download firmware."
-}
-
 upgrade_firmware() {
-  sysupgrade -n -v /tmp/firmware.bin || error "Failed to upgrade firmware."
+  if ! confirm "Do you want to upgrade firmware?"; then
+    return 0
+  fi
+  LATEST_VERSION=$(check_firmware_version)
+  DEVICE_ID=$(awk '{print tolower($0)}' /tmp/sysinfo/model | tr ' ' '_')
+  DIST_TARGET=$(grep DISTRIB_TARGET /etc/openwrt_release | cut -d"'" -f2)
+  FILE_NAME=$(curl -s "https://downloads.openwrt.org/releases/${LATEST_VERSION}/targets/$DIST_TARGET/profiles.json" | jq -r --arg id "$DEVICE_ID" '.profiles[$id].images | map(select(.type == "sysupgrade")) | sort_by((.name | contains("squashfs")) | not) | .[0].name') || error "Failed to fetch device profile."
+  DOWNLOAD_URL="https://downloads.openwrt.org/releases/${LATEST_VERSION}/targets/$DIST_TARGET/${FILE_NAME}"
+  curl -L -o /tmp/firmware.bin "${DOWNLOAD_URL}" || error "Failed to download firmware."
+  sysupgrade -n -v /tmp/firmware.bin
 }
 
 upgrade_packages() {
@@ -34,29 +34,20 @@ upgrade_packages() {
 }
 
 upgrade() {
-  . /etc/openwrt_release
   LATEST_VERSION=$(check_firmware_version)
+  DIST_RELEASE=$(grep DISTRIB_RELEASE /etc/openwrt_release | cut -d"'" -f2)
 
-  if [[ "$LATEST_VERSION" != "$DISTRIB_RELEASE" ]]; then
-    echo "Do You Want To Upgrade Firmware? (y/n)"
-    read -r -e -i "n" FIRMWARE_UPGRADE
-    if [[ "$FIRMWARE_UPGRADE" =~ ^[Yy] ]]; then
-      download_firmware "$LATEST_VERSION"
-      upgrade_firmware
-    fi
+  if [[ "$LATEST_VERSION" != "$DIST_RELEASE" ]]; then
+    upgrade_firmware
   fi
 
-  echo "Do You Want To Upgrade Packages? (y/n)"
-  read -r -e -i "n" FIRMWARE_UPGRADE
-  if [[ "$FIRMWARE_UPGRADE" =~ ^[Yy] ]]; then
+  if confirm "Do you want to upgrade packages?"; then
     upgrade_packages
   fi
 }
 
 change_root_password() {
-  echo "Do You Want To Change Root Password? (y/n)"
-  read -r -e -i "n" CHANGE_PASSWORD
-  if [[ "$CHANGE_PASSWORD" =~ ^[Yy] ]]; then
+  if confirm "Do you want to change root password?"; then
     passwd root
   fi
 }
@@ -73,8 +64,7 @@ configure_timezone() {
 
 configure_network_dns() {
   if [ "$(uci get network.lan.dns)" != "$IPV4_DNS" ]; then
-    uci del network.lan.dns
-    uci add_list network.lan.dns="$IPV4_DNS"
+    uci set network.lan.dns="$IPV4_DNS"
     for INTERFACE_V4 in $(uci show network | grep "proto='dhcp'" | cut -d. -f2 | cut -d= -f1); do
       uci set network.${INTERFACE_V4}.peerdns='0'
       uci set network.${INTERFACE_V4}.dns="$IPV4_DNS"
@@ -91,9 +81,7 @@ configure_network_dns() {
 configure_dhcp() {
   if [ "$(uci get dhcp.lan.dhcp_option)" != "6,${IPV4_DNS} 42,${NTP_SERVER}" ]; then
     uci set dhcp.lan.leasetime='12h'
-    uci del dhcp.lan.dhcp_option
-    uci add_list dhcp.lan.dhcp_option="6,${IPV4_DNS}"
-    uci add_list dhcp.lan.dhcp_option="42,${NTP_SERVER}"
+    uci set dhcp.lan.dhcp_option="6,${IPV4_DNS} 42,${NTP_SERVER}"
     uci commit dhcp
     /etc/init.d/dnsmasq restart
   fi
@@ -129,15 +117,12 @@ configure_lan_ip() {
   fi
 }
 
-configure_crontab() {
-  CRONTAB_JOB="30 5 * * * sleep 70 && touch /etc/banner && reboot"
-  if ! grep -qxF "$CRONTAB_JOB" /etc/crontabs/root; then
-    echo "$CRONTAB_JOB" >>/etc/crontabs/root
-  fi
+configure_auto_reboot() {
+  add_cron_job "30 5 * * * sleep 70 && touch /etc/banner && reboot"
 }
 
 install_recommended_packages() {
-  declare -A PACKAGES=(
+  declare -A PACKAGE_DESCRIPTIONS=(
     ["openssh-sftp-server"]="SFTP server"
     ["iperf3"]="iperf3"
     ["htop"]="htop"
@@ -147,25 +132,30 @@ install_recommended_packages() {
     ["zram-swap"]="ZRAM Swap"
   )
 
-  for PKG in "${!PACKAGES[@]}"; do
-    echo "Do you want to install ${PACKAGES[$PKG]}? (y/n)"
-    read -r INSTALL
-    if [[ "$INSTALL" =~ ^[Yy] ]]; then
-      opkg install "$PKG" || error "Failed to install $PKG."
+  local package_list=""
+  for pkg in "${!PACKAGE_DESCRIPTIONS[@]}"; do
+    if confirm "Do you want to install ${PACKAGE_DESCRIPTIONS[$pkg]}?"; then
+      ensure_packages "$pkg"
     fi
   done
 }
 
-setup() {
-  upgrade
-  change_root_password
-  configure_timezone
-  configure_network_dns
-  configure_dhcp
-  configure_wifi
-  configure_lan_ip
-  configure_crontab
-  install_recommended_packages
+main() {
+  if [ -n "${1-}" ]; then
+    "$1"
+  else
+    upgrade
+    change_root_password
+    configure_timezone
+    configure_network_dns
+    configure_dhcp
+    configure_wifi
+    configure_lan_ip
+    configure_auto_reboot
+    install_recommended_packages
+  fi
+
+  success "Setup completed successfully"
 }
 
-setup
+main "$@"

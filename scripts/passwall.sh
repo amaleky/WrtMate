@@ -18,42 +18,34 @@ detect_architecture() {
 }
 
 install_base_packages() {
-  opkg remove dnsmasq || error "Failed to remove dnsmasq."
-  opkg install dnsmasq-full kmod-nft-socket kmod-nft-tproxy unzip binutils || error "Failed to install Passwall dependencies."
+  opkg remove dnsmasq
+  ensure_packages "dnsmasq-full kmod-nft-socket kmod-nft-tproxy binutils"
 }
 
 install_passwall() {
-  curl -L -o /tmp/packages.zip "https://github.com/xiaorouji/openwrt-passwall2/releases/latest/download/passwall_packages_ipk_$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2).zip" || error "Failed to download Passwall packages."
+  curl -s -L -o /tmp/packages.zip "https://github.com/xiaorouji/openwrt-passwall2/releases/latest/download/passwall_packages_ipk_$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2).zip" || error "Failed to download Passwall packages."
   unzip -o /tmp/packages.zip -d /tmp/passwall
   for pkg in /tmp/passwall/*.ipk; do opkg install "$pkg"; done
 
-  curl -L -o /tmp/passwall2.ipk "$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | grep "browser_download_url" | grep -o 'https://[^"]*luci-[^_]*_luci-app-passwall2_[^_]*_all\.ipk' | head -n1)" || error "Failed to download Passwall2 package."
+  curl -s -L -o /tmp/passwall2.ipk "$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | grep "browser_download_url" | grep -o 'https://[^"]*luci-[^_]*_luci-app-passwall2_[^_]*_all\.ipk' | head -n1)" || error "Failed to download Passwall2 package."
   opkg install /tmp/passwall2.ipk || error "Failed to install Passwall2."
-  curl -L -o /etc/config/passwall2 "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/config/passwall2" || error "Failed to download passwall2 config."
+  curl -s -L -o /etc/config/passwall2 "${REPO_URL}/src/etc/config/passwall2" || error "Failed to download passwall2 config."
 }
 
 setup_geo_update() {
   if [ ! -f "/usr/share/v2ray/geo-update.sh" ]; then
-    curl -L -o /usr/share/v2ray/geo-update.sh "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/usr/share/v2ray/geo-update.sh" || error "Failed to download geo-update.sh."
+    curl -s -L -o /usr/share/v2ray/geo-update.sh "${REPO_URL}/src/usr/share/v2ray/geo-update.sh" || error "Failed to download geo-update.sh."
     chmod +x /usr/share/v2ray/geo-update.sh
     /usr/share/v2ray/geo-update.sh || error "Failed to update geo data."
-
-    CRONTAB_JOB="0 6 * * 0 /usr/share/v2ray/geo-update.sh"
-    if ! grep -qxF "$CRONTAB_JOB" /etc/crontabs/root; then
-      echo "$CRONTAB_JOB" >>/etc/crontabs/root
-    fi
+    add_cron_job "0 6 * * 0 /usr/share/v2ray/geo-update.sh"
   fi
 }
 
 setup_url_test() {
   if [ ! -f "/usr/share/v2ray/url-test.sh" ]; then
-    curl -L -o /usr/share/v2ray/url-test.sh "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/usr/share/v2ray/url-test.sh" || error "Failed to download url-test.sh."
+    curl -s -L -o /usr/share/v2ray/url-test.sh "${REPO_URL}/src/usr/share/v2ray/url-test.sh" || error "Failed to download url-test.sh."
     chmod +x /usr/share/v2ray/url-test.sh
-
-    CRONTAB_JOB="* * * * * /usr/share/v2ray/url-test.sh"
-    if ! grep -qxF "$CRONTAB_JOB" /etc/crontabs/root; then
-      echo "$CRONTAB_JOB" >>/etc/crontabs/root
-    fi
+    add_cron_job "* * * * * /usr/share/v2ray/url-test.sh"
   fi
 }
 
@@ -96,22 +88,20 @@ detect_warp_arch() {
 }
 
 install_warp() {
-  opkg install unzip || error "Failed to install unzip."
-
   detect_warp_arch
 
-  curl -L -o /tmp/warp.zip "https://github.com/bepass-org/warp-plus/releases/latest/download/warp-plus_linux-$DETECTED_ARCH.zip" || error "Failed to download WARP zip."
+  curl -s -L -o /tmp/warp.zip "https://github.com/bepass-org/warp-plus/releases/latest/download/warp-plus_linux-${DETECTED_ARCH}.zip" || error "Failed to download WARP zip."
   unzip -o /tmp/warp.zip -d /tmp
   mv /tmp/warp-plus /usr/bin/warp-plus
   chmod +x /usr/bin/warp-plus
 
-  curl -L -o /etc/init.d/warp-plus "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/init.d/warp-plus" || error "Failed to download warp-plus init script."
+  curl -s -L -o /etc/init.d/warp-plus "${REPO_URL}/src/etc/init.d/warp-plus" || error "Failed to download warp-plus init script."
   chmod +x /etc/init.d/warp-plus
 
-  curl -L -o /etc/init.d/warp-psiphon "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/init.d/warp-psiphon" || error "Failed to download warp-psiphon init script."
+  curl -s -L -o /etc/init.d/warp-psiphon "${REPO_URL}/src/etc/init.d/warp-psiphon" || error "Failed to download warp-psiphon init script."
   chmod +x /etc/init.d/warp-psiphon
 
-  curl -L -o /etc/hotplug.d/iface/99-warp "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/hotplug.d/iface/99-warp" || error "Failed to download 99-warp hotplug script."
+  curl -s -L -o /etc/hotplug.d/iface/99-warp "${REPO_URL}/src/etc/hotplug.d/iface/99-warp" || error "Failed to download 99-warp hotplug script."
   chmod +x /etc/hotplug.d/iface/99-warp
 
   /etc/init.d/warp-plus enable
@@ -158,7 +148,7 @@ detect_hiddify_arch() {
 install_hiddify() {
   detect_hiddify_arch
 
-  curl -L -o /tmp/hiddify.tar.gz "https://github.com/hiddify/hiddify-core/releases/latest/download/hiddify-cli-linux-$DETECTED_ARCH.tar.gz" || error "Failed to download Hiddify."
+  curl -s -L -o /tmp/hiddify.tar.gz "https://github.com/hiddify/hiddify-core/releases/latest/download/hiddify-cli-linux-${DETECTED_ARCH}.tar.gz" || error "Failed to download Hiddify."
   tar -xvzf /tmp/hiddify.tar.gz -C /tmp
   mv /tmp/HiddifyCli /usr/bin/hiddify-cli
   chmod +x /usr/bin/hiddify-cli
@@ -167,37 +157,33 @@ install_hiddify() {
     mkdir /root/hiddify/
   fi
 
-  curl -L -o /etc/init.d/hiddify-cli "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/init.d/hiddify-cli" || error "Failed to download hiddify-cli init script."
+  curl -s -L -o /etc/init.d/hiddify-cli "${REPO_URL}/src/etc/init.d/hiddify-cli" || error "Failed to download hiddify-cli init script."
   chmod +x /etc/init.d/hiddify-cli
 
-  curl -L -o /etc/hotplug.d/iface/99-hiddify "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/hotplug.d/iface/99-hiddify" || error "Failed to download 99-hiddify hotplug script."
+  curl -s -L -o /etc/hotplug.d/iface/99-hiddify "${REPO_URL}/src/etc/hotplug.d/iface/99-hiddify" || error "Failed to download 99-hiddify hotplug script."
   chmod +x /etc/hotplug.d/iface/99-hiddify
 
   if [[ ! -e /root/hiddify/configs.conf ]]; then
-    curl -L -o /root/hiddify/configs.conf "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/root/hiddify/configs.conf" || error "Failed to download hiddify configs."
+    curl -s -L -o /root/hiddify/configs.conf "${REPO_URL}/src/root/hiddify/configs.conf" || error "Failed to download hiddify configs."
   fi
 
-  curl -L -o /root/hiddify/settings.conf "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/root/hiddify/settings.conf" || error "Failed to download hiddify settings."
+  curl -s -L -o /root/hiddify/settings.conf "${REPO_URL}/src/root/hiddify/settings.conf" || error "Failed to download hiddify settings."
 
   /etc/init.d/hiddify-cli enable
   /etc/init.d/hiddify-cli restart
 }
 
-passwall() {
-  echo "Do You Want To Install WARP? (y/n)"
-  echo "Do You Want To Install Hiddify? (y/n)"
+main() {
+  detect_architecture
 
-  read -r -e -i "y" WARP_INSTALL
-  if ! [[ "$WARP_INSTALL" =~ ^[Nn] ]]; then
+  if confirm "Do you want to install WARP?" "y"; then
     install_warp
   fi
 
-  read -r -e -i "y" HIDDIFY_INSTALL
-  if ! [[ "$HIDDIFY_INSTALL" =~ ^[Nn] ]]; then
+  if confirm "Do you want to install Hiddify?" "y"; then
     install_hiddify
   fi
 
-  detect_architecture
   install_base_packages
   install_passwall
   setup_geo_update
@@ -205,6 +191,7 @@ passwall() {
 
   uci commit passwall2
   /etc/init.d/passwall2 restart
+  success "PassWall configuration completed successfully"
 }
 
-passwall
+main "$@"
