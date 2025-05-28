@@ -12,27 +12,39 @@
 
 set -euo pipefail
 
-# Print a formatted message
 info() {
   echo -e "\033[1;34m[INFO]\033[0m $1"
 }
 
-# Print an error message and exit
-error_exit() {
+warning() {
+  echo -e "\033[1;33m[WARNING]\033[0m $1" >&2
+}
+
+error() {
   echo -e "\033[1;31m[ERROR]\033[0m $1" >&2
   exit 1
 }
 
-# Prepare environment and source common scripts
+check_openwrt() {
+  if [ ! -f "/etc/openwrt_release" ]; then
+    error "This script must be run on an OpenWrt system."
+  fi
+}
+
 prepare() {
-  opkg update || error_exit "Failed to update package lists."
-  opkg install jq curl || error_exit "Failed to install required packages."
+  info "Preparing environment..."
+  if ! opkg update; then
+    error "Failed to update package lists. Please check your internet connection."
+  fi
+  if ! opkg install jq curl; then
+    error "Failed to install required packages. Please check available storage space."
+  fi
 }
 
 menu() {
   PS3="Enter Your Option: "
   OPTIONS=(
-    "setup" "upgrade" "passwall" "mwan" "usbwan" "usbstorage" "adguard" "swap" "sqm" "irq" "quit"
+    "setup" "adguard" "mwan" "passwall" "usb" "quit"
   )
   select CHOICE in "${OPTIONS[@]}"; do
     info "Selected: $CHOICE"
@@ -47,5 +59,6 @@ menu() {
   done
 }
 
+check_openwrt
 prepare
 menu
