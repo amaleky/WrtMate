@@ -25,10 +25,36 @@ error() {
   exit 1
 }
 
-check_openwrt() {
+check_requirements() {
+  # Check if running as root
+  if [ "$(id -u)" -ne 0 ]; then
+    error "This script must be run as root (use sudo)"
+  fi
+
+  # Check if running on OpenWrt
   if [ ! -f "/etc/openwrt_release" ]; then
     error "This script must be run on an OpenWrt system."
   fi
+
+  # Check RAM (500MB minimum)
+  total_ram=$(($(grep MemTotal /proc/meminfo | awk '{print $2}') / 1024)) # Convert to MB
+  if [ "$total_ram" -lt 500 ]; then
+    error "Insufficient RAM. Required: 500 MB, Available: ${total_ram} MB"
+  fi
+
+  # Check available storage (100MB minimum)
+  available_space=$(($(df /overlay | awk 'NR==2 {print $4}') / 1024)) # Convert to MB
+  if [ "$available_space" -lt 100 ]; then
+    error "Insufficient storage space. Required: 100 MB, Available: ${available_space} MB"
+  fi
+
+  # Check CPU cores (minimum 2 cores)
+  cpu_cores=$(grep -c processor /proc/cpuinfo)
+  if [ "$cpu_cores" -lt 2 ]; then
+    error "Insufficient CPU cores. Required: 2 cores, Available: ${cpu_cores} cores"
+  fi
+
+  info "System requirements check passed"
 }
 
 prepare() {
@@ -59,6 +85,6 @@ menu() {
   done
 }
 
-check_openwrt
+check_requirements
 prepare
 menu
