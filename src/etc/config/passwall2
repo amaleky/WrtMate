@@ -141,10 +141,18 @@ config shunt_rules 'Sanction'
 	option remarks 'Sanction'
 	option network 'tcp,udp'
 	option domain_list 'geosite:category-ai-!cn
+geosite:category-games
 geosite:category-dev
 geosite:sanctioned
 geosite:youtube
 domain:one.one.one.one
+domain:cloudflare-dns.com
+domain:dns.google
+domain:quad9.net
+domain:nextdns.io
+domain:adguard.com
+domain:cleanbrowsing.org
+domain:opendns.com
 domain:dev
 domain:io'
 	option ip_list 'ext:geoip-services.dat:openai
