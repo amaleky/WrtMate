@@ -71,6 +71,11 @@ setup() {
     uci commit network
     /etc/init.d/network restart
   fi
+
+  CRONTAB_JOB="30 5 * * * sleep 70 && touch /etc/banner && reboot"
+  if ! grep -qxF "$CRONTAB_JOB" /etc/crontabs/root; then
+    echo "$CRONTAB_JOB" >> /etc/crontabs/root
+  fi
 }
 
 recommended() {

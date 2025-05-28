@@ -45,7 +45,11 @@ passwall() {
     curl -L -o /usr/share/v2ray/geo-update.sh "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/usr/share/v2ray/geo-update.sh" || error_exit "Failed to download geo-update.sh."
     chmod +x /usr/share/v2ray/geo-update.sh
     /usr/share/v2ray/geo-update.sh || error_exit "Failed to update geo data."
-    curl -L -o /etc/crontabs/root "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/etc/crontabs/root" || error_exit "Failed to download crontab root."
+
+    CRONTAB_JOB="0 6 * * 0 /usr/share/v2ray/geo-update.sh"
+    if ! grep -qxF "$CRONTAB_JOB" /etc/crontabs/root; then
+      echo "$CRONTAB_JOB" >> /etc/crontabs/root
+    fi
   fi
 
   # Install WARP if requested
