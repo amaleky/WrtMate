@@ -45,6 +45,18 @@ setup_geo_update() {
   fi
 }
 
+setup_url_test() {
+  if [ ! -f "/usr/share/v2ray/url-test.sh" ]; then
+    curl -L -o /usr/share/v2ray/url-test.sh "https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/src/usr/share/v2ray/url-test.sh" || error "Failed to download url-test.sh."
+    chmod +x /usr/share/v2ray/url-test.sh
+
+    CRONTAB_JOB="* * * * * /usr/share/v2ray/url-test.sh"
+    if ! grep -qxF "$CRONTAB_JOB" /etc/crontabs/root; then
+      echo "$CRONTAB_JOB" >>/etc/crontabs/root
+    fi
+  fi
+}
+
 detect_warp_arch() {
   case "$ARCH" in
   x86_64) DETECTED_ARCH="amd64" ;;
@@ -189,6 +201,7 @@ passwall() {
   install_base_packages
   install_passwall
   setup_geo_update
+  setup_url_test
 
   uci commit passwall2
   /etc/init.d/passwall2 restart
