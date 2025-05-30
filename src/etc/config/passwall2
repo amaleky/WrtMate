@@ -146,7 +146,16 @@ geosite:category-dev
 geosite:sanctioned
 geosite:youtube
 domain:codeassist.google
+# qodo
+domain:qodo.ai
 domain:mixpanel.com
+# trae
+domain:byteintlapi.com
+domain:byteoversea.com
+domain:bytednsdoc.com
+domain:zijieapi.com
+domain:mchost.guru
+# secure dns
 domain:one.one.one.one
 domain:cloudflare-dns.com
 domain:dns.google
@@ -155,6 +164,7 @@ domain:nextdns.io
 domain:adguard.com
 domain:cleanbrowsing.org
 domain:opendns.com
+# domain suffix
 domain:dev
 domain:ai
 domain:io'
