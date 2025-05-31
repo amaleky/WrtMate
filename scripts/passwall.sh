@@ -98,16 +98,11 @@ install_warp() {
   curl -s -L -o /etc/init.d/warp-plus "${REPO_URL}/src/etc/init.d/warp-plus" || error "Failed to download warp-plus init script."
   chmod +x /etc/init.d/warp-plus
 
-  curl -s -L -o /etc/init.d/warp-psiphon "${REPO_URL}/src/etc/init.d/warp-psiphon" || error "Failed to download warp-psiphon init script."
-  chmod +x /etc/init.d/warp-psiphon
-
   curl -s -L -o /etc/hotplug.d/iface/99-warp "${REPO_URL}/src/etc/hotplug.d/iface/99-warp" || error "Failed to download 99-warp hotplug script."
   chmod +x /etc/hotplug.d/iface/99-warp
 
   /etc/init.d/warp-plus enable
   /etc/init.d/warp-plus restart
-  /etc/init.d/warp-psiphon enable
-  /etc/init.d/warp-psiphon restart
 }
 
 detect_hiddify_arch() {

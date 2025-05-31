@@ -3,9 +3,8 @@ config nodes 'Splitter'
 	option type 'Xray'
 	option protocol '_shunt'
 	option Block '_blackhole'
-	option Sanction 'Hiddify'
-	option Censor 'WarpPlus'
-	option default_node '_direct'
+	option Direct '_direct'
+	option default_node 'Hiddify'
 	option domainStrategy 'IPOnDemand'
 	option domainMatcher 'hybrid'
 	option preproxy_enabled '0'
@@ -28,18 +27,6 @@ config nodes 'WarpPlus'
 	option protocol 'socks'
 	option address '127.0.0.1'
 	option port '8086'
-	option tls '0'
-	option transport 'raw'
-	option tcp_guise 'none'
-	option tcpMptcp '0'
-	option tcpNoDelay '0'
-
-config nodes 'WarpPsiphon'
-	option remarks 'WarpPsiphon'
-	option type 'Xray'
-	option protocol 'socks'
-	option address '127.0.0.1'
-	option port '8087'
 	option tls '0'
 	option transport 'raw'
 	option tcp_guise 'none'
@@ -100,8 +87,8 @@ config global_rules
 	option geoip_update '1'
 	option v2ray_location_asset '/usr/share/v2ray/'
 	option enable_geoview '1'
-	option geoip_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geoip.dat'
-	option geosite_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geosite.dat'
+	option geoip_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geoip-lite.dat'
+	option geosite_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geosite-lite.dat'
 
 config global_app
 	option xray_file '/usr/bin/xray'
@@ -119,75 +106,30 @@ config global_subscribe
 config global_singbox
 	option sniff_override_destination '0'
 	option geoip_path '/usr/share/singbox/geoip.db'
-	option geoip_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-sing-box-rules@release/geoip.db'
+	option geoip_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-sing-box-rules@release/geoip-lite.db'
 	option geosite_path '/usr/share/singbox/geosite.db'
-	option geosite_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-sing-box-rules@release/geosite.db'
+	option geosite_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-sing-box-rules@release/geosite-lite.db'
 
 config shunt_rules 'Block'
 	option remarks 'Block'
 	option network 'tcp,udp'
-	option domain_list 'geosite:category-public-tracker
-geosite:category-ads-all
-geosite:cryptominers
-geosite:malware
-geosite:phishing
+	option domain_list 'ext:security.dat:category-ads-all
+ext:security.dat:malware
+ext:security.dat:phishing
+ext:security.dat:cryptominers
 geosite:yandex
 domain:webengage.com
 domain:analytics.pinterest.com'
 	option ip_list 'ext:security-ip.dat:malware
 ext:security-ip.dat:phishing'
 
-config shunt_rules 'Sanction'
-	option remarks 'Sanction'
+config shunt_rules 'Direct'
+	option remarks 'Direct'
 	option network 'tcp,udp'
-	option domain_list 'geosite:category-ai-!cn
-geosite:category-games
-geosite:category-dev
-geosite:sanctioned
-geosite:youtube
-domain:codeassist.google
-# qodo
-domain:qodo.ai
-domain:mixpanel.com
-# trae
-domain:byteintlapi.com
-domain:byteoversea.com
-domain:bytednsdoc.com
-domain:zijieapi.com
-domain:mchost.guru
-# secure dns
-domain:one.one.one.one
-domain:cloudflare-dns.com
-domain:dns.google
-domain:quad9.net
-domain:nextdns.io
-domain:adguard.com
-domain:cleanbrowsing.org
-domain:opendns.com
-# domain suffix
-domain:dev
-domain:ai
-domain:io'
-	option ip_list 'ext:geoip-services.dat:openai
-208.67.220.2
-1.1.1.1
-1.0.0.1
-2606:4700:4700::1111
-2606:4700:4700::1001'
-
-config shunt_rules 'Censor'
-	option remarks 'Censor'
-	option network 'tcp,udp'
-	option domain_list 'geosite:category-anticensorship
-geosite:category-entertainment
-geosite:social
-geosite:nsfw
-domain:leakfa.com
-domain:radiojavan.com
-domain:rjassets.com
-domain:rjapp-content.app
-domain:30nama.com
-domain:digimoviez.com
-domain:zarfilm.com'
-	option ip_list 'ext:geoip-services.dat:netflix
-ext:geoip-services.dat:telegram'
+	option domain_list 'geosite:category-ir
+domain:ir'
+	option ip_list 'geoip:ir
+geoip:private
+208.67.222.2
+2620:0:ccc::2
+216.239.35.0'

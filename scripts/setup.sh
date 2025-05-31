@@ -27,9 +27,11 @@ upgrade_firmware() {
 upgrade_packages() {
   UPGRADABLE_PACKAGES=$(opkg list-upgradable | cut -f 1 -d ' ')
   if [ -n "$UPGRADABLE_PACKAGES" ]; then
-    for PACKAGE in $UPGRADABLE_PACKAGES; do
-      opkg upgrade "$PACKAGE" || error "Failed to upgrade package $PACKAGE."
-    done
+    if confirm "Do you want to upgrade packages?"; then
+      for PACKAGE in $UPGRADABLE_PACKAGES; do
+        opkg upgrade "$PACKAGE" || error "Failed to upgrade package $PACKAGE."
+      done
+    fi
   fi
 }
 
@@ -41,9 +43,7 @@ upgrade() {
     upgrade_firmware
   fi
 
-  if confirm "Do you want to upgrade packages?"; then
-    upgrade_packages
-  fi
+  upgrade_packages
 }
 
 change_root_password() {

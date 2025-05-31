@@ -2,5 +2,4 @@
 
 if [ "$INTERFACE" = "wan" ] || [ "$INTERFACE" = "wan6" ]; then
   /etc/init.d/warp-plus restart
-  /etc/init.d/warp-psiphon restart
 fi
