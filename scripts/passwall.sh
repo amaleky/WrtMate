@@ -23,30 +23,26 @@ install_base_packages() {
 }
 
 install_passwall() {
-  curl -s -L -o /tmp/packages.zip "https://github.com/xiaorouji/openwrt-passwall2/releases/latest/download/passwall_packages_ipk_$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2).zip" || error "Failed to download Passwall packages."
+  curl -L -o /tmp/packages.zip "https://github.com/xiaorouji/openwrt-passwall2/releases/latest/download/passwall_packages_ipk_$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2).zip" || error "Failed to download Passwall packages."
   unzip -o /tmp/packages.zip -d /tmp/passwall
   for pkg in /tmp/passwall/*.ipk; do opkg install "$pkg"; done
 
-  curl -s -L -o /tmp/passwall2.ipk "$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | grep "browser_download_url" | grep -o 'https://[^"]*luci-[^_]*_luci-app-passwall2_[^_]*_all\.ipk' | head -n1)" || error "Failed to download Passwall2 package."
+  curl -L -o /tmp/passwall2.ipk "$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | grep "browser_download_url" | grep -o 'https://[^"]*luci-[^_]*_luci-app-passwall2_[^_]*_all\.ipk' | head -n1)" || error "Failed to download Passwall2 package."
   opkg install /tmp/passwall2.ipk || error "Failed to install Passwall2."
   curl -s -L -o /etc/config/passwall2 "${REPO_URL}/src/etc/config/passwall2" || error "Failed to download passwall2 config."
 }
 
 setup_geo_update() {
-  if [ ! -f "/usr/share/v2ray/geo-update.sh" ]; then
-    curl -s -L -o /usr/share/v2ray/geo-update.sh "${REPO_URL}/src/usr/share/v2ray/geo-update.sh" || error "Failed to download geo-update.sh."
-    chmod +x /usr/share/v2ray/geo-update.sh
-    /usr/share/v2ray/geo-update.sh || error "Failed to update geo data."
-    add_cron_job "0 6 * * 0 /usr/share/v2ray/geo-update.sh"
-  fi
+  curl -s -L -o /usr/share/v2ray/geo-update.sh "${REPO_URL}/src/usr/share/v2ray/geo-update.sh" || error "Failed to download geo-update.sh."
+  chmod +x /usr/share/v2ray/geo-update.sh
+  /usr/share/v2ray/geo-update.sh || error "Failed to update geo data."
+  add_cron_job "0 6 * * 0 /usr/share/v2ray/geo-update.sh"
 }
 
 setup_url_test() {
-  if [ ! -f "/usr/share/v2ray/url-test.sh" ]; then
-    curl -s -L -o /usr/share/v2ray/url-test.sh "${REPO_URL}/src/usr/share/v2ray/url-test.sh" || error "Failed to download url-test.sh."
-    chmod +x /usr/share/v2ray/url-test.sh
-    add_cron_job "* * * * * /usr/share/v2ray/url-test.sh"
-  fi
+  curl -s -L -o /usr/share/v2ray/url-test.sh "${REPO_URL}/src/usr/share/v2ray/url-test.sh" || error "Failed to download url-test.sh."
+  chmod +x /usr/share/v2ray/url-test.sh
+  add_cron_job "* * * * * /usr/share/v2ray/url-test.sh"
 }
 
 detect_warp_arch() {
@@ -90,7 +86,7 @@ detect_warp_arch() {
 install_warp() {
   detect_warp_arch
 
-  curl -s -L -o /tmp/warp.zip "https://github.com/bepass-org/warp-plus/releases/latest/download/warp-plus_linux-${DETECTED_ARCH}.zip" || error "Failed to download WARP zip."
+  curl -L -o /tmp/warp.zip "https://github.com/bepass-org/warp-plus/releases/latest/download/warp-plus_linux-${DETECTED_ARCH}.zip" || error "Failed to download WARP zip."
   unzip -o /tmp/warp.zip -d /tmp
   mv /tmp/warp-plus /usr/bin/warp-plus
   chmod +x /usr/bin/warp-plus
@@ -143,7 +139,7 @@ detect_hiddify_arch() {
 install_hiddify() {
   detect_hiddify_arch
 
-  curl -s -L -o /tmp/hiddify.tar.gz "https://github.com/hiddify/hiddify-core/releases/latest/download/hiddify-cli-linux-${DETECTED_ARCH}.tar.gz" || error "Failed to download Hiddify."
+  curl -L -o /tmp/hiddify.tar.gz "https://github.com/hiddify/hiddify-core/releases/latest/download/hiddify-cli-linux-${DETECTED_ARCH}.tar.gz" || error "Failed to download Hiddify."
   tar -xvzf /tmp/hiddify.tar.gz -C /tmp
   mv /tmp/HiddifyCli /usr/bin/hiddify-cli
   chmod +x /usr/bin/hiddify-cli

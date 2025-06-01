@@ -2,7 +2,6 @@ config nodes 'Splitter'
 	option remarks 'Splitter'
 	option type 'Xray'
 	option protocol '_shunt'
-	option Block '_blackhole'
 	option Direct '_direct'
 	option default_node 'Hiddify'
 	option domainStrategy 'IPOnDemand'
@@ -110,26 +109,34 @@ config global_singbox
 	option geosite_path '/usr/share/singbox/geosite.db'
 	option geosite_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-sing-box-rules@release/geosite-lite.db'
 
-config shunt_rules 'Block'
-	option remarks 'Block'
-	option network 'tcp,udp'
-	option domain_list 'ext:security.dat:category-ads-all
-ext:security.dat:malware
-ext:security.dat:phishing
-ext:security.dat:cryptominers
-geosite:yandex
-domain:webengage.com
-domain:analytics.pinterest.com'
-	option ip_list 'ext:security-ip.dat:malware
-ext:security-ip.dat:phishing'
-
 config shunt_rules 'Direct'
 	option remarks 'Direct'
 	option network 'tcp,udp'
 	option domain_list 'geosite:category-ir
-domain:ir'
+domain:ir
+# messengers
+domain:slack.com
+domain:live.com
+domain:live.net
+domain:microsoftonline.com
+domain:meet.google.com
+domain:whatsapp.com
+domain:mail.google.com
+domain:linkedin.com
+domain:licdn.com
+# games
+domain:pvp.net
+domain:riotcdn.net
+domain:riotgames.com
+domain:leagueoflegends.com
+domain:callofduty.com
+domain:activision.com
+domain:callofdutyleague.com
+# download
+domain:dl.playstation.net
+domain:upenlod.pw
+domain:ptp
+domain:local
+domain:pinsvc.net'
 	option ip_list 'geoip:ir
-geoip:private
-208.67.222.2
-2620:0:ccc::2
-216.239.35.0'
+geoip:private'

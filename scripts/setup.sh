@@ -3,7 +3,6 @@
 
 IPV4_DNS="208.67.222.2"
 IPV6_DNS="2620:0:ccc::2"
-NTP_SERVER="216.239.35.0"
 LAN_IPADDR="$(uci get network.lan.ipaddr 2>/dev/null || echo '192.168.1.1')"
 
 check_firmware_version() {
@@ -63,28 +62,16 @@ configure_timezone() {
 }
 
 configure_network_dns() {
-  if [ "$(uci get network.lan.dns)" != "$IPV4_DNS" ]; then
-    uci set network.lan.dns="$IPV4_DNS"
-    for INTERFACE_V4 in $(uci show network | grep "proto='dhcp'" | cut -d. -f2 | cut -d= -f1); do
-      uci set network.${INTERFACE_V4}.peerdns='0'
-      uci set network.${INTERFACE_V4}.dns="$IPV4_DNS"
-    done
-    for INTERFACE_V6 in $(uci show network | grep "proto='dhcpv6'" | cut -d. -f2 | cut -d= -f1); do
-      uci set network.${INTERFACE_V6}.peerdns='0'
-      uci set network.${INTERFACE_V6}.dns="$IPV6_DNS"
-    done
-    uci commit network
-    /etc/init.d/network restart
-  fi
-}
-
-configure_dhcp() {
-  if [ "$(uci get dhcp.lan.dhcp_option)" != "6,${IPV4_DNS} 42,${NTP_SERVER}" ]; then
-    uci set dhcp.lan.leasetime='12h'
-    uci set dhcp.lan.dhcp_option="6,${IPV4_DNS} 42,${NTP_SERVER}"
-    uci commit dhcp
-    /etc/init.d/dnsmasq restart
-  fi
+  for INTERFACE_V4 in $(uci show network | grep "proto='dhcp'" | cut -d. -f2 | cut -d= -f1); do
+    uci set network.${INTERFACE_V4}.peerdns='0'
+    uci set network.${INTERFACE_V4}.dns="$IPV4_DNS"
+  done
+  for INTERFACE_V6 in $(uci show network | grep "proto='dhcpv6'" | cut -d. -f2 | cut -d= -f1); do
+    uci set network.${INTERFACE_V6}.peerdns='0'
+    uci set network.${INTERFACE_V6}.dns="$IPV6_DNS"
+  done
+  uci commit network
+  /etc/init.d/network reload
 }
 
 configure_wifi() {
@@ -113,7 +100,7 @@ configure_lan_ip() {
     uci set network.lan.ipaddr="$CUSTOM_LAN_IPADDR"
     uci set network.lan.netmask='255.255.255.0'
     uci commit network
-    /etc/init.d/network restart
+    /etc/init.d/network reload
   fi
 }
 
@@ -134,8 +121,10 @@ install_recommended_packages() {
 
   local package_list=""
   for pkg in "${!PACKAGE_DESCRIPTIONS[@]}"; do
-    if confirm "Do you want to install ${PACKAGE_DESCRIPTIONS[$pkg]}?"; then
-      ensure_packages "$pkg"
+    if ! is_package_installed "$pkg"; then
+      if confirm "Do you want to install ${PACKAGE_DESCRIPTIONS[$pkg]}?"; then
+        ensure_packages "$pkg"
+      fi
     fi
   done
 }
@@ -148,7 +137,6 @@ main() {
     change_root_password
     configure_timezone
     configure_network_dns
-    configure_dhcp
     configure_wifi
     configure_lan_ip
     configure_auto_reboot
