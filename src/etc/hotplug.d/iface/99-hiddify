@@ -1,5 +1,7 @@
 #!/bin/sh
 
 if [ "$INTERFACE" = "wan" ] || [ "$INTERFACE" = "wan6" ]; then
-  /etc/init.d/hiddify-cli restart
+  if /etc/init.d/hiddify-cli status | grep -q "running"; then
+    /etc/init.d/hiddify-cli restart
+  fi
 fi
