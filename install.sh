@@ -16,7 +16,6 @@ export REPO_URL
 check_environment() {
   [ "$(id -u)" -eq 0 ] || error "This script must be run as root (use sudo)"
   [ -f "/etc/openwrt_release" ] || error "This script must be run on an OpenWrt system"
-  check_min_requirements 500 100 2
 }
 
 install_dependencies() {
