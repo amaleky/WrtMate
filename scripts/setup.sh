@@ -1,8 +1,8 @@
 #!/bin/bash
 # Setup function for OpenWRT
 
-IPV4_DNS="208.67.222.2"
-IPV6_DNS="2620:0:ccc::2"
+IPV4_DNS="94.140.15.15"
+IPV6_DNS="2a10:50c0::ad2:ff"
 LAN_IPADDR="$(uci get network.lan.ipaddr 2>/dev/null || echo '192.168.1.1')"
 
 check_firmware_version() {
