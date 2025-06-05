@@ -166,7 +166,7 @@ install_hiddify() {
 
 main() {
   detect_architecture
-  check_min_requirements 500 100 2
+  check_min_requirements 200 100 2
 
   if confirm "Do you want to install WARP?" "y"; then
     install_warp
