@@ -33,16 +33,18 @@ install_passwall() {
 }
 
 setup_geo_update() {
-  curl -s -L -o /usr/share/v2ray/geo-update.sh "${REPO_URL}/src/usr/share/v2ray/geo-update.sh" || error "Failed to download geo-update.sh."
-  chmod +x /usr/share/v2ray/geo-update.sh
-  /usr/share/v2ray/geo-update.sh || error "Failed to update geo data."
-  add_cron_job "0 6 * * 0 /usr/share/v2ray/geo-update.sh"
+  if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
+  curl -s -L -o /root/scripts/geo-update.sh "${REPO_URL}/src/root/scripts/geo-update.sh" || error "Failed to download geo-update.sh."
+  chmod +x /root/scripts/geo-update.sh
+  /root/scripts/geo-update.sh || error "Failed to update geo data."
+  add_cron_job "0 6 * * 0 /root/scripts/geo-update.sh"
 }
 
 setup_url_test() {
-  curl -s -L -o /usr/share/v2ray/url-test.sh "${REPO_URL}/src/usr/share/v2ray/url-test.sh" || error "Failed to download url-test.sh."
-  chmod +x /usr/share/v2ray/url-test.sh
-  add_cron_job "* * * * * /usr/share/v2ray/url-test.sh"
+  if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
+  curl -s -L -o /root/scripts/url-test.sh "${REPO_URL}/src/root/scripts/url-test.sh" || error "Failed to download url-test.sh."
+  chmod +x /root/scripts/url-test.sh
+  add_cron_job "* * * * * /root/scripts/url-test.sh"
 }
 
 detect_warp_arch() {
@@ -144,9 +146,7 @@ install_hiddify() {
   mv /tmp/HiddifyCli /usr/bin/hiddify-cli
   chmod +x /usr/bin/hiddify-cli
 
-  if [ ! -d /root/hiddify/ ]; then
-    mkdir /root/hiddify/
-  fi
+  if [ ! -d /root/hiddify/ ]; then mkdir /root/hiddify/; fi
 
   curl -s -L -o /etc/init.d/hiddify-cli "${REPO_URL}/src/etc/init.d/hiddify-cli" || error "Failed to download hiddify-cli init script."
   chmod +x /etc/init.d/hiddify-cli

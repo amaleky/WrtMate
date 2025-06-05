@@ -25,14 +25,14 @@ install_dependencies() {
 
 show_menu() {
   local PS3="Enter your choice [1-8]: "
-  local options=("Setup System" "Install AdGuard" "Configure Multi-WAN" "Install PassWall" "Configure USB" "Factory Reset" "Exit")
+  local options=("Setup System" "Configure Multi-WAN" "Install PassWall" "Install AdGuard" "Configure USB" "Factory Reset" "Exit")
 
   select opt in "${options[@]}"; do
     case "$REPLY" in
     1) source <(wget -qO- "${REPO_URL}/scripts/setup.sh") ;;
-    2) source <(wget -qO- "${REPO_URL}/scripts/adguard.sh") ;;
-    3) source <(wget -qO- "${REPO_URL}/scripts/mwan.sh") ;;
-    4) source <(wget -qO- "${REPO_URL}/scripts/passwall.sh") ;;
+    2) source <(wget -qO- "${REPO_URL}/scripts/mwan.sh") ;;
+    3) source <(wget -qO- "${REPO_URL}/scripts/passwall.sh") ;;
+    4) source <(wget -qO- "${REPO_URL}/scripts/adguard.sh") ;;
     5) source <(wget -qO- "${REPO_URL}/scripts/usb.sh") ;;
     6) source <(wget -qO- "${REPO_URL}/scripts/setup.sh") upgrade_firmware ;;
     7)

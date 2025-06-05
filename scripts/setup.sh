@@ -110,8 +110,6 @@ configure_auto_reboot() {
 
 install_recommended_packages() {
   declare -A PACKAGE_DESCRIPTIONS=(
-    ["openssh-sftp-server"]="SFTP server"
-    ["iperf3"]="iperf3"
     ["htop"]="htop"
     ["nload"]="nload"
     ["luci-app-irqbalance"]="IRQ Balance"
