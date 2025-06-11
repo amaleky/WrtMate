@@ -94,9 +94,9 @@ config global_subscribe
 	option filter_keyword_mode '1'
 	option ss_type 'sing-box'
 	option trojan_type 'sing-box'
-	option vmess_type 'xray'
-	option vless_type 'xray'
-	option hysteria2_type 'hysteria2'
+	option vmess_type 'sing-box'
+	option vless_type 'sing-box'
+	option hysteria2_type 'sing-box'
 
 config global_singbox
 	option sniff_override_destination '0'
