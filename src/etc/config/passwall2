@@ -34,10 +34,9 @@ config global
 	option enabled '1'
 	option node_socks_port '1070'
 	option localhost_proxy '0'
-	option client_proxy '1'
+	option client_proxy '0'
 	option socks_enabled '0'
-	option acl_enable '0'
-	option node 'Splitter'
+	option acl_enable '1'
 	option direct_dns_protocol 'auto'
 	option direct_dns_query_strategy 'UseIP'
 	option remote_dns_protocol 'tcp'
@@ -49,6 +48,7 @@ config global
 	option remote_dns_detour 'remote'
 	option remote_fakedns '0'
 	option dns_redirect '1'
+	option node 'Splitter'
 
 config global_haproxy
 	option balancing_enable '0'
@@ -138,3 +138,8 @@ domain:pinsvc.net'
 geoip:private
 94.140.15.15
 2a10:50c0::ad2:ff'
+
+config acl_rule
+	option enabled '1'
+	option remarks 'Whitelist'
+	option node 'Splitter'
