@@ -13,3 +13,9 @@ if ! curl --socks5 127.0.0.1:12334 --silent --max-time 5 --output "/dev/null" "$
     /etc/init.d/hiddify-cli restart
   fi
 fi
+
+if ! curl --socks5 127.0.0.1:1080 --silent --max-time 5 --output "/dev/null" "$TEST_URL"; then
+  if /etc/init.d/ssh-proxy status | grep -q "running"; then
+    /etc/init.d/ssh-proxy restart
+  fi
+fi

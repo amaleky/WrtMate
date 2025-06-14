@@ -164,6 +164,24 @@ install_hiddify() {
   /etc/init.d/hiddify-cli restart
 }
 
+install_ssh_proxy() {
+  ensure_packages "openssh-keygen openssh-client sshtunnel"
+  if [ ! -d /root/.ssh/ ]; then mkdir /root/.ssh/; fi
+  if [ ! -f /root/.ssh/id_rsa ]; then ssh-keygen -b 4096 -t rsa -f /root/.ssh/id_rsa -P ""; fi
+
+  info "Please add this public key to your SSH server's authorized_keys file:"
+  cat /root/.ssh/id_rsa.pub
+
+  curl -s -L -o /etc/init.d/ssh-proxy "${REPO_URL}/src/etc/init.d/ssh-proxy" || error "Failed to download ssh-proxy init script."
+  chmod +x /etc/init.d/ssh-proxy
+
+  curl -s -L -o /etc/hotplug.d/iface/99-ssh-proxy "${REPO_URL}/src/etc/hotplug.d/iface/99-ssh-proxy" || error "Failed to download 99-ssh-proxy hotplug script."
+  chmod +x /etc/hotplug.d/iface/99-ssh-proxy
+
+  /etc/init.d/ssh-proxy enable
+  /etc/init.d/ssh-proxy restart
+}
+
 main() {
   detect_architecture
   check_min_requirements 200 100 2
@@ -174,6 +192,10 @@ main() {
 
   if confirm "Do you want to install Hiddify?" "y"; then
     install_hiddify
+  fi
+
+  if confirm "Do you want to install SSH-Proxy?" "y"; then
+    install_ssh_proxy
   fi
 
   install_base_packages
