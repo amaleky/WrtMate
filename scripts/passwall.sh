@@ -28,7 +28,7 @@ setup_url_test() {
   if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
   curl -s -L -o /root/scripts/url-test.sh "${REPO_URL}/src/root/scripts/url-test.sh" || error "Failed to download url-test.sh."
   chmod +x /root/scripts/url-test.sh
-  add_cron_job "* * * * * /root/scripts/url-test.sh"
+  add_cron_job "*/10 * * * * /root/scripts/url-test.sh"
 }
 
 install_warp() {
