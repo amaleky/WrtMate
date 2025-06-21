@@ -165,7 +165,7 @@ install_hiddify() {
 }
 
 install_ssh_proxy() {
-  ensure_packages "openssh-keygen openssh-client sshtunnel"
+  ensure_packages "openssh-keygen openssh-client"
   if [ ! -d /root/.ssh/ ]; then mkdir /root/.ssh/; fi
   if [ ! -f /root/.ssh/id_rsa ]; then ssh-keygen -b 4096 -t rsa -f /root/.ssh/id_rsa -P ""; fi
 
