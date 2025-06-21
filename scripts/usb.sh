@@ -6,7 +6,7 @@ usb_wan_support() {
 }
 
 usb_storage_support() {
-  ensure_packages "kmod-usb-storage kmod-usb-storage-uas usbutils block-mount e2fsprogs kmod-fs-ext4 libblkid kmod-fs-exfat exfat-fsck"
+  ensure_packages "kmod-usb-storage kmod-usb-storage-uas usbutils block-mount e2fsprogs kmod-fs-ext4 libblkid kmod-fs-exfat exfat-fsck parted block-mount kmod-fs-ext4 e2fsprogs"
 }
 
 configure_samba() {
@@ -23,27 +23,7 @@ configure_samba() {
   chmod -R 777 /mnt/sda1
 }
 
-check_usb_device() {
-  if [ ! -b "/dev/sda" ]; then
-    error "No USB storage device found at /dev/sda"
-  fi
-
-  # Check if device is already mounted
-  if mount | grep -q "^/dev/sda1"; then
-    error "USB device is already mounted. Please unmount it first"
-  fi
-
-  # Check device size
-  local min_size_mb=100
-  local size_mb=$(blockdev --getsize64 /dev/sda | awk '{print int($1/1024/1024)}')
-  if [ "$size_mb" -lt "$min_size_mb" ]; then
-    error "USB device is too small. Minimum required size: ${min_size_mb}MB"
-  fi
-}
-
 extend_storage() {
-  check_usb_device
-
   # Create partition table and partition
   info "Creating partition table..."
   parted -s /dev/sda mklabel gpt || error "Failed to create GPT label"
@@ -55,8 +35,6 @@ extend_storage() {
   uci set fstab.@global[0].check_fs='1'
   uci commit fstab
   /etc/init.d/fstab boot || error "Failed to boot fstab."
-
-  ensure_packages "block-mount kmod-fs-ext4 e2fsprogs parted"
 
   parted -s /dev/sda -- mklabel gpt mkpart extroot 2048s -2048s || error "Failed to partition USB storage."
   DEVICE="$(block info | sed -n -e '/MOUNT="\S*\/overlay"/s/:\s.*$//p')"
