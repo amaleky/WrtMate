@@ -1,22 +1,6 @@
 #!/bin/bash
 # Passwall configuration for OpenWRT
 
-detect_architecture() {
-  ARCH=$(uname -m)
-  HAS_HARD_FLOAT=1
-  if command -v readelf >/dev/null 2>&1; then
-    if ! readelf -A /proc/self/exe | grep -q "Tag_ABI_FP_number_model: VFP"; then
-      HAS_HARD_FLOAT=0
-    fi
-  fi
-  HAS_V3=0
-  if [ "$ARCH" = "x86_64" ]; then
-    if grep -q -E 'avx2|bmi1|bmi2|f16c|fma|abm|movbe|xsave' /proc/cpuinfo; then
-      HAS_V3=1
-    fi
-  fi
-}
-
 install_base_packages() {
   opkg remove dnsmasq
   ensure_packages "dnsmasq-full kmod-nft-socket kmod-nft-tproxy binutils"
@@ -47,46 +31,44 @@ setup_url_test() {
   add_cron_job "* * * * * /root/scripts/url-test.sh"
 }
 
-detect_warp_arch() {
-  case "$ARCH" in
-  x86_64) DETECTED_ARCH="amd64" ;;
-  aarch64) DETECTED_ARCH="arm64" ;;
-  armv7l | armv7) DETECTED_ARCH="arm7" ;;
-  mips)
-    if [ $HAS_HARD_FLOAT -eq 1 ]; then
-      DETECTED_ARCH="mips"
-    else
-      DETECTED_ARCH="mipssoftfloat"
-    fi
-    ;;
-  mipsel)
-    if [ $HAS_HARD_FLOAT -eq 1 ]; then
-      DETECTED_ARCH="mipsle"
-    else
-      DETECTED_ARCH="mipslesoftfloat"
-    fi
-    ;;
-  mips64)
-    if [ $HAS_HARD_FLOAT -eq 1 ]; then
-      DETECTED_ARCH="mips64"
-    else
-      DETECTED_ARCH="mips64softfloat"
-    fi
-    ;;
-  mips64el)
-    if [ $HAS_HARD_FLOAT -eq 1 ]; then
-      DETECTED_ARCH="mips64le"
-    else
-      DETECTED_ARCH="mips64lesoftfloat"
-    fi
-    ;;
-  riscv64) DETECTED_ARCH="riscv64" ;;
-  *) error "Unsupported CPU architecture: $ARCH" ;;
-  esac
-}
-
 install_warp() {
-  detect_warp_arch
+  case "$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2)" in
+  mipsel_24kc)
+    DETECTED_ARCH="mipslesoftfloat"
+    ;;
+  mips_24kc)
+    DETECTED_ARCH="mipssoftfloat"
+    ;;
+  mipsel*)
+    DETECTED_ARCH="mipsle"
+    ;;
+  mips64el*)
+    DETECTED_ARCH="mips64le"
+    ;;
+  mips64*)
+    DETECTED_ARCH="mips64"
+    ;;
+  mips*)
+    DETECTED_ARCH="mips"
+    ;;
+  arm_cortex-a7 | arm_arm1176jzf-s | arm926ej-s | arm*)
+    DETECTED_ARCH="arm7"
+    ;;
+  aarch64*)
+    DETECTED_ARCH="arm64"
+    ;;
+  x86_64)
+    DETECTED_ARCH="amd64"
+    ;;
+  riscv64*)
+    DETECTED_ARCH="riscv64"
+    ;;
+  *)
+    error "Unsupported CPU architecture: $(uname -m)"
+    ;;
+  esac
+
+  info "Detected architecture: $DETECTED_ARCH"
 
   curl -L -o /tmp/warp.zip "https://github.com/bepass-org/warp-plus/releases/latest/download/warp-plus_linux-${DETECTED_ARCH}.zip" || error "Failed to download WARP zip."
   unzip -o /tmp/warp.zip -d /tmp
@@ -103,43 +85,54 @@ install_warp() {
   /etc/init.d/warp-plus restart
 }
 
-detect_hiddify_arch() {
-  case "$ARCH" in
-  i386 | i686) DETECTED_ARCH="386" ;;
-  x86_64)
-    if [ $HAS_V3 -eq 1 ]; then
-      DETECTED_ARCH="amd64-v3"
-    else
-      DETECTED_ARCH="amd64"
-    fi
-    ;;
-  aarch64) DETECTED_ARCH="arm64" ;;
-  armv5*) DETECTED_ARCH="armv5" ;;
-  armv6*) DETECTED_ARCH="armv6" ;;
-  armv7* | armv7) DETECTED_ARCH="armv7" ;;
-  mips)
-    if [ $HAS_HARD_FLOAT -eq 1 ]; then
-      DETECTED_ARCH="mips-hardfloat"
-    else
-      DETECTED_ARCH="mips-softfloat"
-    fi
-    ;;
-  mipsel)
-    if [ $HAS_HARD_FLOAT -eq 1 ]; then
-      DETECTED_ARCH="mipsel-hardfloat"
-    else
-      DETECTED_ARCH="mipsel-softfloat"
-    fi
-    ;;
-  mips64) DETECTED_ARCH="mips64" ;;
-  mips64el) DETECTED_ARCH="mips64el" ;;
-  s390x) DETECTED_ARCH="s390x" ;;
-  *) error "Unsupported CPU architecture: $ARCH" ;;
-  esac
-}
-
 install_hiddify() {
-  detect_hiddify_arch
+  case "$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2)" in
+  x86_64)
+    DETECTED_ARCH="amd64"
+    ;;
+  i386 | i686)
+    DETECTED_ARCH="386"
+    ;;
+  aarch64* | arm64*)
+    DETECTED_ARCH="arm64"
+    ;;
+  armv5* | arm926ej-s)
+    DETECTED_ARCH="armv5"
+    ;;
+  armv6*)
+    DETECTED_ARCH="armv6"
+    ;;
+  armv7* | arm_cortex-a7 | arm_arm1176jzf-s)
+    DETECTED_ARCH="armv7"
+    ;;
+  mips_24kc)
+    DETECTED_ARCH="mips-softfloat"
+    ;;
+  mipsel_24kc)
+    DETECTED_ARCH="mipsel-softfloat"
+    ;;
+  mipsel*)
+    DETECTED_ARCH="mipsel-hardfloat"
+    ;;
+  mips*)
+    DETECTED_ARCH="mips-hardfloat"
+    ;;
+  mips64el*)
+    DETECTED_ARCH="mips64el"
+    ;;
+  mips64*)
+    DETECTED_ARCH="mips64"
+    ;;
+  s390x)
+    DETECTED_ARCH="s390x"
+    ;;
+  *)
+    echo "Unsupported architecture: $(uname -m)"
+    exit 1
+    ;;
+  esac
+
+  info "Detected architecture: $DETECTED_ARCH"
 
   curl -L -o /tmp/hiddify.tar.gz "https://github.com/hiddify/hiddify-core/releases/latest/download/hiddify-cli-linux-${DETECTED_ARCH}.tar.gz" || error "Failed to download Hiddify."
   tar -xvzf /tmp/hiddify.tar.gz -C /tmp
@@ -183,7 +176,6 @@ install_ssh_proxy() {
 }
 
 main() {
-  detect_architecture
   check_min_requirements 200 100 2
 
   if confirm "Do you want to install WARP?" "y"; then
