@@ -47,18 +47,15 @@ configure_interface() {
   uci set "network.${name}${suffix}.proto=$proto"
   uci set "network.${name}${suffix}.device=$port"
   uci set "network.${name}${suffix}.metric=1"
-  uci set "network.${name}${suffix}.peerdns=0"
 
   if [ -n "$ipv6" ]; then
     # IPv6-specific settings
     uci set "network.${name}${suffix}.reqaddress=try"
     uci set "network.${name}${suffix}.reqprefix=auto"
     uci set "network.${name}${suffix}.norelease=1"
-    uci set "network.${name}${suffix}.dns=$(uci get network.wan6.dns)"
   else
     # IPv4-specific settings
     uci set "network.globals.packet_steering=1"
-    uci set "network.${name}${suffix}.dns=$(uci get network.wan.dns)"
   fi
 
   success "Interface ${name}${suffix} configured"

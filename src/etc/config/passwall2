@@ -135,11 +135,10 @@ domain:upenlod.pw
 domain:odlserver.info
 domain:ptp
 domain:local
+domain:snapp.cab
 domain:pinsvc.net'
 	option ip_list 'geoip:ir
-geoip:private
-94.140.15.15
-2a10:50c0::ad2:ff'
+geoip:private'
 
 config acl_rule
 	option enabled '1'

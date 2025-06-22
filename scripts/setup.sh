@@ -1,8 +1,6 @@
 #!/bin/bash
 # Setup function for OpenWRT
 
-IPV4_DNS="94.140.15.15"
-IPV6_DNS="2a10:50c0::ad2:ff"
 LAN_IPADDR="$(uci get network.lan.ipaddr 2>/dev/null || echo '192.168.1.1')"
 
 check_firmware_version() {
@@ -59,19 +57,6 @@ configure_timezone() {
     uci commit system
     /etc/init.d/system reload
   fi
-}
-
-configure_network_dns() {
-  for INTERFACE_V4 in $(uci show network | grep "proto='dhcp'" | cut -d. -f2 | cut -d= -f1); do
-    uci set network.${INTERFACE_V4}.peerdns='0'
-    uci set network.${INTERFACE_V4}.dns="$IPV4_DNS"
-  done
-  for INTERFACE_V6 in $(uci show network | grep "proto='dhcpv6'" | cut -d. -f2 | cut -d= -f1); do
-    uci set network.${INTERFACE_V6}.peerdns='0'
-    uci set network.${INTERFACE_V6}.dns="$IPV6_DNS"
-  done
-  uci commit network
-  /etc/init.d/network reload
 }
 
 configure_wifi() {
@@ -134,7 +119,6 @@ main() {
     upgrade
     change_root_password
     configure_timezone
-    configure_network_dns
     configure_wifi
     configure_lan_ip
     configure_auto_reboot
