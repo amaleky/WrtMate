@@ -121,14 +121,6 @@ config shunt_rules 'Direct'
 	option network 'tcp,udp'
 	option domain_list 'geosite:category-ir
 domain:ir
-# games
-domain:pvp.net
-domain:riotcdn.net
-domain:riotgames.com
-domain:leagueoflegends.com
-domain:callofduty.com
-domain:activision.com
-domain:callofdutyleague.com
 # download
 domain:dl.playstation.net
 domain:upenlod.pw
