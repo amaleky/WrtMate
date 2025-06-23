@@ -1,0 +1,5 @@
+#!/bin/sh
+
+[ "$ACTION" = "ifup" ] && \
+[ "$DEVICE" = "$(ip route | grep default | awk -F 'dev ' '{print $2}' | awk '{print $1}')" ] && \
+/root/scripts/url-test.sh

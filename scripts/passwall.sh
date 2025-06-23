@@ -28,7 +28,10 @@ setup_url_test() {
   if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
   curl -s -L -o /root/scripts/url-test.sh "${REPO_URL}/src/root/scripts/url-test.sh" || error "Failed to download url-test.sh."
   chmod +x /root/scripts/url-test.sh
-  add_cron_job "*/10 * * * * /root/scripts/url-test.sh"
+  add_cron_job "* * * * * /root/scripts/url-test.sh"
+
+  curl -s -L -o /etc/hotplug.d/iface/99-url-test "${REPO_URL}/src/etc/hotplug.d/iface/99-url-test" || error "Failed to download 99-url-test hotplug script."
+  chmod +x /etc/hotplug.d/iface/99-url-test
 }
 
 install_warp() {
@@ -77,9 +80,6 @@ install_warp() {
 
   curl -s -L -o /etc/init.d/warp-plus "${REPO_URL}/src/etc/init.d/warp-plus" || error "Failed to download warp-plus init script."
   chmod +x /etc/init.d/warp-plus
-
-  curl -s -L -o /etc/hotplug.d/iface/99-warp "${REPO_URL}/src/etc/hotplug.d/iface/99-warp" || error "Failed to download 99-warp hotplug script."
-  chmod +x /etc/hotplug.d/iface/99-warp
 
   /etc/init.d/warp-plus enable
   /etc/init.d/warp-plus restart
@@ -144,9 +144,6 @@ install_hiddify() {
   curl -s -L -o /etc/init.d/hiddify-cli "${REPO_URL}/src/etc/init.d/hiddify-cli" || error "Failed to download hiddify-cli init script."
   chmod +x /etc/init.d/hiddify-cli
 
-  curl -s -L -o /etc/hotplug.d/iface/99-hiddify "${REPO_URL}/src/etc/hotplug.d/iface/99-hiddify" || error "Failed to download 99-hiddify hotplug script."
-  chmod +x /etc/hotplug.d/iface/99-hiddify
-
   if [[ ! -e /root/hiddify/configs.conf ]]; then
     curl -s -L -o /root/hiddify/configs.conf "${REPO_URL}/src/root/hiddify/configs.conf" || error "Failed to download hiddify configs."
   fi
@@ -167,9 +164,6 @@ install_ssh_proxy() {
 
   curl -s -L -o /etc/init.d/ssh-proxy "${REPO_URL}/src/etc/init.d/ssh-proxy" || error "Failed to download ssh-proxy init script."
   chmod +x /etc/init.d/ssh-proxy
-
-  curl -s -L -o /etc/hotplug.d/iface/99-ssh-proxy "${REPO_URL}/src/etc/hotplug.d/iface/99-ssh-proxy" || error "Failed to download 99-ssh-proxy hotplug script."
-  chmod +x /etc/hotplug.d/iface/99-ssh-proxy
 
   /etc/init.d/ssh-proxy enable
   /etc/init.d/ssh-proxy restart
