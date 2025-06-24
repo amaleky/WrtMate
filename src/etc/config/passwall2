@@ -45,13 +45,12 @@ config global
 	option enabled '1'
 	option node_socks_port '1070'
 	option localhost_proxy '0'
-	option client_proxy '0'
+	option client_proxy '1'
 	option socks_enabled '0'
-	option acl_enable '1'
+	option acl_enable '0'
 	option direct_dns_protocol 'auto'
 	option direct_dns_query_strategy 'UseIP'
 	option remote_dns_protocol 'tcp'
-	option remote_dns '94.140.14.14'
 	option remote_dns_query_strategy 'UseIPv4'
 	option log_node '0'
 	option loglevel 'error'
@@ -60,6 +59,7 @@ config global
 	option remote_fakedns '0'
 	option dns_redirect '1'
 	option node 'Splitter'
+	option remote_dns '94.140.14.14'
 
 config global_haproxy
 	option balancing_enable '0'
@@ -121,6 +121,7 @@ config shunt_rules 'Direct'
 	option network 'tcp,udp'
 	option domain_list 'geosite:category-ir
 domain:ir
+domain:devsrights.workers.dev
 # download
 domain:dl.playstation.net
 domain:upenlod.pw
@@ -131,8 +132,3 @@ domain:snapp.cab
 domain:pinsvc.net'
 	option ip_list 'geoip:ir
 geoip:private'
-
-config acl_rule
-	option enabled '1'
-	option remarks 'Whitelist'
-	option node 'Splitter'
