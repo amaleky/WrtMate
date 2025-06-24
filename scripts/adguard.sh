@@ -1,83 +1,57 @@
 #!/bin/bash
 # AdGuard Home configuration for OpenWRT
 
-# AdGuard configuration constants
-readonly ADGUARD_PORT=54
-readonly ADGUARD_DOMAIN="lan"
-readonly ADGUARD_LOCAL_ZONE="/lan/"
-readonly ADGUARD_SERVICES=(
-  "adguardhome"
-  "dnsmasq"
-  "odhcpd"
-)
-
-get_network_addresses() {
-  local -n addr4_ref=$1
-  local -n addr6_ref=$2
-
-  addr4_ref=$(/sbin/ip -o -4 addr list br-lan | awk 'NR==1{ split($4, ip_addr, "/"); print ip_addr[1]; exit }')
-  addr6_ref=$(/sbin/ip -o -6 addr list br-lan scope global | awk '$4 ~ /^fd|^fc/ { split($4, ip_addr, "/"); print ip_addr[1]; exit }')
-
-  if [ -z "$addr4_ref" ]; then
-    error "Failed to get IPv4 address for br-lan interface"
-  fi
-}
-
 install_adguard() {
   ensure_packages "adguardhome"
-  for service in "${ADGUARD_SERVICES[@]}"; do
-    /etc/init.d/"$service" enable
-  done
 }
 
-configure_dns_settings() {
-  info "Configuring DNS settings..."
-  local ipv4_addr ipv6_addr
-  get_network_addresses ipv4_addr ipv6_addr
+configure_adguard() {
+  curl -s -L -o /etc/adguardhome.yaml "${REPO_URL}/src/etc/adguardhome.yaml" || error "Failed to download adguardhome config."
 
-  # Configure dnsmasq
-  local dnsmasq_config=(
-    "port=$ADGUARD_PORT"
-    "domain=$ADGUARD_DOMAIN"
-    "local=$ADGUARD_LOCAL_ZONE"
-    "expandhosts=1"
-    "cachesize=0"
-    "noresolv=1"
-  )
+  NET_ADDR=$(/sbin/ip -o -4 addr list br-lan | awk 'NR==1{ split($4, ip_addr, "/"); print ip_addr[1]; exit }')
+  NET_ADDR6=$(/sbin/ip -o -6 addr list br-lan scope global | awk '$4 ~ /^fd|^fc/ { split($4, ip_addr, "/"); print ip_addr[1]; exit }')
 
-  # Apply dnsmasq settings
-  for setting in "${dnsmasq_config[@]}"; do
-    local key="${setting%%=*}"
-    local value="${setting#*=}"
-    uci set "dhcp.@dnsmasq[0].$key=$value"
-  done
-
-  # Clear existing DNS settings
+  # 1. Move dnsmasq to port 54.
+  # 2. Set local domain to "lan".
+  # 3. Add local '/lan/' to make sure all queries *.lan are resolved in dnsmasq;
+  # 4. Add expandhosts '1' to make sure non-expanded hosts are expanded to ".lan";
+  # 5. Disable dnsmasq cache size as it will only provide PTR/rDNS info, making sure queries are always up to date (even if a device internal IP change after a DHCP lease renew).
+  # 6. Disable reading /tmp/resolv.conf.d/resolv.conf.auto file (which are your ISP nameservers by default), you don't want to leak any queries to your ISP.
+  # 7. Delete all forwarding servers from dnsmasq config.
+  uci set dhcp.@dnsmasq[0].port="54"
+  uci set dhcp.@dnsmasq[0].domain="lan"
+  uci set dhcp.@dnsmasq[0].local="/lan/"
+  uci set dhcp.@dnsmasq[0].expandhosts="1"
+  uci set dhcp.@dnsmasq[0].cachesize="0"
+  uci set dhcp.@dnsmasq[0].noresolv="1"
   uci -q del dhcp.@dnsmasq[0].server
 
-  # Configure DHCP options
-  uci set dhcp.lan.dhcp_option="3,$ipv4_addr 6,$ipv4_addr 15,lan"
-  [ -n "$ipv6_addr" ] && uci set dhcp.lan.dns="$ipv6_addr"
+  # Delete existing config ready to install new options.
+  uci -q del dhcp.lan.dhcp_option
+  uci -q del dhcp.lan.dns
+
+  # DHCP option 3: Specifies the gateway the DHCP server should send to DHCP clients.
+  uci add_list dhcp.lan.dhcp_option='3,'"${NET_ADDR}"
+
+  # DHCP option 6: Specifies the DNS server the DHCP server should send to DHCP clients.
+  uci add_list dhcp.lan.dhcp_option='6,'"${NET_ADDR}"
+
+  # DHCP option 15: Specifies the domain suffix the DHCP server should send to DHCP clients.
+  uci add_list dhcp.lan.dhcp_option='15,'"lan"
+
+  # Set IPv6 Announced DNS
+  uci add_list dhcp.lan.dns="$NET_ADDR6"
 
   uci commit dhcp
-  success "DNS settings configured successfully"
-}
-
-restart_services() {
-  info "Restarting DNS services..."
-  for service in "${ADGUARD_SERVICES[@]}"; do
-    /etc/init.d/"$service" restart
-  done
-  success "DNS services restarted successfully"
+  /etc/init.d/adguardhome enable
+  /etc/init.d/adguardhome restart
+  /etc/init.d/dnsmasq restart
+  /etc/init.d/odhcpd restart
 }
 
 main() {
   install_adguard
-
-  if confirm "Do you want to set AdGuard as the default DNS server?"; then
-    configure_dns_settings
-    restart_services
-  fi
+  configure_adguard
 
   success "AdGuard Home setup completed successfully"
 }

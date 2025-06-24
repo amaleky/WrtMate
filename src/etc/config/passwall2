@@ -57,9 +57,9 @@ config global
 	option write_ipset_direct '1'
 	option remote_dns_detour 'remote'
 	option remote_fakedns '0'
-	option dns_redirect '1'
+	option dns_redirect '0'
 	option node 'Splitter'
-	option remote_dns '94.140.14.14'
+	option remote_dns '208.67.222.2'
 
 config global_haproxy
 	option balancing_enable '0'
