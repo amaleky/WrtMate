@@ -155,12 +155,12 @@ install_hiddify() {
 }
 
 install_ssh_proxy() {
-  ensure_packages "openssh-keygen openssh-client"
+  ensure_packages "openssh-client"
   if [ ! -d /root/.ssh/ ]; then mkdir /root/.ssh/; fi
-  if [ ! -f /root/.ssh/id_rsa ]; then ssh-keygen -b 4096 -t rsa -f /root/.ssh/id_rsa -P ""; fi
 
-  info "Please add this public key to your SSH server's authorized_keys file:"
-  cat /root/.ssh/id_rsa.pub
+  info "Please paste your SSH private key (press Ctrl+D when done):"
+  cat >/root/.ssh/id_rsa
+  chmod 600 /root/.ssh/id_rsa
 
   curl -s -L -o /etc/init.d/ssh-proxy "${REPO_URL}/src/etc/init.d/ssh-proxy" || error "Failed to download ssh-proxy init script."
   chmod +x /etc/init.d/ssh-proxy
