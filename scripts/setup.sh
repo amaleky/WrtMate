@@ -98,14 +98,13 @@ install_recommended_packages() {
     ["htop"]="htop"
     ["nload"]="nload"
     ["luci-app-irqbalance"]="IRQ Balance"
-    ["luci-app-sqm"]="Smart Queue Management (SQM)"
     ["zram-swap"]="ZRAM Swap"
   )
 
   local package_list=""
   for pkg in "${!PACKAGE_DESCRIPTIONS[@]}"; do
     if ! is_package_installed "$pkg"; then
-      if confirm "Do you want to install ${PACKAGE_DESCRIPTIONS[$pkg]}?"; then
+      if confirm "Do you want to install ${PACKAGE_DESCRIPTIONS[$pkg]}?" "y"; then
         ensure_packages "$pkg"
       fi
     fi
