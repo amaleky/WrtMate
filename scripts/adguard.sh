@@ -6,8 +6,6 @@ install_adguard() {
 }
 
 configure_adguard() {
-  curl -s -L -o /etc/adguardhome.yaml "${REPO_URL}/src/etc/adguardhome.yaml" || error "Failed to download adguardhome config."
-
   NET_ADDR=$(/sbin/ip -o -4 addr list br-lan | awk 'NR==1{ split($4, ip_addr, "/"); print ip_addr[1]; exit }')
   NET_ADDR6=$(/sbin/ip -o -6 addr list br-lan scope global | awk '$4 ~ /^fd|^fc/ { split($4, ip_addr, "/"); print ip_addr[1]; exit }')
 
