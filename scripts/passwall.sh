@@ -158,12 +158,16 @@ install_ssh_proxy() {
   ensure_packages "openssh-client"
   if [ ! -d /root/.ssh/ ]; then mkdir /root/.ssh/; fi
 
-  info "Please paste your SSH private key (press Ctrl+D when done):"
-  cat >/root/.ssh/id_rsa
-  chmod 600 /root/.ssh/id_rsa
+  if [ ! -e "/root/.ssh/id_rsa" ]; then
+    info "Please paste your SSH private key (press Ctrl+D when done):"
+    cat >/root/.ssh/id_rsa
+    chmod 600 /root/.ssh/id_rsa
+  fi
 
-  curl -s -L -o /etc/init.d/ssh-proxy "${REPO_URL}/src/etc/init.d/ssh-proxy" || error "Failed to download ssh-proxy init script."
-  chmod +x /etc/init.d/ssh-proxy
+  if [ ! -e "/etc/init.d/ssh-proxy" ]; then
+    curl -s -L -o /etc/init.d/ssh-proxy "${REPO_URL}/src/etc/init.d/ssh-proxy" || error "Failed to download ssh-proxy init script."
+    chmod +x /etc/init.d/ssh-proxy
+  fi
 
   /etc/init.d/ssh-proxy enable
   /etc/init.d/ssh-proxy restart
