@@ -54,11 +54,11 @@ install_warp() {
   mips*)
     DETECTED_ARCH="mips"
     ;;
-  arm_cortex-a7 | arm_arm1176jzf-s | arm926ej-s | arm*)
-    DETECTED_ARCH="arm7"
-    ;;
-  aarch64*)
+  aarch64* | arm64* | armv8*)
     DETECTED_ARCH="arm64"
+    ;;
+  arm*)
+    DETECTED_ARCH="arm7"
     ;;
   x86_64)
     DETECTED_ARCH="amd64"
@@ -93,7 +93,7 @@ install_hiddify() {
   i386 | i686)
     DETECTED_ARCH="386"
     ;;
-  aarch64* | arm64*)
+  aarch64* | arm64* | armv8*)
     DETECTED_ARCH="arm64"
     ;;
   armv5* | arm926ej-s)
@@ -102,7 +102,7 @@ install_hiddify() {
   armv6*)
     DETECTED_ARCH="armv6"
     ;;
-  armv7* | arm_cortex-a7 | arm_arm1176jzf-s)
+  arm*)
     DETECTED_ARCH="armv7"
     ;;
   mips_24kc)
@@ -111,17 +111,17 @@ install_hiddify() {
   mipsel_24kc)
     DETECTED_ARCH="mipsel-softfloat"
     ;;
-  mipsel*)
-    DETECTED_ARCH="mipsel-hardfloat"
-    ;;
-  mips*)
-    DETECTED_ARCH="mips-hardfloat"
-    ;;
   mips64el*)
     DETECTED_ARCH="mips64el"
     ;;
+  mipsel*)
+    DETECTED_ARCH="mipsel-hardfloat"
+    ;;
   mips64*)
     DETECTED_ARCH="mips64"
+    ;;
+  mips*)
+    DETECTED_ARCH="mips-hardfloat"
     ;;
   s390x)
     DETECTED_ARCH="s390x"
