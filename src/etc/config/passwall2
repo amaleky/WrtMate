@@ -52,7 +52,7 @@ config global
 	option direct_dns_query_strategy 'UseIP'
 	option remote_dns_protocol 'tcp'
 	option remote_dns_query_strategy 'UseIPv4'
-	option log_node '0'
+	option log_node '1'
 	option loglevel 'error'
 	option write_ipset_direct '1'
 	option remote_dns_detour 'remote'
