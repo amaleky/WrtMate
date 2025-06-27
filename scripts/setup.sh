@@ -71,7 +71,7 @@ configure_wifi() {
     for i in $(seq 0 $(($(uci show wireless | grep -c 'wifi-iface') - 1))); do
       uci set wireless.@wifi-iface[$i].ssid="$WIFI_SSID"
       uci set wireless.@wifi-iface[$i].key="$WIFI_PASSWORD"
-      uci set wireless.@wifi-iface[$i].encryption='psk-mixed'
+      uci set wireless.@wifi-iface[$i].encryption='psk2'
     done
     uci commit wireless
     wifi reload
