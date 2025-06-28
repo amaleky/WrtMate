@@ -8,10 +8,10 @@ SSH_USER=root
 SSH_PORT=22
 
 start_service() {
-    procd_open_instance
-    procd_set_param command /usr/bin/ssh -N -D 1080 -i /root/.ssh/id_rsa -o ServerAliveInterval=60 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} -p ${SSH_PORT}
-    procd_set_param stdout 1
-    procd_set_param stderr 1
-    procd_set_param respawn
-    procd_close_instance
+  procd_open_instance
+  procd_set_param command /usr/bin/ssh -N -D 1080 -i /root/.ssh/id_rsa -o ServerAliveInterval=60 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} -p ${SSH_PORT}
+  procd_set_param stdout 1
+  procd_set_param stderr 1
+  procd_set_param respawn
+  procd_close_instance
 }
