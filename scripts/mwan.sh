@@ -92,7 +92,7 @@ configure_multiwan() {
   # Configure network settings
   configure_network_metrics "$interface_port"
   configure_interface "$interface_name" "$interface_port"        # IPv4
-  configure_interface "$interface_name" "$interface_port" "ipv6" # IPv6
+#  configure_interface "$interface_name" "$interface_port" "ipv6" # IPv6
 
   # Apply changes
   uci commit network

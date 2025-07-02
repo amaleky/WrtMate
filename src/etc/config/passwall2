@@ -49,7 +49,7 @@ config global
 	option socks_enabled '0'
 	option acl_enable '0'
 	option direct_dns_protocol 'auto'
-	option direct_dns_query_strategy 'UseIP'
+	option direct_dns_query_strategy 'UseIPv4'
 	option remote_dns_protocol 'tcp'
 	option remote_dns_query_strategy 'UseIPv4'
 	option log_node '1'

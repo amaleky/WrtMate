@@ -3,7 +3,7 @@
 START=91
 USE_PROCD=1
 
-SSH_HOST=1.1.1.1
+SSH_HOST=ssh.example.com
 SSH_USER=root
 SSH_PORT=22
 
