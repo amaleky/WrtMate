@@ -148,7 +148,7 @@ install_hiddify() {
     curl -s -L -o /root/hiddify/configs.conf "${REPO_URL}/src/root/hiddify/configs.conf" || error "Failed to download hiddify configs."
   fi
 
-  curl -s -L -o /root/hiddify/settings.conf "${REPO_URL}/src/root/hiddify/settings.conf" || error "Failed to download hiddify settings."
+  curl -s -L -o /root/hiddify/settings.json "${REPO_URL}/src/root/hiddify/settings.json" || error "Failed to download hiddify settings."
 
   /etc/init.d/hiddify-cli enable
   /etc/init.d/hiddify-cli restart
