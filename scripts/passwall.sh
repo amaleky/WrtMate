@@ -34,6 +34,13 @@ setup_url_test() {
   chmod +x /etc/hotplug.d/iface/99-url-test
 }
 
+setup_scanner() {
+  if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
+
+  curl -s -L -o /root/scripts/scanner.sh "${REPO_URL}/src/root/scripts/scanner.sh" || error "Failed to download scanner.sh."
+  chmod +x /root/scripts/scanner.sh
+}
+
 install_warp() {
   case "$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2)" in
   mipsel_24kc)
@@ -192,6 +199,7 @@ main() {
   install_passwall
   setup_geo_update
   setup_url_test
+  setup_scanner
 
   uci commit passwall2
   /etc/init.d/passwall2 restart
