@@ -39,6 +39,9 @@ setup_scanner() {
 
   curl -s -L -o /root/scripts/scanner.sh "${REPO_URL}/src/root/scripts/scanner.sh" || error "Failed to download scanner.sh."
   chmod +x /root/scripts/scanner.sh
+
+  curl -s -L -o /etc/init.d/scanner "${REPO_URL}/src/etc/init.d/scanner" || error "Failed to download scanner init script."
+  chmod +x /etc/init.d/scanner
 }
 
 install_warp() {
