@@ -1,10 +1,14 @@
 #!/bin/bash
 
 TEST_URL="https://www.gstatic.com/generate_204"
-OUTPUT_FILE="/root/hiddify/configs.conf"
-HASH_DIR="/root/hiddify/ignored"
+TEST_INDEX="/root/hiddify/test.index"
+SUBSCRIPTION="/root/hiddify/subscription.conf"
+HIDDIFY_BACKUP="/tmp/configs.backup"
+HIDDIFY_CONFIGS="/root/hiddify/configs.conf"
 BASE_SOCKS_PORT=1400
-ALL_CONFIGS=$(cat "$OUTPUT_FILE")
+PORT_COUNTER=$BASE_SOCKS_PORT
+CURRENT_INDEX=0
+START_INDEX=0
 MAX_JOBS=10
 
 CONFIG_URLS=(
@@ -21,58 +25,42 @@ cd "/tmp" || {
   exit 1
 }
 
-if [[ ! -d "$HASH_DIR" ]]; then
-  mkdir -p "$HASH_DIR"
-fi
+sort "$HIDDIFY_CONFIGS" | uniq | grep -v '^$' >"$HIDDIFY_BACKUP"
+echo "" >"$HIDDIFY_CONFIGS"
 
-for CONFIG_URL in "${CONFIG_URLS[@]}"; do
-  echo "🔄 Downloading: $CONFIG_URL"
-  HASHED_FILE="/tmp/$(echo -n "$CONFIG_URL" | md5sum | cut -d ' ' -f1).conf"
-  if [[ -f "$HASHED_FILE" ]]; then
-    echo "⏩ Cached already: $HASHED_FILE"
-  else
-    if curl --max-time 60 --retry 2 "$CONFIG_URL" -o "$HASHED_FILE"; then
-      echo "✅ Saved to cache: $HASHED_FILE"
+if [ -f "$SUBSCRIPTION" ] && [ "$(wc -l <"$SUBSCRIPTION")" -ge 1 ]; then
+  if [[ -f "$TEST_INDEX" ]]; then
+    START_INDEX=$(<"$TEST_INDEX")
+  fi
+else
+  for CONFIG_URL in "${CONFIG_URLS[@]}"; do
+    echo "🔄 Downloading: $CONFIG_URL"
+    if curl -f --max-time 60 --retry 2 "$CONFIG_URL" >>"$SUBSCRIPTION"; then
+      echo "✅ Subscription Saved: $CONFIG_URL"
     else
       echo "❌ Failed to fetch: $CONFIG_URL"
-      rm -f "$HASHED_FILE"
-      continue
     fi
-  fi
-  ALL_CONFIGS+=$'\n'"$(cat "$HASHED_FILE")"$'\n'
-  echo "" >"$OUTPUT_FILE"
-done
+  done
+fi
+
+echo "ℹ️ $(wc -l <"$SUBSCRIPTION") Config Loaded, $(wc -l <"$HIDDIFY_BACKUP") Config Found, Starting from $START_INDEX"
 
 test_config() {
   local CONFIG="$1"
-  local SHORT_CONFIG="${CONFIG:0:50}..."
   local SOCKS_PORT="$2"
   TEMP_CONFIG="/tmp/config.${SOCKS_PORT}.conf"
   PARSED_CONFIG="/tmp/parsed.${SOCKS_PORT}.json"
   XRAY_CONFIG="/tmp/xray.${SOCKS_PORT}.json"
 
-  HASH_FILE="$HASH_DIR/$(echo -n "$CONFIG" | sha256sum | cut -d ' ' -f1)"
-
-  if [[ -f "$HASH_FILE" ]]; then
-    # echo "⚡️ Config Already tested ${SHORT_CONFIG}"
-    return
-  fi
-
   echo "$CONFIG" >"$TEMP_CONFIG"
 
-  if grep -qxF "$CONFIG" "$OUTPUT_FILE"; then
-    echo "⚠️ Config is duplicated in $OUTPUT_FILE"
-    return
-  fi
-
   if [[ -z "$CONFIG" ]] || [[ "$CONFIG" == \#* ]]; then
-    # echo "⚠️ Skipping empty or commented config"
+    echo "⚠️ Skipping empty or commented config"
     return
   fi
 
   if hiddify-cli parse "$TEMP_CONFIG" -o "$PARSED_CONFIG" 2>&1 | grep -qiE "error|fatal"; then
-    # echo "🚫 Failed to parse config ${SHORT_CONFIG}"
-    touch "$HASH_FILE"
+    echo "🚫 Failed to parse config ${CONFIG}"
     return
   fi
 
@@ -94,13 +82,12 @@ test_config() {
   /tmp/sing-box-test-${SOCKS_PORT} run -c "$XRAY_CONFIG" 2>&1 | while read -r line; do
     if echo "$line" | grep -q "sing-box started"; then
       if curl -s --max-time 1 --retry 1 --proxy "socks://127.0.0.1:$SOCKS_PORT" "$TEST_URL"; then
-        echo "✅ Successfully connected ${SHORT_CONFIG}"
-        flock "$OUTPUT_FILE" -c "echo '$CONFIG' >> '$OUTPUT_FILE'"
+        echo "✅ Successfully connected ${CONFIG}"
+        echo "$CONFIG" >>"$HIDDIFY_CONFIGS"
         killall "sing-box-test-${SOCKS_PORT}"
         wait
       else
-        # echo "❌ Failed to connect ${SHORT_CONFIG}"
-        touch "$HASH_FILE"
+        echo "❌ Failed to connect ${CONFIG}"
         killall "sing-box-test-${SOCKS_PORT}"
         wait
       fi
@@ -108,10 +95,18 @@ test_config() {
   done
 }
 
-PORT_COUNTER=$BASE_SOCKS_PORT
+while IFS= read -r CONFIG; do
+  test_config "$CONFIG" "$PORT_COUNTER"
+  ((PORT_COUNTER++))
+done <"$HIDDIFY_BACKUP"
 
 while IFS= read -r CONFIG; do
+  ((CURRENT_INDEX++))
+  if ((START_INDEX >= CURRENT_INDEX)); then
+    continue
+  fi
   while (($(jobs -r | wc -l) >= MAX_JOBS)); do
+    echo "$CURRENT_INDEX" >"$TEST_INDEX"
     sleep 1
   done
   test_config "$CONFIG" "$PORT_COUNTER" &
@@ -119,7 +114,7 @@ while IFS= read -r CONFIG; do
   if ((PORT_COUNTER >= BASE_SOCKS_PORT + 20)); then
     PORT_COUNTER=$BASE_SOCKS_PORT
   fi
-done <<<"$ALL_CONFIGS"
+done <"$SUBSCRIPTION"
 
 wait
-echo "🎉 All tests completed."
+echo "🎉 $(wc -l <"$SUBSCRIPTION") Config Tested, $(wc -l <"$HIDDIFY_CONFIGS") Config Found"
