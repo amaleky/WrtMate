@@ -118,3 +118,4 @@ done <"$SUBSCRIPTION"
 
 wait
 echo "🎉 $(wc -l <"$SUBSCRIPTION") Config Tested, $(wc -l <"$HIDDIFY_CONFIGS") Config Found"
+rm -rfv $TEST_INDEX $SUBSCRIPTION $HIDDIFY_BACKUP /tmp/config.*.conf /tmp/parsed.*.json /tmp/xray.*.json
