@@ -47,9 +47,18 @@ configure_adguard() {
   /etc/init.d/odhcpd restart
 }
 
+configure_schedule() {
+  if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
+  curl -s -L -o /root/scripts/adguard-filters.sh "${REPO_URL}/src/root/scripts/adguard-filters.sh" || error "Failed to download adguard-filters.sh."
+  chmod +x /root/scripts/adguard-filters.sh
+  /root/scripts/adguard-filters.sh
+  add_cron_job "* * * * * /root/scripts/adguard-filters.sh"
+}
+
 main() {
   install_adguard
   configure_adguard
+  configure_schedule
 
   success "AdGuard Home setup completed successfully"
 }

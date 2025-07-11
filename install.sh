@@ -20,7 +20,7 @@ check_environment() {
 
 install_dependencies() {
   update_package_lists
-  ensure_packages "jq curl unzip"
+  ensure_packages "jq yq curl unzip"
 }
 
 show_menu() {
