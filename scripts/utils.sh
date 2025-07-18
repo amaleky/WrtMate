@@ -116,3 +116,20 @@ check_min_requirements() {
 
   success "System requirements check passed"
 }
+
+check_environment() {
+  [ "$(id -u)" -eq 0 ] || error "This script must be run as root (use sudo)"
+  [ -f "/etc/openwrt_release" ] || error "This script must be run on an OpenWrt system"
+}
+
+install_dependencies() {
+  update_package_lists
+  ensure_packages "jq yq curl unzip"
+}
+
+main() {
+  check_environment
+  install_dependencies
+}
+
+main "$@"

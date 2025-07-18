@@ -13,17 +13,7 @@
 readonly REPO_URL="https://raw.githubusercontent.com/amaleky/WrtMate/main"
 export REPO_URL
 
-check_environment() {
-  [ "$(id -u)" -eq 0 ] || error "This script must be run as root (use sudo)"
-  [ -f "/etc/openwrt_release" ] || error "This script must be run on an OpenWrt system"
-}
-
-install_dependencies() {
-  update_package_lists
-  ensure_packages "jq yq curl unzip"
-}
-
-show_menu() {
+menu() {
   local PS3="Enter your choice [1-8]: "
   local options=("Setup System" "Configure Multi-WAN" "Install PassWall" "Install AdGuard" "Configure USB" "Factory Reset" "Exit")
 
@@ -42,15 +32,9 @@ show_menu() {
     *) warning "Invalid option $REPLY" ;;
     esac
     echo # Add a blank line for readability
-    show_menu
+    menu
   done
 }
 
-main() {
-  source <(wget -qO- "${REPO_URL}/scripts/utils.sh")
-  check_environment
-  install_dependencies
-  show_menu
-}
-
-main "$@"
+source <(wget -qO- "${REPO_URL}/scripts/utils.sh")
+menu "$@"
