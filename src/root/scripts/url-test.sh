@@ -36,3 +36,14 @@ if /etc/init.d/ssh-proxy enabled; then
 else
   echo "INFO: SSH proxy is not running"
 fi
+
+if /etc/init.d/serverless enabled; then
+  if ! curl --max-time 10 --retry 2 --socks5 127.0.0.1:10808 --silent --output "/dev/null" "$TEST_URL"; then
+    echo "ERROR: ServerLess connectivity test failed. Restarting serverless service..."
+    /etc/init.d/serverless restart
+  else
+    echo "ServerLess connectivity test passed"
+  fi
+else
+  echo "INFO: ServerLess is not running"
+fi

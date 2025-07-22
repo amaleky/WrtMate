@@ -20,7 +20,6 @@ setup_geo_update() {
   if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
   curl -s -L -o /root/scripts/geo-update.sh "${REPO_URL}/src/root/scripts/geo-update.sh" || error "Failed to download geo-update.sh."
   chmod +x /root/scripts/geo-update.sh
-  /root/scripts/geo-update.sh || error "Failed to update geo data."
   add_cron_job "0 6 * * 0 /root/scripts/geo-update.sh"
 }
 
@@ -183,29 +182,34 @@ install_ssh_proxy() {
   /etc/init.d/ssh-proxy restart
 }
 
+install_server_less() {
+  if [ ! -d /root/xray/ ]; then mkdir /root/xray/; fi
+
+  curl -s -L -o /etc/init.d/serverless "${REPO_URL}/src/etc/init.d/serverless" || error "Failed to download serverless init script."
+  chmod +x /etc/init.d/serverless
+
+  curl -s -L -o /root/xray/serverless.json "https://cdn.jsdelivr.net/gh/GFW-knocker/gfw_resist_HTTPS_proxy@main/ServerLess_TLSFrag_with_google_DOH.json" || error "Failed to download ServerLess configs."
+
+  /etc/init.d/serverless enable
+  /etc/init.d/serverless restart
+}
+
 main() {
   check_min_requirements 200 100 2
 
-  if confirm "Do you want to install WARP?" "y"; then
-    install_warp
-  fi
-
-  if confirm "Do you want to install Hiddify?" "y"; then
-    install_hiddify
-  fi
-
-  if confirm "Do you want to install SSH-Proxy?" "y"; then
-    install_ssh_proxy
-  fi
-
+  install_warp
+  install_hiddify
+  install_ssh_proxy
+  install_server_less
   install_base_packages
   install_passwall
   setup_geo_update
   setup_url_test
   setup_scanner
 
-  uci commit passwall2
+  /root/scripts/geo-update.sh
   /etc/init.d/passwall2 restart
+
   success "PassWall configuration completed successfully"
 }
 
