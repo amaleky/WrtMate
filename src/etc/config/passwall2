@@ -338,6 +338,19 @@ full:www.cdn.ad.xiaomi.com
 full:yandexadexchange.net
 full:youtube.cleverads.vn'
 
+config shunt_rules 'Direct'
+	option remarks 'Direct'
+	option network 'tcp,udp'
+	option domain_list 'geosite:category-ir
+domain:ir
+domain:devsrights.workers.dev
+# download
+domain:dl.playstation.net
+domain:upenlod.pw
+domain:odlserver.info'
+	option ip_list 'geoip:ir
+geoip:private'
+
 config shunt_rules 'Proxy'
 	option remarks 'Proxy'
 	option network 'tcp,udp'
