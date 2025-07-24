@@ -173,6 +173,16 @@ install_ssh_proxy() {
     chmod 600 /root/.ssh/id_rsa
   fi
 
+  read -r -p "Enter SSH hostname: " SSH_HOST
+  if [ -n "$SSH_HOST" ]; then
+    sed -i "s/^SSH_HOST=.*/SSH_HOST=${SSH_HOST}/" "/etc/init.d/ssh-proxy"
+  fi
+
+  read -r -p "Enter SSH port: " SSH_PORT
+  if [ -n "$SSH_PORT" ]; then
+    sed -i "s/^SSH_PORT=.*/SSH_PORT=${SSH_PORT}/" "/etc/init.d/ssh-proxy"
+  fi
+
   if [ ! -e "/etc/init.d/ssh-proxy" ]; then
     curl -s -L -o /etc/init.d/ssh-proxy "${REPO_URL}/src/etc/init.d/ssh-proxy" || error "Failed to download ssh-proxy init script."
     chmod +x /etc/init.d/ssh-proxy
@@ -199,13 +209,13 @@ main() {
 
   install_warp
   install_hiddify
-  install_ssh_proxy
   install_server_less
   install_base_packages
   install_passwall
   setup_geo_update
   setup_url_test
   setup_scanner
+  install_ssh_proxy
 
   /root/scripts/geo-update.sh
   /etc/init.d/passwall2 restart
