@@ -94,21 +94,7 @@ configure_auto_reboot() {
 }
 
 install_recommended_packages() {
-  declare -A PACKAGE_DESCRIPTIONS=(
-    ["htop"]="htop"
-    ["nload"]="nload"
-    ["luci-app-irqbalance"]="IRQ Balance"
-    ["zram-swap"]="ZRAM Swap"
-  )
-
-  local package_list=""
-  for pkg in "${!PACKAGE_DESCRIPTIONS[@]}"; do
-    if ! is_package_installed "$pkg"; then
-      if confirm "Do you want to install ${PACKAGE_DESCRIPTIONS[$pkg]}?" "y"; then
-        ensure_packages "$pkg"
-      fi
-    fi
-  done
+  ensure_packages "htop nload luci-app-irqbalance zram-swap"
 }
 
 remove_ipv6_interfaces() {
