@@ -9,16 +9,11 @@ check_firmware_version() {
 }
 
 upgrade_firmware() {
-  if ! confirm "Do you want to upgrade firmware?"; then
-    return 0
+  read -r -p "Enter your router firmware upgrade file (sysupgrade.bin): " FIRMWARE_URL
+  if [ -n "$FIRMWARE_URL" ]; then
+    curl -L -o /tmp/firmware.bin "${FIRMWARE_URL}" || error "Failed to download firmware."
+    sysupgrade -n -v /tmp/firmware.bin
   fi
-  LATEST_VERSION=$(check_firmware_version)
-  DEVICE_ID=$(awk '{print tolower($0)}' /tmp/sysinfo/model | tr ' ' '_')
-  DIST_TARGET=$(grep DISTRIB_TARGET /etc/openwrt_release | cut -d"'" -f2)
-  FILE_NAME=$(curl -s "https://downloads.openwrt.org/releases/${LATEST_VERSION}/targets/$DIST_TARGET/profiles.json" | jq -r --arg id "$DEVICE_ID" '.profiles[$id].images | map(select(.type == "sysupgrade")) | sort_by((.name | contains("squashfs")) | not) | .[0].name') || error "Failed to fetch device profile."
-  DOWNLOAD_URL="https://downloads.openwrt.org/releases/${LATEST_VERSION}/targets/$DIST_TARGET/${FILE_NAME}"
-  curl -L -o /tmp/firmware.bin "${DOWNLOAD_URL}" || error "Failed to download firmware."
-  sysupgrade -n -v /tmp/firmware.bin
 }
 
 upgrade_packages() {
