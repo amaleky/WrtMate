@@ -5,7 +5,7 @@ USE_PROCD=1
 
 start_service() {
   procd_open_instance
-  procd_set_param command /usr/bin/hiddify-cli run -c /root/hiddify/configs.conf -d /root/hiddify/settings.json
+  procd_set_param command /root/hiddify/run.sh
   procd_set_param stdout 1
   procd_set_param stderr 1
   procd_set_param respawn

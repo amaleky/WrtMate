@@ -13,6 +13,18 @@ else
   echo "INFO: Hiddify proxy is not running"
 fi
 
+if /etc/init.d/ghost enabled; then
+  if ! curl --max-time 10 --retry 2 --socks5 127.0.0.1:22334 --silent --output "/dev/null" "$TEST_URL"; then
+    echo "ERROR: Ghost proxy connectivity test failed. Restarting ghost service..."
+    /etc/init.d/scanner restart
+    /etc/init.d/ghost restart
+  else
+    echo "Ghost proxy connectivity test passed"
+  fi
+else
+  echo "INFO: Ghost proxy is not running"
+fi
+
 if /etc/init.d/warp-plus enabled; then
   if ! curl --max-time 10 --retry 2 --socks5 127.0.0.1:8086 --silent --output "/dev/null" "$TEST_URL"; then
     echo "ERROR: WARP proxy connectivity test failed. Clearing cache and restarting warp-plus service..."

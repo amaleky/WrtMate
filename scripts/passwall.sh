@@ -33,7 +33,7 @@ setup_url_test() {
   chmod +x /etc/hotplug.d/iface/99-url-test
 }
 
-setup_scanner() {
+install_ghost() {
   if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
 
   curl -s -L -o /root/scripts/scanner.sh "${REPO_URL}/src/root/scripts/scanner.sh" || error "Failed to download scanner.sh."
@@ -41,6 +41,24 @@ setup_scanner() {
 
   curl -s -L -o /etc/init.d/scanner "${REPO_URL}/src/etc/init.d/scanner" || error "Failed to download scanner init script."
   chmod +x /etc/init.d/scanner
+
+  /etc/init.d/scanner enable
+  /etc/init.d/scanner restart
+
+  if [ ! -d /root/ghost/ ]; then mkdir /root/ghost/; fi
+
+  curl -s -L -o /root/ghost/configs.conf "${REPO_URL}/src/root/ghost/configs.conf" || error "Failed to download configs.conf script."
+
+  curl -s -L -o /etc/init.d/ghost "${REPO_URL}/src/etc/init.d/ghost" || error "Failed to download ghost init script."
+  chmod +x /etc/init.d/ghost
+
+  if [[ ! -e /root/ghost/run.sh ]]; then
+    curl -s -L -o /root/ghost/run.sh "${REPO_URL}/src/root/ghost/run.sh" || error "Failed to download ghost run.sh configs."
+  fi
+  chmod +x /root/ghost/run.sh
+
+  /etc/init.d/ghost enable
+  /etc/init.d/ghost restart
 }
 
 install_warp() {
@@ -153,11 +171,14 @@ install_hiddify() {
   curl -s -L -o /etc/init.d/hiddify-cli "${REPO_URL}/src/etc/init.d/hiddify-cli" || error "Failed to download hiddify-cli init script."
   chmod +x /etc/init.d/hiddify-cli
 
+  if [[ ! -e /root/hiddify/run.sh ]]; then
+    curl -s -L -o /root/hiddify/run.sh "${REPO_URL}/src/root/hiddify/run.sh" || error "Failed to download hiddify run.sh configs."
+  fi
+  chmod +x /root/hiddify/run.sh
+
   if [[ ! -e /root/hiddify/configs.conf ]]; then
     curl -s -L -o /root/hiddify/configs.conf "${REPO_URL}/src/root/hiddify/configs.conf" || error "Failed to download hiddify configs."
   fi
-
-  curl -s -L -o /root/hiddify/settings.json "${REPO_URL}/src/root/hiddify/settings.json" || error "Failed to download hiddify settings."
 
   /etc/init.d/hiddify-cli enable
   /etc/init.d/hiddify-cli restart
@@ -167,29 +188,29 @@ install_ssh_proxy() {
   ensure_packages "openssh-client"
   if [ ! -d /root/.ssh/ ]; then mkdir /root/.ssh/; fi
 
-  if [ ! -e "/root/.ssh/id_rsa" ]; then
-    info "Please paste your SSH private key (press Ctrl+D when done):"
-    cat >/root/.ssh/id_rsa
-    chmod 600 /root/.ssh/id_rsa
-  fi
-
-  read -r -p "Enter SSH hostname: " SSH_HOST
-  if [ -n "$SSH_HOST" ]; then
-    sed -i "s/^SSH_HOST=.*/SSH_HOST=${SSH_HOST}/" "/etc/init.d/ssh-proxy"
-  fi
-
-  read -r -p "Enter SSH port: " SSH_PORT
-  if [ -n "$SSH_PORT" ]; then
-    sed -i "s/^SSH_PORT=.*/SSH_PORT=${SSH_PORT}/" "/etc/init.d/ssh-proxy"
-  fi
-
   if [ ! -e "/etc/init.d/ssh-proxy" ]; then
     curl -s -L -o /etc/init.d/ssh-proxy "${REPO_URL}/src/etc/init.d/ssh-proxy" || error "Failed to download ssh-proxy init script."
     chmod +x /etc/init.d/ssh-proxy
   fi
 
-  /etc/init.d/ssh-proxy enable
-  /etc/init.d/ssh-proxy restart
+  if [ ! -e "/root/.ssh/id_rsa" ]; then
+    info "Please paste your SSH private key (press Ctrl+D when done):"
+    cat >/root/.ssh/id_rsa
+    chmod 600 /root/.ssh/id_rsa
+
+    read -r -p "Enter SSH hostname: " SSH_HOST
+    if [ -n "$SSH_HOST" ]; then
+      sed -i "s/^SSH_HOST=.*/SSH_HOST=${SSH_HOST}/" "/etc/init.d/ssh-proxy"
+    fi
+
+    read -r -p "Enter SSH port: " SSH_PORT
+    if [ -n "$SSH_PORT" ]; then
+      sed -i "s/^SSH_PORT=.*/SSH_PORT=${SSH_PORT}/" "/etc/init.d/ssh-proxy"
+    fi
+
+    /etc/init.d/ssh-proxy enable
+    /etc/init.d/ssh-proxy restart
+  fi
 }
 
 install_server_less() {
@@ -210,11 +231,11 @@ main() {
   install_warp
   install_hiddify
   install_server_less
+  install_ghost
   install_base_packages
   install_passwall
   setup_geo_update
   setup_url_test
-  setup_scanner
   install_ssh_proxy
 
   /root/scripts/geo-update.sh
