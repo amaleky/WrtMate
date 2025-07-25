@@ -5,9 +5,8 @@ config nodes 'Splitter'
 	option QUIC '_blackhole'
 	option Block '_blackhole'
 	option Direct '_direct'
-	option Proxy 'Hiddify'
-	option Censorship 'WarpPlus'
 	option Sanction 'Hiddify'
+	option Censorship 'WarpPlus'
 	option default_node '_direct'
 	option domainStrategy 'IPOnDemand'
 	option domainMatcher 'hybrid'
@@ -338,11 +337,13 @@ full:widgets.pinterest.com
 full:www.cdn.ad.xiaomi.com
 full:yandexadexchange.net
 full:youtube.cleverads.vn'
+	option ip_list 'geoip:malware'
 
 config shunt_rules 'Direct'
 	option remarks 'Direct'
 	option network 'tcp,udp'
 	option domain_list '#geosite:category-ir
+geosite:slack
 domain:ir
 domain:dl.playstation.net
 domain:upenlod.pw
@@ -350,13 +351,16 @@ domain:odlserver.info'
 	option ip_list '#geoip:ir
 #geoip:private'
 
-config shunt_rules 'Proxy'
-	option remarks 'Proxy'
+config shunt_rules 'Sanction'
+	option remarks 'Sanction'
 	option network 'tcp,udp'
+	option domain_list 'geosite:sanctioned
+domain:io
+domain:ai
+domain:dev
+domain:music.youtube.com
+domain:googleusercontent.com'
 	option ip_list 'geoip:telegram'
-	option domain_list 'domain:music.youtube.com
-domain:googleusercontent.com
-geosite:speedtest'
 
 config shunt_rules 'Censorship'
 	option remarks 'Censorship'
@@ -373,11 +377,3 @@ domain:digimoviez.com
 domain:farsiland.com
 domain:farsiplex.com
 domain:zarfilm.com'
-
-config shunt_rules 'Sanction'
-	option remarks 'Sanction'
-	option network 'tcp,udp'
-	option domain_list 'domain:io
-domain:ai
-domain:dev
-geosite:sanctioned'
