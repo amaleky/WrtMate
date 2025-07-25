@@ -60,7 +60,7 @@ test_config() {
   fi
 
   if hiddify-cli parse "$TEMP_CONFIG" -o "$PARSED_CONFIG" 2>&1 | grep -qiE "error|fatal"; then
-    echo "🚫 Failed to parse config ${CONFIG}"
+    # echo "🚫 Failed to parse config ${CONFIG}"
     return
   fi
 
@@ -87,7 +87,7 @@ test_config() {
         killall "sing-box-test-${SOCKS_PORT}"
         wait
       else
-        echo "❌ Failed to connect ${CONFIG}"
+        # echo "❌ Failed to connect ${CONFIG}"
         killall "sing-box-test-${SOCKS_PORT}"
         wait
       fi
@@ -112,6 +112,9 @@ while IFS= read -r CONFIG; do
   test_config "$CONFIG" "$PORT_COUNTER" &
   ((PORT_COUNTER++))
   if ((PORT_COUNTER >= BASE_SOCKS_PORT + 20)); then
+    while ! curl --silent --head --fail --max-time 1 "$TEST_URL" > /dev/null; do
+      sleep 5
+    done
     PORT_COUNTER=$BASE_SOCKS_PORT
   fi
 done <"$SUBSCRIPTION"
