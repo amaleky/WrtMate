@@ -1,6 +1,6 @@
 #!/bin/sh
 
-TEST_URL="https://1.1.1.1/cdn-cgi/trace/"
+TEST_URL="http://www.youtube.com/generate_204"
 
 if /etc/init.d/hiddify-cli enabled; then
   if ! curl --max-time 10 --retry 2 --socks5 127.0.0.1:12334 --silent --output "/dev/null" "$TEST_URL"; then
