@@ -355,7 +355,8 @@ config shunt_rules 'Proxy'
 	option remarks 'Proxy'
 	option network 'tcp,udp'
 	option ip_list 'geoip:telegram'
-	option domain_list 'domain:music.youtube.com'
+	option domain_list 'domain:music.youtube.com
+geosite:speedtest'
 
 config shunt_rules 'Censorship'
 	option remarks 'Censorship'
