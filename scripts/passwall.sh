@@ -1,19 +1,21 @@
 #!/bin/bash
 # Passwall configuration for OpenWRT
 
-install_base_packages() {
-  opkg remove dnsmasq
-  ensure_packages "dnsmasq-full kmod-nft-socket kmod-nft-tproxy binutils"
-}
-
 install_passwall() {
-  curl -L -o /tmp/packages.zip "https://github.com/xiaorouji/openwrt-passwall2/releases/latest/download/passwall_packages_ipk_$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2).zip" || error "Failed to download Passwall packages."
-  unzip -o /tmp/packages.zip -d /tmp/passwall
-  for pkg in /tmp/passwall/*.ipk; do opkg install "$pkg"; done
+  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | grep "browser_download_url" | grep -o 'https://[^"]*luci-[^_]*_luci-app-passwall2_[^_]*_all\.ipk' | head -n1 | sed -n 's/.*luci-app-passwall2_\([^_]*\)_all\.ipk.*/\1/p')"
+  LOCAL_VERSION=$(opkg list-installed | grep "^luci-app-passwall2" | awk '{print $3}')
+  if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
+    opkg remove dnsmasq
+    ensure_packages "dnsmasq-full kmod-nft-socket kmod-nft-tproxy binutils"
 
-  curl -L -o /tmp/passwall2.ipk "$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | grep "browser_download_url" | grep -o 'https://[^"]*luci-[^_]*_luci-app-passwall2_[^_]*_all\.ipk' | head -n1)" || error "Failed to download Passwall2 package."
-  opkg install /tmp/passwall2.ipk || error "Failed to install Passwall2."
-  curl -s -L -o /etc/config/passwall2 "${REPO_URL}/src/etc/config/passwall2" || error "Failed to download passwall2 config."
+    curl -L -o /tmp/packages.zip "https://github.com/xiaorouji/openwrt-passwall2/releases/latest/download/passwall_packages_ipk_$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2).zip" || error "Failed to download Passwall packages."
+    unzip -o /tmp/packages.zip -d /tmp/passwall
+    for pkg in /tmp/passwall/*.ipk; do opkg install "$pkg"; done
+
+    curl -L -o /tmp/passwall2.ipk "$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | grep "browser_download_url" | grep -o 'https://[^"]*luci-[^_]*_luci-app-passwall2_[^_]*_all\.ipk' | head -n1)" || error "Failed to download Passwall2 package."
+    opkg install /tmp/passwall2.ipk || error "Failed to install Passwall2."
+    curl -s -L -o /etc/config/passwall2 "${REPO_URL}/src/etc/config/passwall2" || error "Failed to download passwall2 config."
+  fi
 }
 
 setup_geo_update() {
@@ -232,7 +234,6 @@ main() {
   install_hiddify
   install_server_less
   install_ghost
-  install_base_packages
   install_passwall
   setup_geo_update
   setup_url_test
