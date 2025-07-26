@@ -45,7 +45,7 @@ install_ghost() {
   chmod +x /etc/init.d/scanner
 
   /etc/init.d/scanner enable
-  /etc/init.d/scanner restart
+  /etc/init.d/scanner start
 
   if [ ! -d /root/ghost/ ]; then mkdir /root/ghost/; fi
 
@@ -58,7 +58,7 @@ install_ghost() {
   chmod +x /root/ghost/run.sh
 
   /etc/init.d/ghost enable
-  /etc/init.d/ghost restart
+  /etc/init.d/ghost start
 }
 
 install_warp() {
@@ -109,7 +109,7 @@ install_warp() {
   chmod +x /etc/init.d/warp-plus
 
   /etc/init.d/warp-plus enable
-  /etc/init.d/warp-plus restart
+  /etc/init.d/warp-plus start
 }
 
 install_hiddify() {
@@ -179,7 +179,7 @@ install_hiddify() {
   fi
 
   /etc/init.d/hiddify-cli enable
-  /etc/init.d/hiddify-cli restart
+  /etc/init.d/hiddify-cli start
 }
 
 install_ssh_proxy() {
@@ -207,7 +207,7 @@ install_ssh_proxy() {
     fi
 
     /etc/init.d/ssh-proxy enable
-    /etc/init.d/ssh-proxy restart
+    /etc/init.d/ssh-proxy start
   fi
 }
 
@@ -220,7 +220,7 @@ install_server_less() {
   curl -s -L -o /root/xray/serverless.json "https://cdn.jsdelivr.net/gh/GFW-knocker/gfw_resist_HTTPS_proxy@main/ServerLess_TLSFrag_with_google_DOH.json" || error "Failed to download ServerLess configs."
 
   /etc/init.d/serverless enable
-  /etc/init.d/serverless restart
+  /etc/init.d/serverless start
 }
 
 main() {
