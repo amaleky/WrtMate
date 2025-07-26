@@ -363,6 +363,7 @@ config shunt_rules 'Sanction'
 domain:io
 domain:ai
 domain:dev
+domain:clashroyaleapp.com
 domain:music.youtube.com
 domain:googleusercontent.com'
 	option ip_list 'geoip:telegram'
