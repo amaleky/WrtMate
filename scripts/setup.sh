@@ -90,6 +90,7 @@ configure_auto_reboot() {
 
 install_recommended_packages() {
   ensure_packages "htop nload luci-app-irqbalance zram-swap"
+  uci set irqbalance.irqbalance.enabled='1'
 }
 
 remove_ipv6_interfaces() {
