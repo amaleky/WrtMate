@@ -54,9 +54,7 @@ install_ghost() {
   curl -s -L -o /etc/init.d/ghost "${REPO_URL}/src/etc/init.d/ghost" || error "Failed to download ghost init script."
   chmod +x /etc/init.d/ghost
 
-  if [[ ! -e /root/ghost/run.sh ]]; then
-    curl -s -L -o /root/ghost/run.sh "${REPO_URL}/src/root/ghost/run.sh" || error "Failed to download ghost run.sh configs."
-  fi
+  curl -s -L -o /root/ghost/run.sh "${REPO_URL}/src/root/ghost/run.sh" || error "Failed to download ghost run.sh configs."
   chmod +x /root/ghost/run.sh
 
   /etc/init.d/ghost enable
@@ -173,9 +171,7 @@ install_hiddify() {
   curl -s -L -o /etc/init.d/hiddify-cli "${REPO_URL}/src/etc/init.d/hiddify-cli" || error "Failed to download hiddify-cli init script."
   chmod +x /etc/init.d/hiddify-cli
 
-  if [[ ! -e /root/hiddify/run.sh ]]; then
-    curl -s -L -o /root/hiddify/run.sh "${REPO_URL}/src/root/hiddify/run.sh" || error "Failed to download hiddify run.sh configs."
-  fi
+  curl -s -L -o /root/hiddify/run.sh "${REPO_URL}/src/root/hiddify/run.sh" || error "Failed to download hiddify run.sh configs."
   chmod +x /root/hiddify/run.sh
 
   if [[ ! -e /root/hiddify/configs.conf ]]; then
