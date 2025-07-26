@@ -1,7 +1,7 @@
 #!/bin/bash
 
 TEST_URL="http://www.youtube.com/generate_204"
-TEST_PING="8.8.8.8"
+TEST_PING="217.218.155.155"
 SUBSCRIPTION="/root/ghost/subscription.conf"
 CONFIGS="/root/ghost/configs.conf"
 MAX_PARALLEL=10
