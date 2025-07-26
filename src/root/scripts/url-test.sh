@@ -1,8 +1,8 @@
 #!/bin/sh
 
-TEST_URL="http://www.youtube.com/generate_204"
+TEST_URL="http://www.gstatic.com/generate_204"
 
-if ! /etc/init.d/hiddify-cli enabled || [ "$(uci get passwall2.@global[0].enabled 2>/dev/null)" != "1" ]; then
+if ! /etc/init.d/hiddify-cli enabled || ! curl --max-time 10 --retry 2 --silent --output "/dev/null" "$TEST_URL" || [ "$(uci get passwall2.@global[0].enabled 2>/dev/null)" != "1" ]; then
   exit 0
 fi
 
