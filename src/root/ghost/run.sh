@@ -3,7 +3,7 @@
 CONFIGS="/root/ghost/configs.conf"
 OUTPUT_CONFIG="/tmp/ghost-configs.json"
 PARSED_CONFIG="/tmp/ghost-parsed.json"
-TEST_URL="http://www.youtube.com/generate_204"
+TEST_URL="http://gstatic.com/generate_204"
 SOCKS_PORT=22334
 
 /usr/bin/hiddify-cli parse "$CONFIGS" -o "$PARSED_CONFIG" > /dev/null 2>&1
