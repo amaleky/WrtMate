@@ -3,7 +3,6 @@
 TEST_URL="http://www.youtube.com/generate_204"
 SUBSCRIPTION="/root/ghost/subscription.conf"
 CONFIGS="/root/ghost/configs.conf"
-BACKUP="/tmp/configs.backup"
 MAX_PARALLEL=10
 JOBS=0
 
@@ -15,9 +14,6 @@ CONFIG_URLS=(
   "https://raw.githubusercontent.com/Epodonios/v2ray-CONFIGs/main/All_Configs_Sub.txt"
   "https://raw.githubusercontent.com/SoliSpirit/v2ray-configs/main/all_configs.txt"
 )
-
-cat "$CONFIGS" >"$BACKUP"
-echo "" >"$CONFIGS"
 
 if [ -f "$SUBSCRIPTION" ] && [ "$(wc -l <"$SUBSCRIPTION")" -ge 1 ]; then
   echo "ℹ️ $(wc -l <"$SUBSCRIPTION") Config Loaded (cache)"
@@ -60,6 +56,9 @@ test_config() {
       if curl -s --max-time 1 --retry 1 --proxy "socks://$(echo "$LINE" | sed -n 's/.*socks5:\/\/\([^"]*\).*/\1/p')" "$TEST_URL"; then
         echo "✅ Successfully ($(wc -l < "$CONFIGS")) ${CONFIG}"
         grep -qxF "$CONFIG" "$CONFIGS" || echo "$CONFIG" >> "$CONFIGS"
+      else
+        ESCAPED=$(printf '%s\n' "$CONFIG" | sed 's/[]\/$*.^[]/\\&/g')
+        sed -i "/^$ESCAPED$/d" "$CONFIGS"
       fi
       rm -rf $DIRECTORY
       kill -9 "$(pgrep -f "$DIRECTORY/tester instance --config .*")"
@@ -67,9 +66,10 @@ test_config() {
   done
 }
 
-cat "$BACKUP" "$SUBSCRIPTION" | while IFS= read -r CONFIG; do
+PREV_COUNT=$(wc -l < "$CONFIGS")
+
+cat "$CONFIGS" "$SUBSCRIPTION" | while IFS= read -r CONFIG; do
   FOUND_COUNT=$(wc -l < "$CONFIGS")
-  PREV_COUNT=$(wc -l < "$BACKUP")
 
   if [ "$FOUND_COUNT" -gt 20 ]; then
     echo "🎉 $FOUND_COUNT Configs Found (previous: $PREV_COUNT)"
