@@ -77,7 +77,7 @@ cat "$CONFIGS" "$SUBSCRIPTION" | while IFS= read -r CONFIG; do
     exit 0
   fi
 
-  while ! ping -c 1 -W 2 "$TEST_PING" > /dev/null 2>&1 || [ "$(pgrep -f "/tmp/.*/tester instance --config .*" | wc -l)" -ge 10 ]; do
+  while ! ping -c 1 -W 2 "$TEST_PING" > /dev/null 2>&1 || [ "$(pgrep -f "/tmp/.*/tester instance --config .*" | wc -l)" -ge $MAX_PARALLEL ]; do
     sleep 1
   done
 
