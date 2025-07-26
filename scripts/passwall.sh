@@ -50,7 +50,9 @@ install_ghost() {
 
   if [ ! -d /root/ghost/ ]; then mkdir /root/ghost/; fi
 
-  curl -s -L -o /root/ghost/configs.conf "${REPO_URL}/src/root/ghost/configs.conf" || error "Failed to download configs.conf script."
+  if [[ ! -f /root/ghost/configs.conf ]]; then
+    curl -s -L -o /root/ghost/configs.conf "${REPO_URL}/src/root/ghost/configs.conf" || error "Failed to download ghost configs."
+  fi
 
   curl -s -L -o /etc/init.d/ghost "${REPO_URL}/src/etc/init.d/ghost" || error "Failed to download ghost init script."
   chmod +x /etc/init.d/ghost
@@ -187,7 +189,7 @@ install_hiddify() {
   curl -s -L -o /root/hiddify/run.sh "${REPO_URL}/src/root/hiddify/run.sh" || error "Failed to download hiddify run.sh configs."
   chmod +x /root/hiddify/run.sh
 
-  if [[ ! -e /root/hiddify/configs.conf ]]; then
+  if [[ ! -f /root/hiddify/configs.conf ]]; then
     curl -s -L -o /root/hiddify/configs.conf "${REPO_URL}/src/root/hiddify/configs.conf" || error "Failed to download hiddify configs."
   fi
 
