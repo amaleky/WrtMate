@@ -1,6 +1,7 @@
 #!/bin/bash
 
 TEST_URL="http://www.youtube.com/generate_204"
+TEST_PING="8.8.8.8"
 SUBSCRIPTION="/root/ghost/subscription.conf"
 CONFIGS="/root/ghost/configs.conf"
 MAX_PARALLEL=10
@@ -76,7 +77,7 @@ cat "$CONFIGS" "$SUBSCRIPTION" | while IFS= read -r CONFIG; do
     exit 0
   fi
 
-  while [ "$(pgrep -f "/tmp/.*/tester instance --config .*" | wc -l)" -ge 10 ]; do
+  while ! ping -c 1 -W 2 "$TEST_PING" > /dev/null 2>&1 || [ "$(pgrep -f "/tmp/.*/tester instance --config .*" | wc -l)" -ge 10 ]; do
     sleep 1
   done
 
