@@ -2,6 +2,10 @@
 
 TEST_URL="http://www.youtube.com/generate_204"
 
+if ! /etc/init.d/hiddify-cli enabled || [ "$(uci get passwall2.@global[0].enabled 2>/dev/null)" != "1" ]; then
+  exit 0
+fi
+
 if /etc/init.d/hiddify-cli enabled; then
   if ! curl --max-time 10 --retry 2 --socks5 127.0.0.1:12334 --silent --output "/dev/null" "$TEST_URL"; then
     echo "ERROR: Hiddify proxy connectivity test failed. Restarting hiddify-cli service..."

@@ -45,7 +45,7 @@ install_ghost() {
   curl -s -L -o /etc/init.d/scanner "${REPO_URL}/src/etc/init.d/scanner" || error "Failed to download scanner init script."
   chmod +x /etc/init.d/scanner
 
-  /etc/init.d/scanner enable
+  /etc/init.d/scanner disable
   /etc/init.d/scanner start
 
   if [ ! -d /root/ghost/ ]; then mkdir /root/ghost/; fi
