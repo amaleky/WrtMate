@@ -14,8 +14,9 @@ install_passwall() {
 
     curl -L -o /tmp/passwall2.ipk "$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | grep "browser_download_url" | grep -o 'https://[^"]*luci-[^_]*_luci-app-passwall2_[^_]*_all\.ipk' | head -n1)" || error "Failed to download Passwall2 package."
     opkg install /tmp/passwall2.ipk || error "Failed to install Passwall2."
-    curl -s -L -o /etc/config/passwall2 "${REPO_URL}/src/etc/config/passwall2" || error "Failed to download passwall2 config."
   fi
+
+  curl -s -L -o /etc/config/passwall2 "${REPO_URL}/src/etc/config/passwall2" || error "Failed to download passwall2 config."
 }
 
 setup_geo_update() {
@@ -62,48 +63,54 @@ install_ghost() {
 }
 
 install_warp() {
-  case "$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2)" in
-  mipsel_24kc)
-    DETECTED_ARCH="mipslesoftfloat"
-    ;;
-  mips_24kc)
-    DETECTED_ARCH="mipssoftfloat"
-    ;;
-  mipsel*)
-    DETECTED_ARCH="mipsle"
-    ;;
-  mips64el*)
-    DETECTED_ARCH="mips64le"
-    ;;
-  mips64*)
-    DETECTED_ARCH="mips64"
-    ;;
-  mips*)
-    DETECTED_ARCH="mips"
-    ;;
-  aarch64* | arm64* | armv8*)
-    DETECTED_ARCH="arm64"
-    ;;
-  arm*)
-    DETECTED_ARCH="arm7"
-    ;;
-  x86_64)
-    DETECTED_ARCH="amd64"
-    ;;
-  riscv64*)
-    DETECTED_ARCH="riscv64"
-    ;;
-  *)
-    error "Unsupported CPU architecture: $(uname -m)"
-    ;;
-  esac
+  if [ ! -d /root/.config/warp-plus ]; then mkdir -p /root/.config/warp-plus; fi
 
-  info "Detected architecture: $DETECTED_ARCH"
+  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/bepass-org/warp-plus/releases/latest" | jq -r '.tag_name')"
+  LOCAL_VERSION="$(cat /root/.config/warp-plus/version 2>/dev/null || echo 'none')"
 
-  curl -L -o /tmp/warp.zip "https://github.com/bepass-org/warp-plus/releases/latest/download/warp-plus_linux-${DETECTED_ARCH}.zip" || error "Failed to download WARP zip."
-  unzip -o /tmp/warp.zip -d /tmp
-  mv /tmp/warp-plus /usr/bin/warp-plus
-  chmod +x /usr/bin/warp-plus
+  if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
+    echo "$REMOTE_VERSION" > /root/.config/warp-plus/version
+    case "$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2)" in
+      mipsel_24kc)
+        DETECTED_ARCH="mipslesoftfloat"
+        ;;
+      mips_24kc)
+        DETECTED_ARCH="mipssoftfloat"
+        ;;
+      mipsel*)
+        DETECTED_ARCH="mipsle"
+        ;;
+      mips64el*)
+        DETECTED_ARCH="mips64le"
+        ;;
+      mips64*)
+        DETECTED_ARCH="mips64"
+        ;;
+      mips*)
+        DETECTED_ARCH="mips"
+        ;;
+      aarch64* | arm64* | armv8*)
+        DETECTED_ARCH="arm64"
+        ;;
+      arm*)
+        DETECTED_ARCH="arm7"
+        ;;
+      x86_64)
+        DETECTED_ARCH="amd64"
+        ;;
+      riscv64*)
+        DETECTED_ARCH="riscv64"
+        ;;
+      *)
+        error "Unsupported CPU architecture: $(uname -m)"
+        ;;
+      esac
+
+      curl -L -o /tmp/warp.zip "https://github.com/bepass-org/warp-plus/releases/latest/download/warp-plus_linux-${DETECTED_ARCH}.zip" || error "Failed to download WARP zip."
+      unzip -o /tmp/warp.zip -d /tmp
+      mv /tmp/warp-plus /usr/bin/warp-plus
+      chmod +x /usr/bin/warp-plus
+  fi
 
   curl -s -L -o /etc/init.d/warp-plus "${REPO_URL}/src/etc/init.d/warp-plus" || error "Failed to download warp-plus init script."
   chmod +x /etc/init.d/warp-plus
@@ -113,58 +120,64 @@ install_warp() {
 }
 
 install_hiddify() {
-  case "$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2)" in
-  x86_64)
-    DETECTED_ARCH="amd64"
-    ;;
-  i386 | i686)
-    DETECTED_ARCH="386"
-    ;;
-  aarch64* | arm64* | armv8*)
-    DETECTED_ARCH="arm64"
-    ;;
-  armv5* | arm926ej-s)
-    DETECTED_ARCH="armv5"
-    ;;
-  armv6*)
-    DETECTED_ARCH="armv6"
-    ;;
-  arm*)
-    DETECTED_ARCH="armv7"
-    ;;
-  mips_24kc)
-    DETECTED_ARCH="mips-softfloat"
-    ;;
-  mipsel_24kc)
-    DETECTED_ARCH="mipsel-softfloat"
-    ;;
-  mips64el*)
-    DETECTED_ARCH="mips64el"
-    ;;
-  mipsel*)
-    DETECTED_ARCH="mipsel-hardfloat"
-    ;;
-  mips64*)
-    DETECTED_ARCH="mips64"
-    ;;
-  mips*)
-    DETECTED_ARCH="mips-hardfloat"
-    ;;
-  s390x)
-    DETECTED_ARCH="s390x"
-    ;;
-  *)
-    echo "Unsupported architecture: $(uname -m)"
-    exit 1
-    ;;
-  esac
+  if [ ! -d /root/.config/hiddify-cli ]; then mkdir -p /root/.config/hiddify-cli; fi
 
-  info "Detected architecture: $DETECTED_ARCH"
+  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/hiddify/hiddify-core/releases/latest" | jq -r '.tag_name')"
+  LOCAL_VERSION="$(cat /root/.config/hiddify-cli/version 2>/dev/null || echo 'none')"
 
-  curl -L -o /tmp/hiddify.tar.gz "https://github.com/hiddify/hiddify-core/releases/latest/download/hiddify-cli-linux-${DETECTED_ARCH}.tar.gz" || error "Failed to download Hiddify."
-  tar -xvzf /tmp/hiddify.tar.gz -C /tmp
-  mv /tmp/HiddifyCli /usr/bin/hiddify-cli
-  chmod +x /usr/bin/hiddify-cli
+  if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
+    echo "$REMOTE_VERSION" > /root/.config/hiddify-cli/version
+    case "$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2)" in
+    x86_64)
+      DETECTED_ARCH="amd64"
+      ;;
+    i386 | i686)
+      DETECTED_ARCH="386"
+      ;;
+    aarch64* | arm64* | armv8*)
+      DETECTED_ARCH="arm64"
+      ;;
+    armv5* | arm926ej-s)
+      DETECTED_ARCH="armv5"
+      ;;
+    armv6*)
+      DETECTED_ARCH="armv6"
+      ;;
+    arm*)
+      DETECTED_ARCH="armv7"
+      ;;
+    mips_24kc)
+      DETECTED_ARCH="mips-softfloat"
+      ;;
+    mipsel_24kc)
+      DETECTED_ARCH="mipsel-softfloat"
+      ;;
+    mips64el*)
+      DETECTED_ARCH="mips64el"
+      ;;
+    mipsel*)
+      DETECTED_ARCH="mipsel-hardfloat"
+      ;;
+    mips64*)
+      DETECTED_ARCH="mips64"
+      ;;
+    mips*)
+      DETECTED_ARCH="mips-hardfloat"
+      ;;
+    s390x)
+      DETECTED_ARCH="s390x"
+      ;;
+    *)
+      echo "Unsupported architecture: $(uname -m)"
+      exit 1
+      ;;
+    esac
+
+    curl -L -o /tmp/hiddify.tar.gz "https://github.com/hiddify/hiddify-core/releases/latest/download/hiddify-cli-linux-${DETECTED_ARCH}.tar.gz" || error "Failed to download Hiddify."
+    tar -xvzf /tmp/hiddify.tar.gz -C /tmp
+    mv /tmp/HiddifyCli /usr/bin/hiddify-cli
+    chmod +x /usr/bin/hiddify-cli
+  fi
 
   if [ ! -d /root/hiddify/ ]; then mkdir /root/hiddify/; fi
 
