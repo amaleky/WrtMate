@@ -24,6 +24,7 @@ setup_geo_update() {
   curl -s -L -o /root/scripts/geo-update.sh "${REPO_URL}/src/root/scripts/geo-update.sh" || error "Failed to download geo-update.sh."
   chmod +x /root/scripts/geo-update.sh
   add_cron_job "0 6 * * 0 /root/scripts/geo-update.sh"
+  /root/scripts/geo-update.sh
 }
 
 setup_url_test() {
@@ -247,12 +248,10 @@ main() {
   install_hiddify
   install_server_less
   install_ghost
-  install_passwall
-  setup_geo_update
   setup_url_test
+  setup_geo_update
   install_ssh_proxy
-
-  /root/scripts/geo-update.sh
+  install_passwall
   /etc/init.d/passwall2 restart
 
   success "PassWall configuration completed successfully"
