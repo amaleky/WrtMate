@@ -3,7 +3,12 @@
 TEST_URL="https://1.1.1.1/cdn-cgi/trace/"
 TEST_PING="217.218.155.155"
 
-if ! /etc/init.d/hiddify-cli enabled || ! ping -c 1 -W 2 "$TEST_PING" > /dev/null 2>&1 || [ "$(uci get passwall2.@global[0].enabled 2>/dev/null)" != "1" ] || [ -f /var/lock/passwall2.lock ] || [ ! -f /var/lock/passwall2_ready.lock ]; then
+if ! ping -c 1 -W 2 "$TEST_PING" > /dev/null 2>&1; then
+  exit 0
+fi
+
+if ! top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default' | grep 'global' > /dev/null; then
+  /etc/init.d/passwall2 restart
   exit 0
 fi
 
