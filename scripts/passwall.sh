@@ -17,6 +17,9 @@ install_passwall() {
   fi
 
   curl -s -L -o /etc/config/passwall2 "${REPO_URL}/src/etc/config/passwall2" || error "Failed to download passwall2 config."
+
+  uci commit passwall2
+  /etc/init.d/passwall2 restart
 }
 
 setup_geo_update() {
@@ -252,7 +255,6 @@ main() {
   setup_geo_update
   install_ssh_proxy
   install_passwall
-  /etc/init.d/passwall2 restart
 
   success "PassWall configuration completed successfully"
 }
