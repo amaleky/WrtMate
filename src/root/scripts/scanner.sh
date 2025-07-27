@@ -35,6 +35,7 @@ fi
 if [ -f "$SUBSCRIPTION" ] && [ "$(wc -l <"$SUBSCRIPTION")" -ge 1 ]; then
   echo "ℹ️ $(wc -l <"$SUBSCRIPTION") Config Loaded (cache)"
 else
+  curl -f --max-time 60 --retry 2 $PROXY_OPTION "https://the3rf.com/api.php" | jq -r '.[]' >> "$SUBSCRIPTION"
   for CONFIG_URL in "${CONFIG_URLS[@]}"; do
     echo "🔄 Downloading: $CONFIG_URL"
     if curl -f --max-time 60 --retry 2 $PROXY_OPTION "$CONFIG_URL" >>"$SUBSCRIPTION"; then
