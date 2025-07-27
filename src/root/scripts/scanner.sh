@@ -13,6 +13,7 @@ CONFIG_URLS=(
   "https://raw.githubusercontent.com/barry-far/V2ray-Config/main/All_Configs_Sub.txt"
   "https://raw.githubusercontent.com/Epodonios/v2ray-CONFIGs/main/All_Configs_Sub.txt"
   "https://raw.githubusercontent.com/SoliSpirit/v2ray-configs/main/all_configs.txt"
+  "https://raw.githubusercontent.com/itsyebekhe/PSG/main/subscriptions/xray/normal/mix"
 )
 
 cd "/tmp" || true
