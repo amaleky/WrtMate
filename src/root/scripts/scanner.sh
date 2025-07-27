@@ -2,12 +2,9 @@
 
 TEST_URL="http://gstatic.com/generate_204"
 TEST_PING="217.218.155.155"
-SUBSCRIPTION="/tmp/ghost-subscription.conf"
 CONFIGS="/root/ghost/configs.conf"
-BACKUP="/tmp/ghost-backup.conf"
 PREV_COUNT=$(wc -l < "$CONFIGS")
 MAX_PARALLEL=5
-JOBS=0
 
 CONFIG_URLS=(
   "https://raw.githubusercontent.com/roosterkid/openproxylist/main/V2RAY_RAW.txt"
@@ -32,24 +29,6 @@ else
   PROXY_OPTION=""
 fi
 
-if [ -f "$SUBSCRIPTION" ] && [ "$(wc -l <"$SUBSCRIPTION")" -ge 1 ]; then
-  echo "ℹ️ $(wc -l <"$SUBSCRIPTION") Config Loaded (cache)"
-else
-  curl -f --max-time 60 --retry 2 $PROXY_OPTION "https://the3rf.com/api.php" | jq -r '.[]' >> "$SUBSCRIPTION"
-  for CONFIG_URL in "${CONFIG_URLS[@]}"; do
-    echo "🔄 Downloading: $CONFIG_URL"
-    if curl -f --max-time 60 --retry 2 $PROXY_OPTION "$CONFIG_URL" >>"$SUBSCRIPTION"; then
-      echo "✅ Subscription Saved: $CONFIG_URL"
-    else
-      echo "❌ Failed to fetch: $CONFIG_URL"
-    fi
-  done
-  echo "ℹ️ $(wc -l <"$SUBSCRIPTION") Config Loaded"
-fi
-
-cat "$CONFIGS" >"$BACKUP"
-echo "" >"$CONFIGS"
-
 get_random_port() {
   for i in $(seq 1 100); do
     port=$(( (RANDOM % 16384) + 49152 ))
@@ -73,7 +52,7 @@ test_config() {
 
   echo "$CONFIG" >"$TEMP_CONFIG"
 
-  if hiddify-cli parse "$TEMP_CONFIG" -o "$PARSED_CONFIG" 2>&1 | grep -qiE "error|fatal"; then
+  if hiddify-cli parse "$TEMP_CONFIG" -o "$PARSED_CONFIG" 2>&1 | grep -qiE "error|fatal" || grep -qxF "$CONFIG" "$CONFIGS"; then
     return
   fi
 
@@ -96,10 +75,7 @@ test_config() {
     if echo "$line" | grep -q "sing-box started"; then
       if curl -s --max-time 1 --retry 1 --proxy "socks://127.0.0.1:$SOCKS_PORT" "$TEST_URL"; then
         echo "✅ Successfully ($(wc -l < "$CONFIGS")) ${CONFIG}"
-        grep -qxF "$CONFIG" "$CONFIGS" || echo "$CONFIG" >> "$CONFIGS"
-      else
-        ESCAPED=$(printf '%s\n' "$CONFIG" | sed 's/[]\/$*.^[]/\\&/g')
-        sed -i "/^$ESCAPED$/d" "$CONFIGS"
+        echo "$CONFIG" >> "$CONFIGS"
       fi
       rm -rf "/tmp/test.${SOCKS_PORT}.*"
       kill -9 "$(pgrep -f "/tmp/sing-box-$SOCKS_PORT run -c .*")"
@@ -108,27 +84,40 @@ test_config() {
   done
 }
 
-cat "$BACKUP" "$SUBSCRIPTION" | while IFS= read -r CONFIG; do
+process_config() {
+  local CONFIG="$1"
+
   if [ "$(wc -l < "$CONFIGS")" -ge 20 ]; then
     echo "🎉 $(wc -l < "$CONFIGS") Configs Found (previous: $PREV_COUNT)"
     exit 0
   fi
 
-  while ! ping -c 1 -W 2 "$TEST_PING" > /dev/null 2>&1 || [ "$(pgrep -f "/tmp/sing-box-.* run -c .*" | wc -l)" -ge $MAX_PARALLEL ]; do
+  while ! ping -c 1 -W 2 "$TEST_PING" > /dev/null 2>&1 || [ "$(pgrep -f "/tmp/sing-box-.* run -c .*" | wc -l)" -ge "$MAX_PARALLEL" ]; do
     sleep 1
   done
 
-  while [[ $JOBS -ge $MAX_PARALLEL ]]; do
-    wait -n
-    ((JOBS--))
-  done
-
   if [[ -z "$CONFIG" ]] || [[ "$CONFIG" == \#* ]]; then
-    continue
+    return
   fi
 
   test_config "$CONFIG" &
-  ((JOBS++))
+}
+
+BACKUP="$(cat "$CONFIGS")"
+echo "" >"$CONFIGS"
+echo "⏳ Testing $CONFIGS"
+while IFS= read -r CONFIG; do
+  process_config "$CONFIG"
+done <<< "$BACKUP"
+
+echo "⏳ Testing https://the3rf.com/api.php"
+curl -f --max-time 60 --retry 2 $PROXY_OPTION "https://the3rf.com/api.php" | jq -r '.[]' | while IFS= read -r CONFIG; do
+  process_config "$CONFIG"
 done
 
-wait
+for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
+  echo "⏳ Testing $SUBSCRIPTION"
+  curl -f --max-time 300 --retry 2 $PROXY_OPTION "$SUBSCRIPTION" | while IFS= read -r CONFIG; do
+    process_config "$CONFIG"
+  done
+done
