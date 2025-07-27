@@ -1,7 +1,21 @@
 #!/bin/sh
 
+TEST_URL="http://gstatic.com/generate_204"
+
 if [ ! -d "/usr/share/v2ray" ]; then mkdir -p "/usr/share/v2ray"; fi
 if [ ! -d "/usr/share/singbox" ]; then mkdir -p "/usr/share/singbox"; fi
+
+if curl --max-time 1 --socks5 127.0.0.1:12334 --silent --output "/dev/null" "$TEST_URL"; then
+  PROXY_OPTION="--socks5 127.0.0.1:12334"
+elif curl --max-time 1 --socks5 127.0.0.1:22334 --silent --output "/dev/null" "$TEST_URL"; then
+  PROXY_OPTION="--socks5 127.0.0.1:22334"
+elif curl --max-time 1 --socks5 127.0.0.1:8086 --silent --output "/dev/null" "$TEST_URL"; then
+  PROXY_OPTION="--socks5 127.0.0.1:8086"
+elif curl --max-time 1 --socks5 127.0.0.1:1080 --silent --output "/dev/null" "$TEST_URL"; then
+  PROXY_OPTION="--socks5 127.0.0.1:1080"
+else
+  PROXY_OPTION=""
+fi
 
 download() {
   FILE="$1"
@@ -15,10 +29,9 @@ download() {
   fi
 
   if [ "$REMOTE_SIZE" != "$LOCAL_SIZE" ]; then
-    curl -L -o "$FILE" "$URL"
+    curl -L $PROXY_OPTION --output "$FILE" "$URL"
   fi
 }
-
 
 # ip
 download "/usr/share/v2ray/geoip.dat" "https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geoip.dat"
