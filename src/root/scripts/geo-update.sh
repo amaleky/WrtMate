@@ -29,7 +29,10 @@ download() {
   fi
 
   if [ "$REMOTE_SIZE" != "$LOCAL_SIZE" ]; then
-    curl -L $PROXY_OPTION --output "$FILE" "$URL"
+    TEMP_FILE="$(mktemp)"
+    if curl -fL $PROXY_OPTION --output "$TEMP_FILE" "$URL"; then
+      mv "$TEMP_FILE" "$FILE"
+    fi
   fi
 }
 
