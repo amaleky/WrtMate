@@ -12,17 +12,6 @@ if ! top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default'
   exit 0
 fi
 
-if /etc/init.d/hiddify-cli enabled; then
-  if ! curl --max-time 10 --retry 2 --socks5 127.0.0.1:12334 --silent --output "/dev/null" "$TEST_URL"; then
-    echo "ERROR: Hiddify proxy connectivity test failed. Restarting hiddify-cli service..."
-    /etc/init.d/hiddify-cli restart
-  else
-    echo "Hiddify proxy connectivity test passed"
-  fi
-else
-  echo "INFO: Hiddify proxy is not running"
-fi
-
 if /etc/init.d/ghost enabled; then
   if ! curl --max-time 10 --retry 2 --socks5 127.0.0.1:22334 --silent --output "/dev/null" "$TEST_URL"; then
     echo "ERROR: Ghost proxy connectivity test failed. Restarting ghost service..."

@@ -185,21 +185,6 @@ install_hiddify() {
     mv /tmp/HiddifyCli /usr/bin/hiddify-cli
     chmod +x /usr/bin/hiddify-cli
   fi
-
-  if [ ! -d /root/hiddify/ ]; then mkdir /root/hiddify/; fi
-
-  curl -s -L -o /etc/init.d/hiddify-cli "${REPO_URL}/src/etc/init.d/hiddify-cli" || error "Failed to download hiddify-cli init script."
-  chmod +x /etc/init.d/hiddify-cli
-
-  curl -s -L -o /root/hiddify/run.sh "${REPO_URL}/src/root/hiddify/run.sh" || error "Failed to download hiddify run.sh configs."
-  chmod +x /root/hiddify/run.sh
-
-  if [[ ! -f /root/hiddify/configs.conf ]]; then
-    curl -s -L -o /root/hiddify/configs.conf "${REPO_URL}/src/root/hiddify/configs.conf" || error "Failed to download hiddify configs."
-  fi
-
-  /etc/init.d/hiddify-cli enable
-  /etc/init.d/hiddify-cli start
 }
 
 install_ssh_proxy() {
