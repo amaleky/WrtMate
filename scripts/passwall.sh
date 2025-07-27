@@ -251,9 +251,9 @@ main() {
   install_hiddify
   install_server_less
   install_ghost
+  install_ssh_proxy
   setup_url_test
   setup_geo_update
-  install_ssh_proxy
   install_passwall
 
   success "PassWall configuration completed successfully"

@@ -17,13 +17,13 @@ CONFIG_URLS=(
 
 cd "/tmp" || true
 
-if curl --max-time 1 --socks5 127.0.0.1:12334 --silent --output "/dev/null" "$TEST_URL"; then
+if curl --max-time 1 --socks5 "127.0.0.1:12334" --silent --output "/dev/null" "$TEST_URL"; then
   PROXY_OPTION="--socks5 127.0.0.1:12334"
-elif curl --max-time 1 --socks5 127.0.0.1:22334 --silent --output "/dev/null" "$TEST_URL"; then
+elif curl --max-time 1 --socks5 "127.0.0.1:22334" --silent --output "/dev/null" "$TEST_URL"; then
   PROXY_OPTION="--socks5 127.0.0.1:22334"
-elif curl --max-time 1 --socks5 127.0.0.1:8086 --silent --output "/dev/null" "$TEST_URL"; then
+elif curl --max-time 1 --socks5 "127.0.0.1:8086" --silent --output "/dev/null" "$TEST_URL"; then
   PROXY_OPTION="--socks5 127.0.0.1:8086"
-elif curl --max-time 1 --socks5 127.0.0.1:1080 --silent --output "/dev/null" "$TEST_URL"; then
+elif curl --max-time 1 --socks5 "127.0.0.1:1080" --silent --output "/dev/null" "$TEST_URL"; then
   PROXY_OPTION="--socks5 127.0.0.1:1080"
 else
   PROXY_OPTION=""
@@ -73,7 +73,7 @@ test_config() {
 
   /tmp/sing-box-$SOCKS_PORT run -c "$JSON_CONFIG" 2>&1 | while read -r line; do
     if echo "$line" | grep -q "sing-box started"; then
-      if curl -s --max-time 1 --retry 1 --proxy "socks://127.0.0.1:$SOCKS_PORT" "$TEST_URL"; then
+      if curl --max-time 1 --retry 1 --socks5 "127.0.0.1:$SOCKS_PORT" --silent --output "/dev/null" "$TEST_URL"; then
         echo "✅ Successfully ($(wc -l < "$CONFIGS")) ${CONFIG}"
         echo "$CONFIG" >> "$CONFIGS"
       fi
