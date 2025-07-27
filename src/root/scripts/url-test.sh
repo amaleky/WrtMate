@@ -1,6 +1,6 @@
 #!/bin/sh
 
-TEST_URL="http://gstatic.com/generate_204"
+TEST_URL="https://1.1.1.1/cdn-cgi/trace/"
 TEST_PING="217.218.155.155"
 
 if ! /etc/init.d/hiddify-cli enabled || ! ping -c 1 -W 2 "$TEST_PING" > /dev/null 2>&1 || [ "$(uci get passwall2.@global[0].enabled 2>/dev/null)" != "1" ]; then

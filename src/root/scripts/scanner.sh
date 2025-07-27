@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TEST_URL="http://gstatic.com/generate_204"
+TEST_URL="https://1.1.1.1/cdn-cgi/trace/"
 TEST_PING="217.218.155.155"
 CONFIGS="/root/ghost/configs.conf"
 PREV_COUNT=$(wc -l < "$CONFIGS")

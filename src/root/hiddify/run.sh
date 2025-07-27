@@ -3,7 +3,7 @@
 CONFIGS="/root/hiddify/configs.conf"
 OUTPUT_CONFIG="/tmp/hiddify-configs.json"
 PARSED_CONFIG="/tmp/hiddify-parsed.json"
-TEST_URL="http://gstatic.com/generate_204"
+TEST_URL="https://1.1.1.1/cdn-cgi/trace/"
 SOCKS_PORT=12334
 
 /usr/bin/hiddify-cli parse "$CONFIGS" -o "$PARSED_CONFIG" > /dev/null 2>&1

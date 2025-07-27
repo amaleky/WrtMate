@@ -1,6 +1,6 @@
 #!/bin/sh
 
-TEST_URL="http://gstatic.com/generate_204"
+TEST_URL="https://1.1.1.1/cdn-cgi/trace/"
 
 if [ ! -d "/usr/share/v2ray" ]; then mkdir -p "/usr/share/v2ray"; fi
 if [ ! -d "/usr/share/singbox" ]; then mkdir -p "/usr/share/singbox"; fi
