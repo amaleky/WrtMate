@@ -122,3 +122,5 @@ for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
     process_config "$CONFIG"
   done
 done
+
+rm -rf /tmp/test* /tmp/sing-box*
