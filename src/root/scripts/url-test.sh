@@ -30,10 +30,22 @@ if /etc/init.d/warp-plus enabled; then
     rm -rfv /.cache/warp-plus/
     /etc/init.d/warp-plus restart
   else
-    echo "WARP proxy connectivity test passed"
+    echo "WARP Plus proxy connectivity test passed"
   fi
 else
-  echo "INFO: WARP proxy is not running"
+  echo "INFO: WARP Plus proxy is not running"
+fi
+
+if /etc/init.d/psiphon enabled; then
+  if ! curl --max-time 10 --retry 2 --socks5 127.0.0.1:8087 --silent --output "/dev/null" "$TEST_URL"; then
+    echo "ERROR: WARP proxy connectivity test failed. Clearing cache and restarting psiphon service..."
+    rm -rfv /.cache/psiphon/
+    /etc/init.d/psiphon restart
+  else
+    echo "Psiphon proxy connectivity test passed"
+  fi
+else
+  echo "INFO: Psiphon proxy is not running"
 fi
 
 if /etc/init.d/ssh-proxy enabled; then

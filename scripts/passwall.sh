@@ -124,6 +124,12 @@ install_warp() {
 
   /etc/init.d/warp-plus enable
   /etc/init.d/warp-plus start
+
+  curl -s -L -o /etc/init.d/psiphon "${REPO_URL}/src/etc/init.d/psiphon" || error "Failed to download psiphon init script."
+  chmod +x /etc/init.d/psiphon
+
+  /etc/init.d/psiphon enable
+  /etc/init.d/psiphon start
 }
 
 install_hiddify() {
