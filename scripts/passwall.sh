@@ -2,6 +2,7 @@
 # Passwall configuration for OpenWRT
 
 install_passwall() {
+  info "install_passwall"
   REMOTE_VERSION="$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | grep "browser_download_url" | grep -o 'https://[^"]*luci-[^_]*_luci-app-passwall2_[^_]*_all\.ipk' | head -n1 | sed -n 's/.*luci-app-passwall2_\([^_]*\)_all\.ipk.*/\1/p')"
   LOCAL_VERSION=$(opkg list-installed | grep "^luci-app-passwall2" | awk '{print $3}')
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
@@ -23,6 +24,7 @@ install_passwall() {
 }
 
 setup_geo_update() {
+  info "setup_geo_update"
   if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
   curl -s -L -o /root/scripts/geo-update.sh "${REPO_URL}/src/root/scripts/geo-update.sh" || error "Failed to download geo-update.sh."
   chmod +x /root/scripts/geo-update.sh
@@ -31,6 +33,7 @@ setup_geo_update() {
 }
 
 setup_url_test() {
+  info "setup_url_test"
   if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
   curl -s -L -o /root/scripts/url-test.sh "${REPO_URL}/src/root/scripts/url-test.sh" || error "Failed to download url-test.sh."
   chmod +x /root/scripts/url-test.sh
@@ -40,7 +43,26 @@ setup_url_test() {
   chmod +x /etc/hotplug.d/iface/99-url-test
 }
 
+setup_balancer() {
+  info "setup_balancer"
+  if [ ! -d /root/balancer/ ]; then mkdir /root/balancer/; fi
+
+  if [[ ! -f /root/balancer/configs.conf ]]; then
+    curl -s -L -o /root/balancer/configs.conf "${REPO_URL}/src/root/balancer/configs.conf" || error "Failed to download balancer configs."
+  fi
+
+  curl -s -L -o /etc/init.d/balancer "${REPO_URL}/src/etc/init.d/balancer" || error "Failed to download balancer init script."
+  chmod +x /etc/init.d/balancer
+
+  curl -s -L -o /root/balancer/run.sh "${REPO_URL}/src/root/balancer/run.sh" || error "Failed to download balancer run.sh configs."
+  chmod +x /root/balancer/run.sh
+
+  /etc/init.d/balancer enable
+  /etc/init.d/balancer start
+}
+
 install_ghost() {
+  info "install_ghost"
   if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
 
   curl -s -L -o /root/scripts/scanner.sh "${REPO_URL}/src/root/scripts/scanner.sh" || error "Failed to download scanner.sh."
@@ -70,6 +92,7 @@ install_ghost() {
 }
 
 install_warp() {
+  info "install_warp"
   if [ ! -d /root/.config/warp-plus ]; then mkdir -p /root/.config/warp-plus; fi
 
   REMOTE_VERSION="$(curl -s "https://api.github.com/repos/bepass-org/warp-plus/releases/latest" | jq -r '.tag_name')"
@@ -133,6 +156,7 @@ install_warp() {
 }
 
 install_hiddify() {
+  info "install_hiddify"
   if [ ! -d /root/.config/hiddify-cli ]; then mkdir -p /root/.config/hiddify-cli; fi
 
   REMOTE_VERSION="$(curl -s "https://api.github.com/repos/hiddify/hiddify-core/releases/latest" | jq -r '.tag_name')"
@@ -194,6 +218,7 @@ install_hiddify() {
 }
 
 install_ssh_proxy() {
+  info "install_ssh_proxy"
   ensure_packages "openssh-client"
   if [ ! -d /root/.ssh/ ]; then mkdir /root/.ssh/; fi
 
@@ -223,6 +248,7 @@ install_ssh_proxy() {
 }
 
 install_server_less() {
+  info "install_server_less"
   if [ ! -d /root/xray/ ]; then mkdir /root/xray/; fi
 
   curl -s -L -o /etc/init.d/serverless "${REPO_URL}/src/etc/init.d/serverless" || error "Failed to download serverless init script."
@@ -247,6 +273,7 @@ main() {
   install_server_less
   install_ghost
   install_ssh_proxy
+  setup_balancer
   setup_url_test
   setup_geo_update
   install_passwall

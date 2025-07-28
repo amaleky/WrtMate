@@ -39,7 +39,6 @@ fi
 if /etc/init.d/psiphon enabled; then
   if ! curl --max-time 10 --retry 2 --socks5 127.0.0.1:8087 --silent --output "/dev/null" "$TEST_URL"; then
     echo "ERROR: WARP proxy connectivity test failed. Clearing cache and restarting psiphon service..."
-    rm -rfv /.cache/psiphon/
     /etc/init.d/psiphon restart
   else
     echo "Psiphon proxy connectivity test passed"
@@ -69,4 +68,15 @@ if /etc/init.d/serverless enabled; then
   fi
 else
   echo "INFO: ServerLess is not running"
+fi
+
+if /etc/init.d/balancer enabled; then
+  if ! curl --max-time 10 --retry 2 --socks5 127.0.0.1:22335 --silent --output "/dev/null" "$TEST_URL"; then
+    echo "ERROR: Balancer connectivity test failed. Restarting balancer service..."
+    /etc/init.d/balancer restart
+  else
+    echo "Balancer connectivity test passed"
+  fi
+else
+  echo "INFO: Balancer is not running"
 fi
