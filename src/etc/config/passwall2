@@ -371,12 +371,30 @@ config shunt_rules 'Sanction'
 	option remarks 'Sanction'
 	option network 'tcp,udp'
 	option domain_list 'geosite:sanctioned
+geosite:category-speedtest
 domain:io
 domain:ai
 domain:dev
 domain:clashroyaleapp.com
 domain:music.youtube.com
-domain:googleusercontent.com'
+domain:dein-ip-check.de
+domain:geolocation.com
+domain:googleusercontent.com
+domain:infobyip.com
+domain:ip-api.com
+domain:ip2location.com
+domain:ipinfo.io
+domain:ipinfodb.com
+domain:iplocation.com
+domain:iplocation.io
+domain:iplocation.net
+domain:ipstack.com
+domain:showmyip.com
+domain:tools.keycdn.com
+domain:whatismyip.com
+domain:whatismyipaddress.com
+domain:whatsmyip.org
+domain:wieistmeineip.de'
 	option ip_list 'geoip:telegram'
 
 config shunt_rules 'Censorship'
