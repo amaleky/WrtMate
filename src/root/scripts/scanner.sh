@@ -19,6 +19,7 @@ CONFIG_URLS=(
 )
 
 cd "/tmp" || true
+echo "ℹ️ $PREV_COUNT Previous Configs Found"
 
 if curl --max-time 1 --socks5 "127.0.0.1:12334" --silent --output "/dev/null" "$TEST_URL"; then
   PROXY_OPTION="--socks5 127.0.0.1:12334"
