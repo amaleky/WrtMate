@@ -4,6 +4,7 @@ TEST_URL="https://1.1.1.1/cdn-cgi/trace/"
 TEST_PING="217.218.155.155"
 CONFIGS="/root/ghost/configs.conf"
 PREV_COUNT=$(wc -l < "$CONFIGS")
+CONFIGS_LIMIT=40
 MAX_PARALLEL=5
 
 CONFIG_URLS=(
@@ -89,7 +90,7 @@ test_config() {
 process_config() {
   local CONFIG="$1"
 
-  if [ "$(wc -l < "$CONFIGS")" -ge 20 ]; then
+  if [ "$(wc -l < "$CONFIGS")" -ge $CONFIGS_LIMIT ]; then
     echo "🎉 $(wc -l < "$CONFIGS") Configs Found (previous: $PREV_COUNT)"
     exit 0
   fi
