@@ -80,7 +80,7 @@ test_config() {
         echo "✅ Successfully ($(wc -l < "$CONFIGS")) ${CONFIG}"
         echo "$CONFIG" >> "$CONFIGS"
       fi
-      kill -9 "$(pgrep -f "/tmp/sing-box-$SOCKS_PORT run -c .*")"
+      kill -9 $(pgrep -f "/tmp/sing-box-$SOCKS_PORT run -c .*")
       wait
       rm -rf "$TEMP_CONFIG" "$PARSED_CONFIG" "$JSON_CONFIG" "/tmp/sing-box-$SOCKS_PORT"
     fi
