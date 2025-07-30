@@ -21,14 +21,8 @@ CONFIG_URLS=(
 cd "/tmp" || true
 echo "ℹ️ $PREV_COUNT Previous Configs Found"
 
-if curl --max-time 1 --socks5 "127.0.0.1:12334" --silent --output "/dev/null" "$TEST_URL"; then
-  PROXY_OPTION="--socks5 127.0.0.1:12334"
-elif curl --max-time 1 --socks5 "127.0.0.1:22334" --silent --output "/dev/null" "$TEST_URL"; then
-  PROXY_OPTION="--socks5 127.0.0.1:22334"
-elif curl --max-time 1 --socks5 "127.0.0.1:8086" --silent --output "/dev/null" "$TEST_URL"; then
-  PROXY_OPTION="--socks5 127.0.0.1:8086"
-elif curl --max-time 1 --socks5 "127.0.0.1:1080" --silent --output "/dev/null" "$TEST_URL"; then
-  PROXY_OPTION="--socks5 127.0.0.1:1080"
+if curl --max-time 1 --socks5 "127.0.0.1:22335" --silent --output "/dev/null" "$TEST_URL"; then
+  PROXY_OPTION="--socks5 127.0.0.1:22335"
 else
   PROXY_OPTION=""
 fi
