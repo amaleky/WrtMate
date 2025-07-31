@@ -14,20 +14,21 @@ jq --argjson port "$SOCKS_PORT" --arg url "$TEST_URL" '{
   },
   inbounds: [
     {
-      type: "socks",
-      tag: "socks-inbound",
-      listen: "127.0.0.1",
-      listen_port: $port
+      "type": "mixed",
+      "tag": "mixed-in",
+      "listen": "0.0.0.0",
+      "listen_port": $port
     }
   ],
   outbounds: (
     [
       {
-        type: "urltest",
-        tag: "Auto",
-        outbounds: [.outbounds[] | select(.type != "urltest") | .tag],
-        url: $url,
-        interval: "5m"
+        "type": "urltest",
+        "tag": "Auto",
+        "outbounds": [.outbounds[] | select(.type != "urltest") | .tag],
+        "url": $url,
+        "interval": "5m",
+        "tolerance": 100
       }
     ] + (.outbounds | map(select(.type != "urltest")))
   )
