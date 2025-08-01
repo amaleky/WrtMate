@@ -2,9 +2,9 @@
 
 TEST_URL="https://1.1.1.1/cdn-cgi/trace/"
 TEST_SANCTION_URL="https://developer.android.com/"
-TEST_DIRECT_URL="https://www.digikala.com/"
+TEST_PING="217.218.155.155"
 
-if ! curl -I --max-time 3 --retry 1 --silent --output "/dev/null" "$TEST_DIRECT_URL"; then
+if ! ping -c 1 -W 2 "$TEST_PING" > /dev/null 2>&1; then
   echo "ERROR: Connectivity test failed."
   exit 0
 fi

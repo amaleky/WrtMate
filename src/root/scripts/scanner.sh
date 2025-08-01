@@ -1,7 +1,7 @@
 #!/bin/bash
 
 TEST_SANCTION_URL="https://developer.android.com/"
-TEST_DIRECT_URL="https://www.digikala.com/"
+TEST_PING="217.218.155.155"
 CONFIGS="/root/ghost/configs.conf"
 PREV_COUNT=$(wc -l < "$CONFIGS")
 CONFIGS_LIMIT=40
@@ -23,7 +23,7 @@ CONFIG_URLS=(
 cd "/tmp" || true
 echo "ℹ️ $PREV_COUNT Previous Configs Found"
 
-while ! curl -I --max-time 3 --retry 1 --silent --output "/dev/null" "$TEST_DIRECT_URL" || ! top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default' | grep 'global' > /dev/null; do
+while ! ping -c 1 -W 2 "$TEST_PING" > /dev/null 2>&1 || ! top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default' | grep 'global' > /dev/null; do
   sleep 1
 done
 
