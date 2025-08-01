@@ -1,7 +1,7 @@
 #!/bin/bash
 
-TEST_URL="https://1.1.1.1/cdn-cgi/trace/"
-TEST_PING="217.218.155.155"
+TEST_SANCTION_URL="https://developer.android.com/"
+TEST_DIRECT_URL="https://www.digikala.com/"
 CONFIGS="/root/ghost/configs.conf"
 PREV_COUNT=$(wc -l < "$CONFIGS")
 CONFIGS_LIMIT=40
@@ -23,7 +23,11 @@ CONFIG_URLS=(
 cd "/tmp" || true
 echo "ℹ️ $PREV_COUNT Previous Configs Found"
 
-if curl --max-time 1 --socks5 "127.0.0.1:22335" --silent --output "/dev/null" "$TEST_URL"; then
+while ! curl -I --max-time 3 --retry 1 --socks5 "127.0.0.1:22335" --silent --output "/dev/null" "$TEST_DIRECT_URL" || ! top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default' | grep 'global' > /dev/null; do
+  sleep 1
+done
+
+if curl -I --max-time 3 --retry 1 --socks5 "127.0.0.1:22335" --silent --output "/dev/null" "$TEST_SANCTION_URL"; then
   PROXY_OPTION="--socks5 127.0.0.1:22335"
 else
   PROXY_OPTION=""
@@ -73,7 +77,7 @@ test_config() {
 
   /tmp/sing-box-$SOCKS_PORT run -c "$JSON_CONFIG" 2>&1 | while read -r line; do
     if echo "$line" | grep -q "sing-box started"; then
-      if curl --max-time 1 --retry 1 --socks5 "127.0.0.1:$SOCKS_PORT" --silent --output "/dev/null" "$TEST_URL"; then
+      if curl -I --max-time 3 --retry 1 --socks5 "127.0.0.1:$SOCKS_PORT" --silent --output "/dev/null" "$TEST_SANCTION_URL"; then
         echo "✅ Successfully ($(wc -l < "$CONFIGS")) ${CONFIG}"
         echo "$CONFIG" >> "$CONFIGS"
       fi
@@ -92,7 +96,7 @@ process_config() {
     exit 0
   fi
 
-  while ! ping -c 1 -W 2 "$TEST_PING" > /dev/null 2>&1 || [ "$(pgrep -f "/tmp/sing-box-.* run -c .*" | wc -l)" -ge "$MAX_PARALLEL" ] || ! top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default' | grep 'global' > /dev/null; do
+  while [ "$(pgrep -f "/tmp/sing-box-.* run -c .*" | wc -l)" -ge "$MAX_PARALLEL" ]; do
     sleep 1
   done
 
