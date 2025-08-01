@@ -8,14 +8,16 @@ CONFIGS_LIMIT=40
 MAX_PARALLEL=5
 
 CONFIG_URLS=(
+  "https://raw.githubusercontent.com/ermaozi/get_subscribe/main/subscribe/v2ray.txt"
+  "https://raw.githubusercontent.com/liketolivefree/kobabi/main/sub.txt"
   "https://raw.githubusercontent.com/roosterkid/openproxylist/main/V2RAY_RAW.txt"
-  "https://raw.githubusercontent.com/MatinGhanbari/v2ray-CONFIGs/main/subscriptions/v2ray/all_sub.txt"
-  "https://raw.githubusercontent.com/hamed1124/PORT-based-v2ray-CONFIGs/main/All-Configs.txt"
-  "https://raw.githubusercontent.com/barry-far/V2ray-Config/main/All_Configs_Sub.txt"
-  "https://raw.githubusercontent.com/Epodonios/v2ray-CONFIGs/main/All_Configs_Sub.txt"
-  "https://raw.githubusercontent.com/SoliSpirit/v2ray-configs/main/all_configs.txt"
+  "https://raw.githubusercontent.com/Rayan-Config/C-Sub/main/configs/proxy.txt"
   "https://raw.githubusercontent.com/itsyebekhe/PSG/main/subscriptions/xray/normal/mix"
-  "https://raw.githubusercontent.com/darknessm427/v2ray-configs/main/All_Configs_Sub.txt"
+  "https://raw.githubusercontent.com/MatinGhanbari/v2ray-CONFIGs/main/subscriptions/v2ray/all_sub.txt"
+  "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/sub/sub_merge.txt"
+  "https://raw.githubusercontent.com/barry-far/V2ray-Config/main/All_Configs_Sub.txt"
+  "https://raw.githubusercontent.com/SoliSpirit/v2ray-configs/main/all_configs.txt"
+  "https://raw.githubusercontent.com/Epodonios/v2ray-CONFIGs/main/All_Configs_Sub.txt"
 )
 
 cd "/tmp" || true
