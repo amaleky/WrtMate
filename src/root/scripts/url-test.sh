@@ -12,7 +12,6 @@ fi
 if ! top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default' | grep 'global' > /dev/null; then
   echo "ERROR: Passwall is not running."
   /etc/init.d/passwall2 restart
-  exit 0
 fi
 
 if /etc/init.d/ghost enabled; then
