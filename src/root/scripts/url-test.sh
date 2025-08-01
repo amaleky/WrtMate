@@ -5,10 +5,12 @@ TEST_SANCTION_URL="https://developer.android.com/"
 TEST_DIRECT_URL="https://www.digikala.com/"
 
 if ! curl -I --max-time 3 --retry 1 --silent --output "/dev/null" "$TEST_DIRECT_URL"; then
+  echo "ERROR: Connectivity test failed."
   exit 0
 fi
 
 if ! top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default' | grep 'global' > /dev/null; then
+  echo "ERROR: Passwall is not running."
   /etc/init.d/passwall2 restart
   exit 0
 fi
