@@ -23,7 +23,7 @@ CONFIG_URLS=(
 cd "/tmp" || true
 echo "ℹ️ $PREV_COUNT Previous Configs Found"
 
-while ! curl -I --max-time 3 --retry 1 --socks5 "127.0.0.1:22335" --silent --output "/dev/null" "$TEST_DIRECT_URL" || ! top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default' | grep 'global' > /dev/null; do
+while ! curl -I --max-time 3 --retry 1 --silent --output "/dev/null" "$TEST_DIRECT_URL" || ! top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default' | grep 'global' > /dev/null; do
   sleep 1
 done
 

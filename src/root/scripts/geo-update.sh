@@ -1,11 +1,11 @@
 #!/bin/sh
 
-TEST_URL="https://1.1.1.1/cdn-cgi/trace/"
+TEST_SANCTION_URL="https://developer.android.com/"
 
 if [ ! -d "/usr/share/v2ray" ]; then mkdir -p "/usr/share/v2ray"; fi
 if [ ! -d "/usr/share/singbox" ]; then mkdir -p "/usr/share/singbox"; fi
 
-if curl -I --max-time 3 --retry 1 --socks5 "127.0.0.1:22335" --silent --output "/dev/null" "$TEST_URL"; then
+if curl -I --max-time 3 --retry 1 --socks5 "127.0.0.1:22335" --silent --output "/dev/null" "$TEST_SANCTION_URL"; then
   PROXY_OPTION="--socks5 127.0.0.1:22335"
 else
   PROXY_OPTION=""

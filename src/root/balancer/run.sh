@@ -3,12 +3,12 @@
 CONFIGS="/root/balancer/configs.conf"
 OUTPUT_CONFIG="/tmp/balancer-configs.json"
 PARSED_CONFIG="/tmp/balancer-parsed.json"
-TEST_URL="https://1.1.1.1/cdn-cgi/trace/"
+TEST_SANCTION_URL="https://developer.android.com/"
 SOCKS_PORT=22335
 
 /usr/bin/hiddify-cli parse "$CONFIGS" -o "$PARSED_CONFIG" > /dev/null 2>&1
 
-jq --argjson port "$SOCKS_PORT" --arg url "$TEST_URL" '{
+jq --argjson port "$SOCKS_PORT" --arg url "$TEST_SANCTION_URL" '{
   log: {
     level: "error"
   },
