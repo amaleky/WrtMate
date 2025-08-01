@@ -17,8 +17,8 @@ fi
 if /etc/init.d/ghost enabled; then
   if ! curl -I --max-time 3 --retry 1 --socks5 "127.0.0.1:22334" --silent --output "/dev/null" "$TEST_SANCTION_URL"; then
     echo "ERROR: Ghost proxy connectivity test failed. Restarting ghost service..."
-    /etc/init.d/scanner start
     /etc/init.d/ghost restart
+    /etc/init.d/scanner start
   else
     echo "Ghost proxy connectivity test passed"
   fi
