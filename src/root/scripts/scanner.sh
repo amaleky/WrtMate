@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TEST_SANCTION_URL="https://developer.android.com/"
+TEST_URL="https://developer.android.com/"
 TEST_PING="217.218.155.155"
 CONFIGS="/root/ghost/configs.conf"
 PREV_COUNT=$(wc -l < "$CONFIGS")
@@ -51,7 +51,7 @@ while ! ping -c 1 -W 2 "$TEST_PING" > /dev/null 2>&1 || ! top -bn1 | grep -v 'gr
   sleep 1
 done
 
-if curl -I --max-time 3 --retry 1 --socks5 "127.0.0.1:22335" --silent --output "/dev/null" "$TEST_SANCTION_URL"; then
+if [ "$(curl -I --max-time 3 --retry 1 --socks5 "127.0.0.1:22335" --silent --output "/dev/null" -w "%{http_code}" "$TEST_URL")" -eq 200 ]; then
   PROXY_OPTION="--socks5 127.0.0.1:22335"
 else
   PROXY_OPTION=""
@@ -101,7 +101,7 @@ test_config() {
 
   /tmp/sing-box-$SOCKS_PORT run -c "$JSON_CONFIG" 2>&1 | while read -r line; do
     if echo "$line" | grep -q "sing-box started"; then
-      if curl -I --max-time 3 --retry 1 --socks5 "127.0.0.1:$SOCKS_PORT" --silent --output "/dev/null" "$TEST_SANCTION_URL"; then
+      if [ "$(curl -I --max-time 3 --retry 1 --socks5 "127.0.0.1:$SOCKS_PORT" --silent --output "/dev/null" -w "%{http_code}" "$TEST_URL")" -eq 200 ]; then
         echo "✅ Successfully ($(wc -l < "$CONFIGS")) ${CONFIG}"
         echo "$CONFIG" >> "$CONFIGS"
       fi
