@@ -9,10 +9,10 @@ SOCKS_PORT=22335
 /usr/bin/hiddify-cli parse "$CONFIGS" -o "$PARSED_CONFIG" > /dev/null 2>&1
 
 jq --argjson port "$SOCKS_PORT" --arg url "$TEST_SANCTION_URL" '{
-  log: {
-    level: "error"
+  "log": {
+    "level": "error"
   },
-  inbounds: [
+  "inbounds": [
     {
       "type": "mixed",
       "tag": "mixed-in",
@@ -20,7 +20,7 @@ jq --argjson port "$SOCKS_PORT" --arg url "$TEST_SANCTION_URL" '{
       "listen_port": $port
     }
   ],
-  outbounds: (
+  "outbounds": (
     [
       {
         "type": "urltest",
