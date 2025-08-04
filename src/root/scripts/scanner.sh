@@ -1,7 +1,6 @@
 #!/bin/bash
 
 TEST_URL="https://developer.android.com/"
-TEST_PING="217.218.155.155"
 CONFIGS="/root/ghost/configs.conf"
 PREV_COUNT=$(wc -l < "$CONFIGS")
 CONFIGS_LIMIT=40
@@ -47,15 +46,16 @@ BASE64_URLS=(
 cd "/tmp" || true
 echo "ℹ️ $PREV_COUNT Previous Configs Found"
 
-while ! ping -c 1 -W 2 "$TEST_PING" > /dev/null 2>&1 || ! top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default' | grep 'global' > /dev/null; do
-  sleep 1
-done
-
 if [ "$(curl -I --max-time 3 --retry 1 --socks5 "127.0.0.1:22335" --silent --output "/dev/null" -w "%{http_code}" "$TEST_URL")" -eq 200 ]; then
   PROXY_OPTION="--socks5 127.0.0.1:22335"
 else
   PROXY_OPTION=""
 fi
+
+while ! curl -I --max-time 3 --retry 1 $PROXY_OPTION --silent --output "/dev/null" -w "%{http_code}" "https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh" | grep -q "^20"; do
+  echo "ERROR: Connectivity test failed."
+  sleep 1
+done
 
 get_random_port() {
   for i in $(seq 1 100); do
