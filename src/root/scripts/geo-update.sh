@@ -5,7 +5,7 @@ TEST_URL="https://developer.android.com/"
 if [ ! -d "/usr/share/v2ray" ]; then mkdir -p "/usr/share/v2ray"; fi
 if [ ! -d "/usr/share/singbox" ]; then mkdir -p "/usr/share/singbox"; fi
 
-if [ "$(curl -I --max-time 3 --retry 1 --socks5 "127.0.0.1:22335" --silent --output "/dev/null" -w "%{http_code}" "$TEST_URL")" -eq 200 ]; then
+if [ "$(curl -I --max-time 5 --retry 5 --socks5 "127.0.0.1:22335" --silent --output "/dev/null" -w "%{http_code}" "$TEST_URL")" -eq 200 ]; then
   PROXY_OPTION="--socks5 127.0.0.1:22335"
 else
   PROXY_OPTION=""

@@ -46,13 +46,13 @@ BASE64_URLS=(
 cd "/tmp" || true
 echo "ℹ️ $PREV_COUNT Previous Configs Found"
 
-if [ "$(curl -I --max-time 3 --retry 1 --socks5 "127.0.0.1:22335" --silent --output "/dev/null" -w "%{http_code}" "$TEST_URL")" -eq 200 ]; then
+if [ "$(curl -I --max-time 5 --retry 5 --socks5 "127.0.0.1:22335" --silent --output "/dev/null" -w "%{http_code}" "$TEST_URL")" -eq 200 ]; then
   PROXY_OPTION="--socks5 127.0.0.1:22335"
 else
   PROXY_OPTION=""
 fi
 
-while ! curl -I --max-time 3 --retry 1 $PROXY_OPTION --silent --output "/dev/null" -w "%{http_code}" "https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh" | grep -q "^20"; do
+while ! curl -I --max-time 5 --retry 5 $PROXY_OPTION --silent --output "/dev/null" -w "%{http_code}" "https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh" | grep -q "^20"; do
   echo "ERROR: Connectivity test failed."
   sleep 1
 done
