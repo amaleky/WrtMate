@@ -221,7 +221,6 @@ install_hiddify() {
 
 install_ssh_proxy() {
   info "install_ssh_proxy"
-  ensure_packages "openssh-client"
   if [ ! -d /root/.ssh/ ]; then mkdir /root/.ssh/; fi
 
   if [ ! -e "/etc/init.d/ssh-proxy" ]; then
@@ -229,7 +228,9 @@ install_ssh_proxy() {
     chmod +x /etc/init.d/ssh-proxy
   fi
 
-  if [ ! -e "/root/.ssh/id_rsa" ]; then
+  if ! is_package_installed "openssh-client"; then
+    ensure_packages "openssh-client"
+
     info "Please paste your SSH private key (press Ctrl+D when done):"
     cat >/root/.ssh/id_rsa
     chmod 600 /root/.ssh/id_rsa
