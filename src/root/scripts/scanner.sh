@@ -132,7 +132,8 @@ process_config() {
 }
 
 BACKUP="$(cat "$CONFIGS")"
-echo "" >"$CONFIGS"
+echo -n >"$CONFIGS"
+
 echo "⏳ Testing $CONFIGS"
 while IFS= read -r CONFIG; do
   process_config "$CONFIG"
