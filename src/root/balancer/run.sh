@@ -10,7 +10,7 @@ SOCKS_PORT=22335
 
 jq --argjson port "$SOCKS_PORT" --arg url "$TEST_SANCTION_URL" '{
   "log": {
-    "level": "error"
+    "level": "warning"
   },
   "inbounds": [
     {

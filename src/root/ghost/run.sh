@@ -8,8 +8,8 @@ SOCKS_PORT=22334
 /usr/bin/hiddify-cli parse "$CONFIGS" -o "$PARSED_CONFIG" > /dev/null 2>&1
 
 jq --argjson port "$SOCKS_PORT" '. + {
-  log: {
-    level: "error"
+  "log": {
+    "level": "warning"
   },
   "inbounds": [
     {
