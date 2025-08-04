@@ -3,7 +3,7 @@
 
 install_passwall() {
   info "install_passwall"
-  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | grep "browser_download_url" | grep -o 'https://[^"]*luci-[^_]*_luci-app-passwall2_[^_]*_all\.ipk' | head -n1 | sed -n 's/.*luci-app-passwall2_\([^_]*\)_all\.ipk.*/\1/p')"
+  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | grep "browser_download_url" | grep -o 'https://[^"]*luci-[^_]*_luci-app-passwall2_[^_]*_all\.ipk' | head -n1 | sed -n 's/.*luci-app-passwall2_\([^_]*\)_all\.ipk.*/\1/p')" || error "Failed to detect openwrt version."
   LOCAL_VERSION=$(opkg list-installed | grep "^luci-app-passwall2" | awk '{print $3}')
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
     opkg remove dnsmasq
@@ -97,7 +97,7 @@ install_warp() {
   info "install_warp"
   if [ ! -d /root/.config/warp-plus ]; then mkdir -p /root/.config/warp-plus; fi
 
-  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/bepass-org/warp-plus/releases/latest" | jq -r '.tag_name')"
+  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/bepass-org/warp-plus/releases/latest" | jq -r '.tag_name')" || error "Failed to detect warp-plus version."
   LOCAL_VERSION="$(cat /root/.config/warp-plus/version 2>/dev/null || echo 'none')"
 
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
@@ -161,7 +161,7 @@ install_hiddify() {
   info "install_hiddify"
   if [ ! -d /root/.config/hiddify-cli ]; then mkdir -p /root/.config/hiddify-cli; fi
 
-  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/hiddify/hiddify-core/releases/latest" | jq -r '.tag_name')"
+  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/hiddify/hiddify-core/releases/latest" | jq -r '.tag_name')" || error "Failed to detect hiddify-core version."
   LOCAL_VERSION="$(cat /root/.config/hiddify-cli/version 2>/dev/null || echo 'none')"
 
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
