@@ -99,7 +99,7 @@ test_config() {
 
   /tmp/sing-box-$SOCKS_PORT run -c "$JSON_CONFIG" 2>&1 | while read -r LINE; do
     if echo "$LINE" | grep -q "sing-box started"; then
-      if [ "$(curl -I $PROXY_OPTION --max-time 3 --retry 1 --socks5 "127.0.0.1:$SOCKS_PORT" --silent --output "/dev/null" -w "%{http_code}" "$TEST_URL")" -eq 200 ]; then
+      if [ "$(curl -I --max-time 3 --retry 1 --socks5 "127.0.0.1:$SOCKS_PORT" --silent --output "/dev/null" -w "%{http_code}" "$TEST_URL")" -eq 200 ]; then
         echo "✅ Successfully ($(wc -l < "$CONFIGS")) ${CONFIG}"
         echo "$CONFIG" >> "$CONFIGS"
       fi
