@@ -46,13 +46,12 @@ BASE64_URLS=(
 cd "/tmp" || true
 echo "ℹ️ $PREV_COUNT Previous Configs Found"
 
-if [ "$(curl -I --max-time 5 --retry 5 --socks5 "127.0.0.1:22335" --silent --output "/dev/null" -w "%{http_code}" "$TEST_URL")" -eq 200 ]; then
-  PROXY_OPTION="--socks5 127.0.0.1:22335"
-else
-  PROXY_OPTION=""
+if curl -I --max-time 5 --retry 5 --socks5 "127.0.0.1:22335" --silent --output "/dev/null" "http://www.gstatic.com/generate_204"; then
+  export http_proxy="http://127.0.0.1:22335"
+  export https_proxy="http://127.0.0.1:22335"
 fi
 
-while ! curl -I --max-time 5 --retry 5 $PROXY_OPTION --silent --output "/dev/null" -w "%{http_code}" "https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh" | grep -q "^20"; do
+while ! curl -I --max-time 5 --retry 5 --silent --output "/dev/null" -w "%{http_code}" "https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh" | grep -q "^20"; do
   echo "ERROR: Connectivity test failed."
   sleep 1
 done
@@ -140,20 +139,20 @@ while IFS= read -r CONFIG; do
 done <<< "$BACKUP"
 
 echo "⏳ Testing https://the3rf.com/api.php"
-curl -f --max-time 60 --retry 2 $PROXY_OPTION "https://the3rf.com/api.php" | jq -r '.[]' | while IFS= read -r CONFIG; do
+curl -f --max-time 60 --retry 2 "https://the3rf.com/api.php" | jq -r '.[]' | while IFS= read -r CONFIG; do
   process_config "$CONFIG"
 done
 
 for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
   echo "⏳ Testing $SUBSCRIPTION"
-  curl -f --max-time 300 --retry 2 $PROXY_OPTION "$SUBSCRIPTION" | while IFS= read -r CONFIG; do
+  curl -f --max-time 300 --retry 2 "$SUBSCRIPTION" | while IFS= read -r CONFIG; do
     process_config "$CONFIG"
   done
 done
 
 for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
   echo "⏳ Testing $SUBSCRIPTION"
-  curl -f --max-time 300 --retry 2 $PROXY_OPTION "$SUBSCRIPTION" | base64 --decode | while IFS= read -r CONFIG; do
+  curl -f --max-time 300 --retry 2 "$SUBSCRIPTION" | base64 --decode | while IFS= read -r CONFIG; do
     process_config "$CONFIG"
   done
 done
