@@ -1,6 +1,7 @@
 #!/bin/bash
 
 TEST_URL="https://1.1.1.1/cdn-cgi/trace/"
+TEST_SANCTION_URL="https://developer.android.com/"
 TEST_PING="217.218.155.155"
 CONFIGS="/root/ghost/configs.conf"
 PREV_COUNT=$(wc -l < "$CONFIGS")
@@ -99,7 +100,7 @@ test_config() {
 
   /tmp/sing-box-$SOCKS_PORT run -c "$JSON_CONFIG" 2>&1 | while read -r LINE; do
     if echo "$LINE" | grep -q "sing-box started"; then
-      if [ "$(curl -I --max-time 3 --retry 1 --socks5-hostname "127.0.0.1:$SOCKS_PORT" --silent --output "/dev/null" -w "%{http_code}" "https://cloud.google.com/generate_204")" -eq 204 ]; then
+      if [ "$(curl -I --max-time 3 --retry 1 --socks5-hostname "127.0.0.1:$SOCKS_PORT" --silent --output "/dev/null" -w "%{http_code}" "$TEST_SANCTION_URL")" -eq 200 ]; then
         echo "✅ Successfully ($(wc -l < "$CONFIGS")) ${CONFIG}"
         echo "$CONFIG" >> "$CONFIGS"
       fi
