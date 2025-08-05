@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TEST_URL="https://developer.android.com/"
+TEST_URL="https://1.1.1.1/cdn-cgi/trace/"
 CONFIGS="/root/ghost/configs.conf"
 PREV_COUNT=$(wc -l < "$CONFIGS")
 CONFIGS_LIMIT=40
@@ -46,12 +46,12 @@ BASE64_URLS=(
 cd "/tmp" || true
 echo "ℹ️ $PREV_COUNT Previous Configs Found"
 
-if curl -I --max-time 5 --retry 5 --socks5 "127.0.0.1:22335" --silent --output "/dev/null" "http://www.gstatic.com/generate_204"; then
+if curl -I --max-time 5 --retry 5 --socks5 "127.0.0.1:22335" --silent --output "/dev/null" "$TEST_URL"; then
   export http_proxy="http://127.0.0.1:22335"
   export https_proxy="http://127.0.0.1:22335"
 fi
 
-while ! curl -I --max-time 5 --retry 5 --silent --output "/dev/null" -w "%{http_code}" "https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh" | grep -q "^20"; do
+while ! curl -I --max-time 5 --retry 5 --silent --output "/dev/null" "https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh"; do
   echo "ERROR: Connectivity test failed."
   sleep 1
 done
@@ -98,8 +98,8 @@ test_config() {
     ln -s "/usr/bin/sing-box" "/tmp/sing-box-$SOCKS_PORT"
   fi
 
-  /tmp/sing-box-$SOCKS_PORT run -c "$JSON_CONFIG" 2>&1 | while read -r line; do
-    if echo "$line" | grep -q "sing-box started"; then
+  /tmp/sing-box-$SOCKS_PORT run -c "$JSON_CONFIG" 2>&1 | while read -r LINE; do
+    if echo "$LINE" | grep -q "sing-box started"; then
       if [ "$(curl -I --max-time 3 --retry 1 --socks5 "127.0.0.1:$SOCKS_PORT" --silent --output "/dev/null" -w "%{http_code}" "$TEST_URL")" -eq 200 ]; then
         echo "✅ Successfully ($(wc -l < "$CONFIGS")) ${CONFIG}"
         echo "$CONFIG" >> "$CONFIGS"

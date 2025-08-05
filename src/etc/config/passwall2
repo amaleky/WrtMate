@@ -363,8 +363,7 @@ geosite:slack
 domain:ir
 domain:dl.playstation.net
 domain:upenlod.pw
-domain:odlserver.info
-domain:raw.githubusercontent.com'
+domain:odlserver.info'
 	option ip_list '#geoip:ir
 #geoip:private'
 

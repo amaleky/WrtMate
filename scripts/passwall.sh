@@ -20,7 +20,7 @@ install_passwall() {
   curl -s -L -o /etc/config/passwall2 "${REPO_URL}/src/etc/config/passwall2" || error "Failed to download passwall2 config."
 
   uci commit passwall2
-  /etc/init.d/passwall2 start
+  /etc/init.d/passwall2 restart
 }
 
 setup_geo_update() {
@@ -265,11 +265,6 @@ install_server_less() {
 
 main() {
   check_min_requirements 200 100 2
-
-  if [ -f "/etc/init.d/passwall2" ]; then
-    /etc/init.d/passwall2 stop
-    rm -fv "/var/lock/passwall2_ready.lock"
-  fi
 
   install_warp
   install_hiddify
