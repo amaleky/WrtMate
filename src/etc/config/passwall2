@@ -128,8 +128,8 @@ config global_rules
 	option geoip_update '1'
 	option v2ray_location_asset '/usr/share/v2ray/'
 	option enable_geoview '1'
-	option geoip_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geoip.dat'
-	option geosite_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geosite.dat'
+	option geoip_url 'https://raw.githubusercontent.com/Chocolate4U/Iran-v2ray-rules/release/geoip.dat'
+	option geosite_url 'https://raw.githubusercontent.com/Chocolate4U/Iran-v2ray-rules/release/geosite.dat'
 
 config global_app
 	option xray_file '/usr/bin/xray'
@@ -147,9 +147,9 @@ config global_subscribe
 config global_singbox
 	option sniff_override_destination '0'
 	option geoip_path '/usr/share/singbox/geoip.db'
-	option geoip_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-sing-box-rules@release/geoip.db'
+	option geoip_url 'https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/release/geoip.db'
 	option geosite_path '/usr/share/singbox/geosite.db'
-	option geosite_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-sing-box-rules@release/geosite.db'
+	option geosite_url 'https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/release/geosite.db'
 
 config shunt_rules 'Block'
 	option remarks 'Block'
@@ -363,7 +363,8 @@ geosite:slack
 domain:ir
 domain:dl.playstation.net
 domain:upenlod.pw
-domain:odlserver.info'
+domain:odlserver.info
+domain:raw.githubusercontent.com'
 	option ip_list '#geoip:ir
 #geoip:private'
 

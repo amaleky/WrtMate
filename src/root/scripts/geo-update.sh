@@ -31,9 +31,9 @@ download() {
 }
 
 # ip
-download "/usr/share/v2ray/geoip.dat" "https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geoip.dat"
-download "/usr/share/singbox/geoip.db" "https://cdn.jsdelivr.net/gh/chocolate4u/Iran-sing-box-rules@release/geoip.db"
+download "/usr/share/v2ray/geoip.dat" "https://raw.githubusercontent.com/Chocolate4U/Iran-v2ray-rules/release/geoip.dat"
+download "/usr/share/singbox/geoip.db" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/release/geoip.db"
 
 # domain
-download "/usr/share/v2ray/geosite.dat" "https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geosite.dat"
-download "/usr/share/singbox/geosite.db" "https://cdn.jsdelivr.net/gh/chocolate4u/Iran-sing-box-rules@release/geosite.db"
+download "/usr/share/v2ray/geosite.dat" "https://raw.githubusercontent.com/Chocolate4U/Iran-v2ray-rules/release/geosite.dat"
+download "/usr/share/singbox/geosite.db" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/release/geosite.db"
