@@ -47,11 +47,10 @@ cd "/tmp" || true
 echo "ℹ️ $PREV_COUNT Previous Configs Found"
 
 if curl -I --max-time 5 --retry 5 --socks5 "127.0.0.1:22335" --silent --output "/dev/null" "$TEST_URL"; then
-  export http_proxy="http://127.0.0.1:22335"
-  export https_proxy="http://127.0.0.1:22335"
+  PROXY_OPTION="--socks5 127.0.0.1:22335"
 fi
 
-while ! curl -I --max-time 5 --retry 5 --silent --output "/dev/null" "https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh"; do
+while ! curl -I $PROXY_OPTION --max-time 5 --retry 5 --silent --output "/dev/null" "https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh"; do
   echo "ERROR: Connectivity test failed."
   sleep 1
 done
@@ -68,7 +67,6 @@ get_random_port() {
   echo "❌ Could not find free port after 100 tries" >&2
   return 1
 }
-
 
 test_config() {
   local CONFIG="$1"
@@ -100,7 +98,7 @@ test_config() {
 
   /tmp/sing-box-$SOCKS_PORT run -c "$JSON_CONFIG" 2>&1 | while read -r LINE; do
     if echo "$LINE" | grep -q "sing-box started"; then
-      if [ "$(curl -I --max-time 3 --retry 1 --socks5 "127.0.0.1:$SOCKS_PORT" --silent --output "/dev/null" -w "%{http_code}" "$TEST_URL")" -eq 200 ]; then
+      if [ "$(curl -I $PROXY_OPTION --max-time 3 --retry 1 --socks5 "127.0.0.1:$SOCKS_PORT" --silent --output "/dev/null" -w "%{http_code}" "$TEST_URL")" -eq 200 ]; then
         echo "✅ Successfully ($(wc -l < "$CONFIGS")) ${CONFIG}"
         echo "$CONFIG" >> "$CONFIGS"
       fi
@@ -139,20 +137,20 @@ while IFS= read -r CONFIG; do
 done <<< "$BACKUP"
 
 echo "⏳ Testing https://the3rf.com/api.php"
-curl -f --max-time 60 --retry 2 "https://the3rf.com/api.php" | jq -r '.[]' | while IFS= read -r CONFIG; do
+curl -f $PROXY_OPTION --max-time 60 --retry 2 "https://the3rf.com/api.php" | jq -r '.[]' | while IFS= read -r CONFIG; do
   process_config "$CONFIG"
 done
 
 for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
   echo "⏳ Testing $SUBSCRIPTION"
-  curl -f --max-time 300 --retry 2 "$SUBSCRIPTION" | while IFS= read -r CONFIG; do
+  curl -f $PROXY_OPTION --max-time 300 --retry 2 "$SUBSCRIPTION" | while IFS= read -r CONFIG; do
     process_config "$CONFIG"
   done
 done
 
 for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
   echo "⏳ Testing $SUBSCRIPTION"
-  curl -f --max-time 300 --retry 2 "$SUBSCRIPTION" | base64 --decode | while IFS= read -r CONFIG; do
+  curl -f $PROXY_OPTION --max-time 300 --retry 2 "$SUBSCRIPTION" | base64 --decode | while IFS= read -r CONFIG; do
     process_config "$CONFIG"
   done
 done

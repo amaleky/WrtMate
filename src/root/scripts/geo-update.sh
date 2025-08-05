@@ -1,11 +1,12 @@
 #!/bin/sh
 
+TEST_URL="https://1.1.1.1/cdn-cgi/trace/"
+
 if [ ! -d "/usr/share/v2ray" ]; then mkdir -p "/usr/share/v2ray"; fi
 if [ ! -d "/usr/share/singbox" ]; then mkdir -p "/usr/share/singbox"; fi
 
-if curl -I --max-time 5 --retry 5 --socks5 "127.0.0.1:22335" --silent --output "/dev/null" "http://www.gstatic.com/generate_204"; then
-  export http_proxy="http://127.0.0.1:22335"
-  export https_proxy="http://127.0.0.1:22335"
+if curl -I --max-time 5 --retry 5 --socks5 "127.0.0.1:22335" --silent --output "/dev/null" "$TEST_URL"; then
+  PROXY_OPTION="--socks5 127.0.0.1:22335"
 fi
 
 download() {
@@ -21,7 +22,7 @@ download() {
 
   if [ "$REMOTE_SIZE" != "$LOCAL_SIZE" ]; then
     TEMP_FILE="$(mktemp)"
-    if curl -fL --output "$TEMP_FILE" "$URL"; then
+    if curl -fL $PROXY_OPTION --output "$TEMP_FILE" "$URL"; then
       mv "$TEMP_FILE" "$FILE"
     fi
   fi
