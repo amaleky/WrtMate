@@ -1,6 +1,7 @@
 #!/bin/bash
 
 TEST_URL="https://1.1.1.1/cdn-cgi/trace/"
+TEST_PING="217.218.155.155"
 CONFIGS="/root/ghost/configs.conf"
 PREV_COUNT=$(wc -l < "$CONFIGS")
 CONFIGS_LIMIT=40
@@ -50,10 +51,10 @@ if curl -I --max-time 5 --retry 5 --socks5 "127.0.0.1:22335" --silent --output "
   PROXY_OPTION="--socks5 127.0.0.1:22335"
 fi
 
-while ! curl -I $PROXY_OPTION --max-time 5 --retry 5 --silent --output "/dev/null" "https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh"; do
+if ! ping -c 1 -W 2 "$TEST_PING" > /dev/null 2>&1; then
   echo "ERROR: Connectivity test failed."
-  sleep 1
-done
+  exit 0
+fi
 
 get_random_port() {
   for i in $(seq 1 100); do
