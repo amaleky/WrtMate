@@ -14,7 +14,7 @@ if ! top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default'
 fi
 
 if /etc/init.d/ghost enabled; then
-  if ! curl -I --max-time 5 --retry 5 --socks5 "127.0.0.1:22334" --silent --output "/dev/null" "$TEST_URL"; then
+  if ! curl -I --max-time 5 --retry 5 --socks5-hostname "127.0.0.1:22334" --silent --output "/dev/null" "$TEST_URL"; then
     echo "ERROR: Ghost proxy connectivity test failed. Restarting ghost service..."
     sed -i '1d' "/root/ghost/configs.conf"
     /etc/init.d/ghost restart
@@ -27,7 +27,7 @@ else
 fi
 
 if /etc/init.d/warp-plus enabled; then
-  if ! curl -I --max-time 5 --retry 5 --socks5 "127.0.0.1:8086" --silent --output "/dev/null" "$TEST_URL"; then
+  if ! curl -I --max-time 5 --retry 5 --socks5-hostname "127.0.0.1:8086" --silent --output "/dev/null" "$TEST_URL"; then
     echo "ERROR: WARP proxy connectivity test failed. Clearing cache and restarting warp-plus service..."
     rm -rfv /.cache/warp-plus/
     /etc/init.d/warp-plus restart
@@ -39,7 +39,7 @@ else
 fi
 
 if /etc/init.d/psiphon enabled; then
-  if ! curl -I --max-time 5 --retry 5 --socks5 "127.0.0.1:8087" --silent --output "/dev/null" "$TEST_URL"; then
+  if ! curl -I --max-time 5 --retry 5 --socks5-hostname "127.0.0.1:8087" --silent --output "/dev/null" "$TEST_URL"; then
     echo "ERROR: WARP proxy connectivity test failed. Clearing cache and restarting psiphon service..."
     /etc/init.d/psiphon restart
   else
@@ -50,7 +50,7 @@ else
 fi
 
 if /etc/init.d/ssh-proxy enabled; then
-  if ! curl -I --max-time 5 --retry 5 --socks5 "127.0.0.1:1080" --silent --output "/dev/null" "$TEST_URL"; then
+  if ! curl -I --max-time 5 --retry 5 --socks5-hostname "127.0.0.1:1080" --silent --output "/dev/null" "$TEST_URL"; then
     echo "ERROR: SSH proxy connectivity test failed. Restarting ssh-proxy service..."
     rm -fv /root/.ssh/known_hosts
     /etc/init.d/ssh-proxy restart
@@ -62,7 +62,7 @@ else
 fi
 
 if /etc/init.d/serverless enabled; then
-  if ! curl -I --max-time 5 --retry 5 --socks5 "127.0.0.1:10808" --silent --output "/dev/null" "$TEST_URL"; then
+  if ! curl -I --max-time 5 --retry 5 --socks5-hostname "127.0.0.1:10808" --silent --output "/dev/null" "$TEST_URL"; then
     echo "ERROR: ServerLess connectivity test failed. Restarting serverless service..."
     /etc/init.d/serverless restart
   else
@@ -73,7 +73,7 @@ else
 fi
 
 if /etc/init.d/balancer enabled; then
-  if ! curl -I --max-time 5 --retry 5 --socks5 "127.0.0.1:22335" --silent --output "/dev/null" "$TEST_URL"; then
+  if ! curl -I --max-time 5 --retry 5 --socks5-hostname "127.0.0.1:22335" --silent --output "/dev/null" "$TEST_URL"; then
     echo "ERROR: Balancer connectivity test failed. Restarting balancer service..."
     /etc/init.d/balancer restart
   else

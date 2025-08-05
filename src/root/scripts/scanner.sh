@@ -47,8 +47,8 @@ BASE64_URLS=(
 cd "/tmp" || true
 echo "ℹ️ $PREV_COUNT Previous Configs Found"
 
-if curl -I --max-time 5 --retry 5 --socks5 "127.0.0.1:22335" --silent --output "/dev/null" "$TEST_URL"; then
-  PROXY_OPTION="--socks5 127.0.0.1:22335"
+if curl -I --max-time 5 --retry 5 --socks5-hostname "127.0.0.1:22335" --silent --output "/dev/null" "$TEST_URL"; then
+  PROXY_OPTION="--socks5-hostname 127.0.0.1:22335"
 fi
 
 if ! ping -c 1 -W 2 "$TEST_PING" > /dev/null 2>&1; then
@@ -99,7 +99,7 @@ test_config() {
 
   /tmp/sing-box-$SOCKS_PORT run -c "$JSON_CONFIG" 2>&1 | while read -r LINE; do
     if echo "$LINE" | grep -q "sing-box started"; then
-      if [ "$(curl -I --max-time 3 --retry 1 --socks5 "127.0.0.1:$SOCKS_PORT" --silent --output "/dev/null" -w "%{http_code}" "https://cloud.google.com/generate_204")" -eq 204 ]; then
+      if [ "$(curl -I --max-time 3 --retry 1 --socks5-hostname "127.0.0.1:$SOCKS_PORT" --silent --output "/dev/null" -w "%{http_code}" "https://cloud.google.com/generate_204")" -eq 204 ]; then
         echo "✅ Successfully ($(wc -l < "$CONFIGS")) ${CONFIG}"
         echo "$CONFIG" >> "$CONFIGS"
       fi

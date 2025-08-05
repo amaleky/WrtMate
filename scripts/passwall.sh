@@ -263,10 +263,6 @@ install_server_less() {
   /etc/init.d/serverless start
 }
 
-setup_local_dns() {
-  grep -q "^185.199.108.133 raw.githubusercontent.com" "/etc/hosts" || echo "185.199.108.133 raw.githubusercontent.com" >> "/etc/hosts"
-}
-
 main() {
   check_min_requirements 200 100 2
 
@@ -277,7 +273,6 @@ main() {
   install_ssh_proxy
   setup_balancer
   setup_url_test
-  setup_local_dns
   setup_geo_update
   install_passwall
 
