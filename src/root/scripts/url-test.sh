@@ -12,9 +12,7 @@ fi
 
 if /etc/init.d/ghost enabled; then
   if [ "$(logread | grep "run.sh\[$(pgrep -f '/root/ghost/run.sh')\]" | grep -c "ERROR")" -gt 50 ] || \
-      [ "$(curl -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:22334" --silent --output "/dev/null" -w "%{http_code}" "https://gemini.google.com/")" -ne 200 ] || \
-      [ "$(curl -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:22334" --silent --output "/dev/null" -w "%{http_code}" "https://probe.easebar.com/")" -ne 200 ] || \
-      [ "$(curl -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:22334" --silent --output "/dev/null" -w "%{http_code}" "https://developer.android.com/")" -ne 200 ]; then
+      [ "$(curl -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:22334" --silent --output "/dev/null" -w "%{http_code}" "https://gemini.google.com/")" -ne 200 ]; then
     echo "ERROR: Ghost proxy connectivity test failed. Restarting ghost service..."
     sed -i '1d' "/root/ghost/configs.conf"
     /etc/init.d/ghost restart
@@ -41,9 +39,7 @@ else
 fi
 
 if /etc/init.d/psiphon enabled; then
-  if [ "$(curl -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:8087" --silent --output "/dev/null" -w "%{http_code}" "https://gemini.google.com/")" -ne 200 ] || \
-      [ "$(curl -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:8087" --silent --output "/dev/null" -w "%{http_code}" "https://probe.easebar.com/")" -ne 200 ] || \
-      [ "$(curl -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:8087" --silent --output "/dev/null" -w "%{http_code}" "https://developer.android.com/")" -ne 200 ]; then
+  if [ "$(curl -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:8087" --silent --output "/dev/null" -w "%{http_code}" "https://gemini.google.com/")" -ne 200 ]; then
     echo "ERROR: WARP proxy connectivity test failed. Clearing cache and restarting psiphon service..."
     /etc/init.d/psiphon restart
   else
