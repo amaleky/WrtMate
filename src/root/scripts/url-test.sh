@@ -1,7 +1,7 @@
 #!/bin/sh
 
 TEST_URL="https://1.1.1.1/cdn-cgi/trace/"
-TEST_SANCTION_URL="https://developer.android.com/"
+TEST_SANCTION_URL="https://gemini.google.com/"
 TEST_PING="217.218.155.155"
 
 if ! ping -c 1 -W 2 "$TEST_PING" > /dev/null 2>&1; then

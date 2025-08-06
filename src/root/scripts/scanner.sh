@@ -1,7 +1,7 @@
 #!/bin/bash
 
 TEST_URL="https://1.1.1.1/cdn-cgi/trace/"
-TEST_SANCTION_URL="https://developer.android.com/"
+TEST_SANCTION_URL="https://gemini.google.com/"
 TEST_PING="217.218.155.155"
 CONFIGS="/root/ghost/configs.conf"
 PREV_COUNT=$(wc -l < "$CONFIGS")
