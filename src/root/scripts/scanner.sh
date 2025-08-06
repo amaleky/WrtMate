@@ -48,7 +48,7 @@ BASE64_URLS=(
 cd "/tmp" || true
 echo "ℹ️ $PREV_COUNT Previous Configs Found"
 
-if curl -I --max-time 5 --retry 5 --socks5-hostname "127.0.0.1:22335" --silent --output "/dev/null" "$TEST_URL"; then
+if curl -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:22335" --silent --output "/dev/null" "$TEST_URL"; then
   PROXY_OPTION="--socks5-hostname 127.0.0.1:22335"
 fi
 
