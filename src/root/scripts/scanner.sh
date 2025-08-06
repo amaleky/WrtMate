@@ -1,8 +1,5 @@
 #!/bin/bash
 
-TEST_URL="https://1.1.1.1/cdn-cgi/trace/"
-TEST_SANCTION_URL="https://gemini.google.com/"
-TEST_PING="217.218.155.155"
 CONFIGS="/root/ghost/configs.conf"
 PREV_COUNT=$(wc -l < "$CONFIGS")
 CONFIGS_LIMIT=40
@@ -48,11 +45,11 @@ BASE64_URLS=(
 cd "/tmp" || true
 echo "ℹ️ $PREV_COUNT Previous Configs Found"
 
-if curl -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:22335" --silent --output "/dev/null" "$TEST_URL"; then
+if curl -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:22335" --silent --output "/dev/null" "https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh"; then
   PROXY_OPTION="--socks5-hostname 127.0.0.1:22335"
 fi
 
-if ! ping -c 1 -W 2 "$TEST_PING" > /dev/null 2>&1; then
+if ! ping -c 1 -W 2 "217.218.155.155" > /dev/null 2>&1; then
   echo "ERROR: Connectivity test failed."
   exit 0
 fi
@@ -100,7 +97,9 @@ test_config() {
 
   /tmp/sing-box-$SOCKS_PORT run -c "$JSON_CONFIG" 2>&1 | while read -r LINE; do
     if echo "$LINE" | grep -q "sing-box started"; then
-      if [ "$(curl -I --max-time 3 --retry 1 --socks5-hostname "127.0.0.1:$SOCKS_PORT" --silent --output "/dev/null" -w "%{http_code}" "$TEST_SANCTION_URL")" -eq 200 ]; then
+      if [ "$(curl -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:$SOCKS_PORT" --silent --output "/dev/null" -w "%{http_code}" "https://gemini.google.com/")" -ne 200 ] || \
+          [ "$(curl -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:$SOCKS_PORT" --silent --output "/dev/null" -w "%{http_code}" "https://probe.easebar.com/")" -ne 200 ] || \
+          [ "$(curl -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:$SOCKS_PORT" --silent --output "/dev/null" -w "%{http_code}" "https://developer.android.com/")" -ne 200 ]; then
         echo "✅ Successfully ($(wc -l < "$CONFIGS")) ${CONFIG}"
         echo "$CONFIG" >> "$CONFIGS"
       fi
@@ -139,20 +138,20 @@ while IFS= read -r CONFIG; do
 done <<< "$BACKUP"
 
 echo "⏳ Testing https://the3rf.com/api.php"
-curl -f $PROXY_OPTION --max-time 60 --retry 2 "https://the3rf.com/api.php" | jq -r '.[]' | while IFS= read -r CONFIG; do
+curl -f $PROXY_OPTION --max-time 60 --retry 1 "https://the3rf.com/api.php" | jq -r '.[]' | while IFS= read -r CONFIG; do
   process_config "$CONFIG"
 done
 
 for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
   echo "⏳ Testing $SUBSCRIPTION"
-  curl -f $PROXY_OPTION --max-time 300 --retry 2 "$SUBSCRIPTION" | while IFS= read -r CONFIG; do
+  curl -f $PROXY_OPTION --max-time 60 --retry 1 "$SUBSCRIPTION" | while IFS= read -r CONFIG; do
     process_config "$CONFIG"
   done
 done
 
 for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
   echo "⏳ Testing $SUBSCRIPTION"
-  curl -f $PROXY_OPTION --max-time 300 --retry 2 "$SUBSCRIPTION" | base64 --decode | while IFS= read -r CONFIG; do
+  curl -f $PROXY_OPTION --max-time 60 --retry 1 "$SUBSCRIPTION" | base64 --decode | while IFS= read -r CONFIG; do
     process_config "$CONFIG"
   done
 done
