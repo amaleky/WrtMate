@@ -6,9 +6,9 @@ PARSED_CONFIG="/tmp/balancer-parsed.json"
 TEST_URL="https://1.1.1.1/cdn-cgi/trace/"
 SOCKS_PORT=22335
 
-/usr/bin/hiddify-cli parse "$CONFIGS" -o "$PARSED_CONFIG" > /dev/null 2>&1
+kill -9 "$(pgrep -f "/usr/bin/sing-box run -c $OUTPUT_CONFIG")"
 
-jq --argjson port "$SOCKS_PORT" --arg url "$TEST_URL" '{
+/usr/bin/hiddify-cli parse "$CONFIGS" -o "$PARSED_CONFIG" > /dev/null 2>&1 && jq --argjson port "$SOCKS_PORT" --arg url "$TEST_URL" '{
   "log": {
     "level": "warning"
   },
@@ -32,8 +32,4 @@ jq --argjson port "$SOCKS_PORT" --arg url "$TEST_URL" '{
       }
     ] + (.outbounds | map(select(.type != "urltest")))
   )
-}' "$PARSED_CONFIG" > "$OUTPUT_CONFIG"
-
-kill -9 "$(pgrep -f "/usr/bin/sing-box run -c $OUTPUT_CONFIG")"
-
-/usr/bin/sing-box run -c "$OUTPUT_CONFIG"
+}' "$PARSED_CONFIG" > "$OUTPUT_CONFIG" && /usr/bin/sing-box run -c "$OUTPUT_CONFIG"
