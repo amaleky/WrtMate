@@ -5,6 +5,16 @@ PREV_COUNT=$(wc -l < "$CONFIGS")
 CONFIGS_LIMIT=40
 MAX_PARALLEL=5
 
+BASE64_URLS=(
+  "https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/refs/heads/main/mci/sub_1.txt"
+  "https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/refs/heads/main/mtn/sub_1.txt"
+  "https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/refs/heads/main/segment/test_sub.txt"
+  "https://raw.githubusercontent.com/Joker-funland/V2ray-configs/main/config.txt"
+  "https://raw.githubusercontent.com/AzadNetCH/Clash/main/AzadNet.txt"
+  "https://raw.githubusercontent.com/DaBao-Lee/V2RayN-NodeShare/main/base64"
+  "https://raw.githubusercontent.com/ripaojiedian/freenode/main/sub"
+)
+
 CONFIG_URLS=(
   "https://raw.githubusercontent.com/Arashtelr/lab/main/FreeVPN-by-ArashZidi"
   "https://raw.githubusercontent.com/ermaozi/get_subscribe/main/subscribe/v2ray.txt"
@@ -33,13 +43,6 @@ CONFIG_URLS=(
   "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/all_extracted_configs.txt"
   "https://raw.githubusercontent.com/Kolandone/v2raycollector/main/config.txt"
   "https://raw.githubusercontent.com/Epodonios/v2ray-CONFIGs/main/All_Configs_Sub.txt"
-)
-
-BASE64_URLS=(
-  "https://raw.githubusercontent.com/Joker-funland/V2ray-configs/main/config.txt"
-  "https://raw.githubusercontent.com/AzadNetCH/Clash/main/AzadNet.txt"
-  "https://raw.githubusercontent.com/DaBao-Lee/V2RayN-NodeShare/main/base64"
-  "https://raw.githubusercontent.com/ripaojiedian/freenode/main/sub"
 )
 
 cd "/tmp" || true
@@ -142,16 +145,16 @@ curl -f $PROXY_OPTION --max-time 60 --retry 1 "https://the3rf.com/api.php" | jq 
   process_config "$CONFIG"
 done
 
-for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
+for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
   echo "⏳ Testing $SUBSCRIPTION"
-  curl -f $PROXY_OPTION --max-time 60 --retry 1 "$SUBSCRIPTION" | while IFS= read -r CONFIG; do
+  curl -f $PROXY_OPTION --max-time 60 --retry 1 "$SUBSCRIPTION" | base64 --decode | while IFS= read -r CONFIG; do
     process_config "$CONFIG"
   done
 done
 
-for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
+for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
   echo "⏳ Testing $SUBSCRIPTION"
-  curl -f $PROXY_OPTION --max-time 60 --retry 1 "$SUBSCRIPTION" | base64 --decode | while IFS= read -r CONFIG; do
+  curl -f $PROXY_OPTION --max-time 60 --retry 1 "$SUBSCRIPTION" | while IFS= read -r CONFIG; do
     process_config "$CONFIG"
   done
 done
