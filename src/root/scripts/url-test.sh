@@ -15,11 +15,11 @@ if ! top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default'
 fi
 
 if /etc/init.d/ghost enabled; then
-  if [ "$(curl -I --max-time 5 --retry 5 --socks5-hostname "127.0.0.1:22334" --silent --output "/dev/null" -w "%{http_code}" "$TEST_SANCTION_URL")" -ne 200 ]; then
+  if [ "$(logread | grep "run.sh\[$(pgrep -f '/root/ghost/run.sh')\]" | grep -c "ERROR")" -gt 50 ] || [ "$(curl -I --max-time 5 --retry 5 --socks5-hostname "127.0.0.1:22334" --silent --output "/dev/null" -w "%{http_code}" "$TEST_SANCTION_URL")" -ne 200 ]; then
     echo "ERROR: Ghost proxy connectivity test failed. Restarting ghost service..."
     sed -i '1d' "/root/ghost/configs.conf"
     /etc/init.d/ghost restart
-    /etc/init.d/scanner start
+    /etc/init.d/scanner restart
   else
     echo "Ghost proxy connectivity test passed"
   fi
