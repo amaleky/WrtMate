@@ -79,7 +79,7 @@ test_config() {
 
   echo "$CONFIG" >"$TEMP_CONFIG"
 
-  if grep -qxF "$CONFIG" "$CONFIGS" || hiddify-cli parse "$TEMP_CONFIG" -o "$PARSED_CONFIG" 2>&1 | grep -qiE "error|fatal"; then
+  if grep -qxF "$CONFIG" "$CONFIGS" || /usr/bin/hiddify-cli parse "$TEMP_CONFIG" -o "$PARSED_CONFIG" 2>&1 | grep -qiE "error|fatal"; then
     return
   fi
 
