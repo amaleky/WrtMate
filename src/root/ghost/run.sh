@@ -14,13 +14,6 @@ sed -n '1p' "$SOURCE_CONFIGS" > "$INPUT_CONFIGS"
   "log": {
     "level": "warning"
   },
-  "dns": {
-    "servers": [
-      {
-        "address": "tcp://1.1.1.1"
-      }
-    ]
-  },
   "inbounds": [
     {
       "type": "socks",

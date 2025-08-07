@@ -84,13 +84,6 @@ test_config() {
   fi
 
   jq --argjson port "$SOCKS_PORT" '. + {
-    "dns": {
-      "servers": [
-        {
-          "address": "tcp://1.1.1.1"
-        }
-      ]
-    },
     "inbounds": [
       {
         "type": "socks",
