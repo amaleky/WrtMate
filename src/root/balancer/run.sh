@@ -12,7 +12,11 @@ kill -9 "$(pgrep -f "/usr/bin/sing-box run -c $OUTPUT_CONFIG")"
     "level": "warning"
   },
   "dns": {
-    "servers": ["1.1.1.1"]
+    "servers": [
+      {
+        "address": "tcp://1.1.1.1"
+      }
+    ]
   },
   "inbounds": [
     {

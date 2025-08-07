@@ -1,7 +1,7 @@
 #!/bin/sh
 
-SOURCE_CONFIGS="/root/balancer/configs.conf"
-INPUT_CONFIGS="/tmp/balancer-input.conf"
+SOURCE_CONFIGS="/root/ghost/configs.conf"
+INPUT_CONFIGS="/tmp/ghost-input.conf"
 OUTPUT_CONFIG="/tmp/ghost-configs.json"
 PARSED_CONFIG="/tmp/ghost-parsed.json"
 SOCKS_PORT=22334
@@ -15,7 +15,11 @@ sed -n '1p' "$SOURCE_CONFIGS" > "$INPUT_CONFIGS"
     "level": "warning"
   },
   "dns": {
-    "servers": ["1.1.1.1"]
+    "servers": [
+      {
+        "address": "tcp://1.1.1.1"
+      }
+    ]
   },
   "inbounds": [
     {
