@@ -16,7 +16,7 @@ if /etc/init.d/ghost enabled; then
     echo "ERROR: Ghost proxy connectivity test failed. Restarting ghost service..."
     sed -i '1d' "/root/ghost/configs.conf"
     /etc/init.d/ghost restart
-    /etc/init.d/scanner restart
+    /etc/init.d/scanner start
   else
     echo "Ghost proxy connectivity test passed"
   fi
