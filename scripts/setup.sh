@@ -11,7 +11,7 @@ check_firmware_version() {
 upgrade_firmware() {
   read -r -p "Enter your router firmware upgrade file (sysupgrade.bin): " FIRMWARE_URL
   if [ -n "$FIRMWARE_URL" ]; then
-    curl -L -o /tmp/firmware.bin "${FIRMWARE_URL}" || error "Failed to download firmware."
+    curl -s -L -o "/tmp/firmware.bin" "${FIRMWARE_URL}" || error "Failed to download firmware."
     sysupgrade -n -v /tmp/firmware.bin
   fi
 }

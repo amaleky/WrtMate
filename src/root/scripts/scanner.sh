@@ -51,7 +51,7 @@ CONFIG_URLS=(
 cd "/tmp" || true
 echo "ℹ️ $PREV_COUNT Previous Configs Found"
 
-if curl -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:22335" --silent --output "/dev/null" "https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh"; then
+if curl -s -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:22335" -o "/dev/null" "https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh"; then
   PROXY_OPTION="--socks5-hostname 127.0.0.1:22335"
 fi
 
@@ -103,8 +103,8 @@ test_config() {
 
   /tmp/sing-box-$SOCKS_PORT run -c "$JSON_CONFIG" 2>&1 | while read -r LINE; do
     if echo "$LINE" | grep -q "sing-box started"; then
-      if [ "$(curl -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:$SOCKS_PORT" --silent --output "/dev/null" -w "%{http_code}" "https://gemini.google.com/")" -eq 200 ] && \
-         [ "$(curl -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:$SOCKS_PORT" --silent --output "/dev/null" -w "%{http_code}" "https://developer.android.com/")" -eq 200 ]; then
+      if [ "$(curl -s -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://gemini.google.com/")" -eq 200 ] && \
+         [ "$(curl -s -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://developer.android.com/")" -eq 200 ]; then
         echo "✅ Successfully ($(wc -l < "$CONFIGS")) ${CONFIG}"
         echo "$CONFIG" >> "$CONFIGS"
       fi
@@ -150,7 +150,7 @@ done
 for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
   CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
   echo "⏳ Checking $SUBSCRIPTION"
-  if curl -fL $PROXY_OPTION --max-time 60 --retry 1 -z "$CACHE_FILE" -o "$CACHE_FILE" "$SUBSCRIPTION"; then
+  if curl -L $PROXY_OPTION --max-time 60 --retry 1 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
     echo "✅ Updated from remote"
   elif [ -f "$CACHE_FILE" ]; then
     echo "⚠️ Using cached version (download failed or unchanged)"
@@ -158,15 +158,17 @@ for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
     echo "❌ No cache and download failed"
     continue
   fi
-  base64 --decode "$CACHE_FILE" 2>/dev/null | while IFS= read -r CONFIG; do
-    process_config "$CONFIG"
-  done
+  if [ "$(wc -l < "$CONFIGS")" -lt $CONFIGS_LIMIT ]; then
+    base64 --decode "$CACHE_FILE" 2>/dev/null | while IFS= read -r CONFIG; do
+      process_config "$CONFIG"
+    done
+  fi
 done
 
 for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
   CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
   echo "⏳ Checking $SUBSCRIPTION"
-  if curl -fL $PROXY_OPTION --max-time 60 --retry 1 -z "$CACHE_FILE" -o "$CACHE_FILE" "$SUBSCRIPTION"; then
+  if curl -L $PROXY_OPTION --max-time 60 --retry 1 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
     echo "✅ Updated from remote"
   elif [ -f "$CACHE_FILE" ]; then
     echo "⚠️ Using cached version (download failed or unchanged)"
@@ -174,9 +176,11 @@ for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
     echo "❌ No cache and download failed"
     continue
   fi
-  while IFS= read -r CONFIG; do
-    process_config "$CONFIG"
-  done < "$CACHE_FILE"
+  if [ "$(wc -l < "$CONFIGS")" -lt $CONFIGS_LIMIT ]; then
+    while IFS= read -r CONFIG; do
+      process_config "$CONFIG"
+    done < "$CACHE_FILE"
+  fi
 done
 
 rm -rf /tmp/test* /tmp/sing-box*

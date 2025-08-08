@@ -9,15 +9,15 @@ install_passwall() {
     opkg remove dnsmasq
     ensure_packages "dnsmasq-full kmod-nft-socket kmod-nft-tproxy binutils"
 
-    curl -L -o /tmp/packages.zip "https://github.com/xiaorouji/openwrt-passwall2/releases/latest/download/passwall_packages_ipk_$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2).zip" || error "Failed to download Passwall packages."
+    curl -s -L -o "/tmp/packages.zip" "https://github.com/xiaorouji/openwrt-passwall2/releases/latest/download/passwall_packages_ipk_$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2).zip" || error "Failed to download Passwall packages."
     unzip -o /tmp/packages.zip -d /tmp/passwall
     for pkg in /tmp/passwall/*.ipk; do opkg install "$pkg"; done
 
-    curl -L -o /tmp/passwall2.ipk "$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | grep "browser_download_url" | grep -o 'https://[^"]*luci-[^_]*_luci-app-passwall2_[^_]*_all\.ipk' | head -n1)" || error "Failed to download Passwall2 package."
+    curl -s -L -o "/tmp/passwall2.ipk" "$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | grep "browser_download_url" | grep -o 'https://[^"]*luci-[^_]*_luci-app-passwall2_[^_]*_all\.ipk' | head -n1)" || error "Failed to download Passwall2 package."
     opkg install /tmp/passwall2.ipk || error "Failed to install Passwall2."
   fi
 
-  curl -s -L -o /etc/config/passwall2 "${REPO_URL}/src/etc/config/passwall2" || error "Failed to download passwall2 config."
+  curl -s -L -o "/etc/config/passwall2" "${REPO_URL}/src/etc/config/passwall2" || error "Failed to download passwall2 config."
 
   uci commit passwall2
   /etc/init.d/passwall2 restart
@@ -26,22 +26,20 @@ install_passwall() {
 setup_geo_update() {
   info "setup_geo_update"
   if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
-  curl -s -L -o /root/scripts/geo-update.sh "${REPO_URL}/src/root/scripts/geo-update.sh" || error "Failed to download geo-update.sh."
+  curl -s -L -o "/root/scripts/geo-update.sh" "${REPO_URL}/src/root/scripts/geo-update.sh" || error "Failed to download geo-update.sh."
   chmod +x /root/scripts/geo-update.sh
   add_cron_job "0 6 * * 0 /root/scripts/geo-update.sh"
-  if [[ ! -f "/usr/share/v2ray/geoip.dat" ]] || [[ ! -f "/usr/share/singbox/geoip.db" ]] || [[ ! -f "/usr/share/v2ray/geosite.dat" ]] || [[ ! -f "/usr/share/singbox/geosite.db" ]]; then
-    /root/scripts/geo-update.sh
-  fi
+  /root/scripts/geo-update.sh
 }
 
 setup_url_test() {
   info "setup_url_test"
   if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
-  curl -s -L -o /root/scripts/url-test.sh "${REPO_URL}/src/root/scripts/url-test.sh" || error "Failed to download url-test.sh."
+  curl -s -L -o "/root/scripts/url-test.sh" "${REPO_URL}/src/root/scripts/url-test.sh" || error "Failed to download url-test.sh."
   chmod +x /root/scripts/url-test.sh
   add_cron_job "* * * * * /root/scripts/url-test.sh"
 
-  curl -s -L -o /etc/hotplug.d/iface/99-url-test "${REPO_URL}/src/etc/hotplug.d/iface/99-url-test" || error "Failed to download 99-url-test hotplug script."
+  curl -s -L -o "/etc/hotplug.d/iface/99-url-test" "${REPO_URL}/src/etc/hotplug.d/iface/99-url-test" || error "Failed to download 99-url-test hotplug script."
   chmod +x /etc/hotplug.d/iface/99-url-test
 }
 
@@ -50,13 +48,13 @@ setup_balancer() {
   if [ ! -d /root/balancer/ ]; then mkdir /root/balancer/; fi
 
   if [[ ! -f /root/balancer/configs.conf ]]; then
-    curl -s -L -o /root/balancer/configs.conf "${REPO_URL}/src/root/balancer/configs.conf" || error "Failed to download balancer configs."
+    curl -s -L -o "/root/balancer/configs.conf" "${REPO_URL}/src/root/balancer/configs.conf" || error "Failed to download balancer configs."
   fi
 
-  curl -s -L -o /etc/init.d/balancer "${REPO_URL}/src/etc/init.d/balancer" || error "Failed to download balancer init script."
+  curl -s -L -o "/etc/init.d/balancer" "${REPO_URL}/src/etc/init.d/balancer" || error "Failed to download balancer init script."
   chmod +x /etc/init.d/balancer
 
-  curl -s -L -o /root/balancer/run.sh "${REPO_URL}/src/root/balancer/run.sh" || error "Failed to download balancer run.sh configs."
+  curl -s -L -o "/root/balancer/run.sh" "${REPO_URL}/src/root/balancer/run.sh" || error "Failed to download balancer run.sh configs."
   chmod +x /root/balancer/run.sh
 
   /etc/init.d/balancer enable
@@ -67,10 +65,10 @@ install_ghost() {
   info "install_ghost"
   if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
 
-  curl -s -L -o /root/scripts/scanner.sh "${REPO_URL}/src/root/scripts/scanner.sh" || error "Failed to download scanner.sh."
+  curl -s -L -o "/root/scripts/scanner.sh" "${REPO_URL}/src/root/scripts/scanner.sh" || error "Failed to download scanner.sh."
   chmod +x /root/scripts/scanner.sh
 
-  curl -s -L -o /etc/init.d/scanner "${REPO_URL}/src/etc/init.d/scanner" || error "Failed to download scanner init script."
+  curl -s -L -o "/etc/init.d/scanner" "${REPO_URL}/src/etc/init.d/scanner" || error "Failed to download scanner init script."
   chmod +x /etc/init.d/scanner
 
   /etc/init.d/scanner disable
@@ -80,13 +78,13 @@ install_ghost() {
   if [ ! -d /root/ghost/ ]; then mkdir /root/ghost/; fi
 
   if [[ ! -f /root/ghost/configs.conf ]]; then
-    curl -s -L -o /root/ghost/configs.conf "${REPO_URL}/src/root/ghost/configs.conf" || error "Failed to download ghost configs."
+    curl -s -L -o "/root/ghost/configs.conf" "${REPO_URL}/src/root/ghost/configs.conf" || error "Failed to download ghost configs."
   fi
 
-  curl -s -L -o /etc/init.d/ghost "${REPO_URL}/src/etc/init.d/ghost" || error "Failed to download ghost init script."
+  curl -s -L -o "/etc/init.d/ghost" "${REPO_URL}/src/etc/init.d/ghost" || error "Failed to download ghost init script."
   chmod +x /etc/init.d/ghost
 
-  curl -s -L -o /root/ghost/run.sh "${REPO_URL}/src/root/ghost/run.sh" || error "Failed to download ghost run.sh configs."
+  curl -s -L -o "/root/ghost/run.sh" "${REPO_URL}/src/root/ghost/run.sh" || error "Failed to download ghost run.sh configs."
   chmod +x /root/ghost/run.sh
 
   /etc/init.d/ghost enable
@@ -138,19 +136,19 @@ install_warp() {
         ;;
       esac
 
-      curl -L -o /tmp/warp.zip "https://github.com/bepass-org/warp-plus/releases/latest/download/warp-plus_linux-${DETECTED_ARCH}.zip" || error "Failed to download WARP zip."
+      curl -s -L -o "/tmp/warp.zip" "https://github.com/bepass-org/warp-plus/releases/latest/download/warp-plus_linux-${DETECTED_ARCH}.zip" || error "Failed to download WARP zip."
       unzip -o /tmp/warp.zip -d /tmp
       mv /tmp/warp-plus /usr/bin/warp-plus
       chmod +x /usr/bin/warp-plus
   fi
 
-  curl -s -L -o /etc/init.d/warp-plus "${REPO_URL}/src/etc/init.d/warp-plus" || error "Failed to download warp-plus init script."
+  curl -s -L -o "/etc/init.d/warp-plus" "${REPO_URL}/src/etc/init.d/warp-plus" || error "Failed to download warp-plus init script."
   chmod +x /etc/init.d/warp-plus
 
   /etc/init.d/warp-plus enable
   /etc/init.d/warp-plus start
 
-  curl -s -L -o /etc/init.d/psiphon "${REPO_URL}/src/etc/init.d/psiphon" || error "Failed to download psiphon init script."
+  curl -s -L -o "/etc/init.d/psiphon" "${REPO_URL}/src/etc/init.d/psiphon" || error "Failed to download psiphon init script."
   chmod +x /etc/init.d/psiphon
 
   /etc/init.d/psiphon enable
@@ -224,7 +222,7 @@ install_ssh_proxy() {
   if [ ! -d /root/.ssh/ ]; then mkdir /root/.ssh/; fi
 
   if [ ! -e "/etc/init.d/ssh-proxy" ]; then
-    curl -s -L -o /etc/init.d/ssh-proxy "${REPO_URL}/src/etc/init.d/ssh-proxy" || error "Failed to download ssh-proxy init script."
+    curl -s -L -o "/etc/init.d/ssh-proxy" "${REPO_URL}/src/etc/init.d/ssh-proxy" || error "Failed to download ssh-proxy init script."
     chmod +x /etc/init.d/ssh-proxy
   fi
 
@@ -254,10 +252,10 @@ install_server_less() {
   info "install_server_less"
   if [ ! -d /root/xray/ ]; then mkdir /root/xray/; fi
 
-  curl -s -L -o /etc/init.d/serverless "${REPO_URL}/src/etc/init.d/serverless" || error "Failed to download serverless init script."
+  curl -s -L -o "/etc/init.d/serverless" "${REPO_URL}/src/etc/init.d/serverless" || error "Failed to download serverless init script."
   chmod +x /etc/init.d/serverless
 
-  curl -s -L -o /root/xray/serverless.json "https://cdn.jsdelivr.net/gh/GFW-knocker/gfw_resist_HTTPS_proxy@main/ServerLess_TLSFrag_with_google_DOH.json" || error "Failed to download ServerLess configs."
+  curl -s -L -o "/root/xray/serverless.json" "https://cdn.jsdelivr.net/gh/GFW-knocker/gfw_resist_HTTPS_proxy@main/ServerLess_TLSFrag_with_google_DOH.json" || error "Failed to download ServerLess configs."
 
   /etc/init.d/serverless enable
   /etc/init.d/serverless start

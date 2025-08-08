@@ -10,7 +10,7 @@ fi
 download() {
   FILE="$1"
   URL="$2"
-  REMOTE_SIZE=$(curl -sI "$URL" | grep -i Content-Length | awk '{print $2}' | tr -d '\r')
+  REMOTE_SIZE=$(curl -s -I -L "$URL" | grep -i Content-Length | tail -n1 | awk '{print $2}' | tr -d '\r')
 
   if [ -f "$FILE" ]; then
     LOCAL_SIZE=$(wc -c < "$FILE" | tr -d ' ')
@@ -19,17 +19,18 @@ download() {
   fi
 
   if [ "$REMOTE_SIZE" != "$LOCAL_SIZE" ]; then
+    echo "Downloading $URL REMOTE_SIZE: $REMOTE_SIZE LOCAL_SIZE: $LOCAL_SIZE"
     TEMP_FILE="$(mktemp)"
-    if curl -fL $PROXY_OPTION --output "$TEMP_FILE" "$URL"; then
+    if curl -L $PROXY_OPTION -o "$TEMP_FILE" "$URL"; then
       mv "$TEMP_FILE" "$FILE"
     fi
   fi
 }
 
 # ip
-download "/usr/share/v2ray/geoip.dat" "https://raw.githubusercontent.com/Chocolate4U/Iran-v2ray-rules/release/geoip.dat"
-download "/usr/share/singbox/geoip.db" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/release/geoip.db"
+download "/usr/share/v2ray/geoip.dat" "https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geoip.dat"
+download "/usr/share/singbox/geoip.db" "https://github.com/Chocolate4U/Iran-sing-box-rules/releases/latest/download/geoip.db"
 
 # domain
-download "/usr/share/v2ray/geosite.dat" "https://raw.githubusercontent.com/Chocolate4U/Iran-v2ray-rules/release/geosite.dat"
-download "/usr/share/singbox/geosite.db" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/release/geosite.db"
+download "/usr/share/v2ray/geosite.dat" "https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geosite.dat"
+download "/usr/share/singbox/geosite.db" "https://github.com/Chocolate4U/Iran-sing-box-rules/releases/latest/download/geosite.db"
