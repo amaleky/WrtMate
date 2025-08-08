@@ -371,6 +371,7 @@ config shunt_rules 'Sanction'
 	option remarks 'Sanction'
 	option network 'tcp,udp'
 	option domain_list 'geosite:sanctioned
+geosite:category-speedtest
 domain:io
 domain:ai
 domain:dev
@@ -403,7 +404,6 @@ config shunt_rules 'Censorship'
 geosite:category-porn
 geosite:category-media
 geosite:category-forums
-geosite:category-speedtest
 geosite:category-communication
 geosite:category-entertainment
 geosite:category-anticensorship
