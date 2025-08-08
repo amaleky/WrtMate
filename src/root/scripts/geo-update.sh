@@ -18,7 +18,7 @@ download() {
     LOCAL_SIZE=0
   fi
 
-  if [ "$REMOTE_SIZE" != "$LOCAL_SIZE" ]; then
+  if [ "$REMOTE_SIZE" != "$LOCAL_SIZE" ] && [ "$REMOTE_SIZE" -gt 0 ]; then
     echo "Downloading $URL REMOTE_SIZE: $REMOTE_SIZE LOCAL_SIZE: $LOCAL_SIZE"
     TEMP_FILE="$(mktemp)"
     if curl -L $PROXY_OPTION -o "$TEMP_FILE" "$URL"; then
