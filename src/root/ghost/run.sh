@@ -14,6 +14,32 @@ sed -n '1p' "$SOURCE_CONFIGS" > "$INPUT_CONFIGS"
   "log": {
     "level": "warning"
   },
+  "dns": {
+    "servers": [
+      {
+        "address": "tcp://1.1.1.1",
+        "address_resolver": "dns-local",
+        "strategy": "prefer_ipv4",
+        "tag": "dns-remote",
+        "detour": "Select"
+      },
+      {
+        "address": "local",
+        "detour": "direct",
+        "tag": "dns-local"
+      }
+    ],
+    "rules": [
+      {
+        "domain": ( [ .outbounds[].server ] | unique ),
+        "server": "dns-local"
+      }
+    ],
+    "final": "dns-remote",
+    "strategy": "prefer_ipv4",
+    "disable_cache": false,
+    "disable_expire": false
+  },
   "inbounds": [
     {
       "type": "socks",
@@ -21,5 +47,13 @@ sed -n '1p' "$SOURCE_CONFIGS" > "$INPUT_CONFIGS"
       "listen": "127.0.0.1",
       "listen_port": $port
     }
-  ]
+  ],
+  "outbounds": (
+    .outbounds + [
+      {
+        "tag": "direct",
+        "type": "direct"
+      }
+    ]
+  )
 }' "$PARSED_CONFIG" >"$OUTPUT_CONFIG" && /usr/bin/sing-box run -c "$OUTPUT_CONFIG"

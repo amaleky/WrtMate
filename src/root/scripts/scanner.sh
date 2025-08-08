@@ -87,6 +87,32 @@ test_config() {
   fi
 
   jq --argjson port "$SOCKS_PORT" '. + {
+    "dns": {
+      "servers": [
+        {
+          "address": "tcp://1.1.1.1",
+          "address_resolver": "dns-local",
+          "strategy": "prefer_ipv4",
+          "tag": "dns-remote",
+          "detour": "Select"
+        },
+        {
+          "address": "local",
+          "detour": "direct",
+          "tag": "dns-local"
+        }
+      ],
+      "rules": [
+        {
+          "domain": ( [ .outbounds[].server ] | unique ),
+          "server": "dns-local"
+        }
+      ],
+      "final": "dns-remote",
+      "strategy": "prefer_ipv4",
+      "disable_cache": false,
+      "disable_expire": false
+    },
     "inbounds": [
       {
         "type": "socks",
@@ -94,7 +120,15 @@ test_config() {
         "listen": "127.0.0.1",
         "listen_port": $port
       }
-    ]
+    ],
+    "outbounds": (
+      .outbounds + [
+        {
+          "tag": "direct",
+          "type": "direct"
+        }
+      ]
+    )
   }' "$PARSED_CONFIG" >"$JSON_CONFIG"
 
   if [[ ! -f "/tmp/sing-box-$SOCKS_PORT" ]]; then
