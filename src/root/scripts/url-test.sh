@@ -24,17 +24,6 @@ else
   echo "⚠️ ghost is not running"
 fi
 
-if /etc/init.d/hiddify enabled; then
-  if ! curl -s -L -I --max-time 1 --retry 1 --socks5-hostname "127.0.0.1:8086" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
-    echo "❌ hiddify connectivity test failed"
-    /etc/init.d/hiddify restart
-  else
-    echo "✅ hiddify connectivity test passed"
-  fi
-else
-  echo "⚠️ hiddify is not running"
-fi
-
 if /etc/init.d/warp-plus enabled; then
   if ! curl -s -L -I --max-time 1 --retry 1 --socks5-hostname "127.0.0.1:8086" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
     echo "❌ warp-plus connectivity test failed"
