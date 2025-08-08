@@ -94,7 +94,7 @@ test_config() {
           "address_resolver": "dns-local",
           "strategy": "prefer_ipv4",
           "tag": "dns-remote",
-          "detour": "Select"
+          "detour": (.outbounds[0].tag)
         },
         {
           "address": "local",

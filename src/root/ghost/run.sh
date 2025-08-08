@@ -21,7 +21,7 @@ sed -n '1p' "$SOURCE_CONFIGS" > "$INPUT_CONFIGS"
         "address_resolver": "dns-local",
         "strategy": "prefer_ipv4",
         "tag": "dns-remote",
-        "detour": "Select"
+        "detour": (.outbounds[0].tag)
       },
       {
         "address": "local",

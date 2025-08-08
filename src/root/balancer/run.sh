@@ -18,7 +18,7 @@ kill -9 "$(pgrep -f "/usr/bin/sing-box run -c $OUTPUT_CONFIG")"
         "address_resolver": "dns-local",
         "strategy": "prefer_ipv4",
         "tag": "dns-remote",
-        "detour": "Select"
+        "detour": (.outbounds[0].tag)
       },
       {
         "address": "local",
