@@ -2,8 +2,11 @@
 
 CONFIGS="/root/ghost/configs.conf"
 PREV_COUNT=$(wc -l < "$CONFIGS")
+CACHE_DIR="/root/.cache/subscriptions"
 CONFIGS_LIMIT=40
 MAX_PARALLEL=5
+
+mkdir -p "$CACHE_DIR"
 
 BASE64_URLS=(
   "https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/refs/heads/main/mci/sub_1.txt"
@@ -145,17 +148,35 @@ curl -f $PROXY_OPTION --max-time 60 --retry 1 "https://the3rf.com/api.php" | jq 
 done
 
 for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
-  echo "⏳ Testing $SUBSCRIPTION"
-  curl -f $PROXY_OPTION --max-time 60 --retry 1 "$SUBSCRIPTION" | base64 --decode | while IFS= read -r CONFIG; do
+  CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
+  echo "⏳ Checking $SUBSCRIPTION"
+  if curl -fL $PROXY_OPTION --max-time 60 --retry 1 -z "$CACHE_FILE" -o "$CACHE_FILE" "$SUBSCRIPTION"; then
+    echo "✅ Updated from remote"
+  elif [ -f "$CACHE_FILE" ]; then
+    echo "⚠️ Using cached version (download failed or unchanged)"
+  else
+    echo "❌ No cache and download failed"
+    continue
+  fi
+  base64 --decode "$CACHE_FILE" 2>/dev/null | while IFS= read -r CONFIG; do
     process_config "$CONFIG"
   done
 done
 
 for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
-  echo "⏳ Testing $SUBSCRIPTION"
-  curl -f $PROXY_OPTION --max-time 60 --retry 1 "$SUBSCRIPTION" | while IFS= read -r CONFIG; do
+  CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
+  echo "⏳ Checking $SUBSCRIPTION"
+  if curl -fL $PROXY_OPTION --max-time 60 --retry 1 -z "$CACHE_FILE" -o "$CACHE_FILE" "$SUBSCRIPTION"; then
+    echo "✅ Updated from remote"
+  elif [ -f "$CACHE_FILE" ]; then
+    echo "⚠️ Using cached version (download failed or unchanged)"
+  else
+    echo "❌ No cache and download failed"
+    continue
+  fi
+  while IFS= read -r CONFIG; do
     process_config "$CONFIG"
-  done
+  done < "$CACHE_FILE"
 done
 
 rm -rf /tmp/test* /tmp/sing-box*
