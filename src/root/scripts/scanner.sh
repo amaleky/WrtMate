@@ -89,8 +89,8 @@ test_config() {
   jq --argjson port "$SOCKS_PORT" '. + {
     "inbounds": [
       {
-        "type": "socks",
-        "tag": "socks-inbound",
+        "type": "mixed",
+        "tag": "mixed-in",
         "listen": "127.0.0.1",
         "listen_port": $port
       }

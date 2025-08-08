@@ -16,9 +16,9 @@ sed -n '1p' "$SOURCE_CONFIGS" > "$INPUT_CONFIGS"
   },
   "inbounds": [
     {
-      "type": "socks",
-      "tag": "socks-inbound",
-      "listen": "127.0.0.1",
+      "type": "mixed",
+      "tag": "mixed-in",
+      "listen": "0.0.0.0",
       "listen_port": $port
     }
   ]
