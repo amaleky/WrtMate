@@ -8,16 +8,6 @@ MAX_PARALLEL=5
 
 mkdir -p "$CACHE_DIR"
 
-BASE64_URLS=(
-  "https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/refs/heads/main/mci/sub_1.txt"
-  "https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/refs/heads/main/mtn/sub_1.txt"
-  "https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/refs/heads/main/segment/test_sub.txt"
-  "https://raw.githubusercontent.com/Joker-funland/V2ray-configs/main/config.txt"
-  "https://raw.githubusercontent.com/AzadNetCH/Clash/main/AzadNet.txt"
-  "https://raw.githubusercontent.com/DaBao-Lee/V2RayN-NodeShare/main/base64"
-  "https://raw.githubusercontent.com/ripaojiedian/freenode/main/sub"
-)
-
 CONFIG_URLS=(
   "https://raw.githubusercontent.com/Arashtelr/lab/main/FreeVPN-by-ArashZidi"
   "https://raw.githubusercontent.com/ermaozi/get_subscribe/main/subscribe/v2ray.txt"
@@ -46,6 +36,16 @@ CONFIG_URLS=(
   "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/all_extracted_configs.txt"
   "https://raw.githubusercontent.com/Kolandone/v2raycollector/main/config.txt"
   "https://raw.githubusercontent.com/Epodonios/v2ray-CONFIGs/main/All_Configs_Sub.txt"
+)
+
+BASE64_URLS=(
+  "https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/refs/heads/main/mci/sub_1.txt"
+  "https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/refs/heads/main/mtn/sub_1.txt"
+  "https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/refs/heads/main/segment/test_sub.txt"
+  "https://raw.githubusercontent.com/Joker-funland/V2ray-configs/main/config.txt"
+  "https://raw.githubusercontent.com/AzadNetCH/Clash/main/AzadNet.txt"
+  "https://raw.githubusercontent.com/DaBao-Lee/V2RayN-NodeShare/main/base64"
+  "https://raw.githubusercontent.com/ripaojiedian/freenode/main/sub"
 )
 
 cd "/tmp" || true
@@ -181,24 +181,6 @@ curl -f $PROXY_OPTION --max-time 60 --retry 1 "https://the3rf.com/api.php" | jq 
   process_config "$CONFIG"
 done
 
-for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
-  CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
-  echo "⏳ Checking $SUBSCRIPTION"
-  if curl -L $PROXY_OPTION --max-time 60 --retry 1 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
-    echo "✅ Updated from remote"
-  elif [ -f "$CACHE_FILE" ]; then
-    echo "⚠️ Using cached version (download failed or unchanged)"
-  else
-    echo "❌ No cache and download failed"
-    continue
-  fi
-  if [ "$(wc -l < "$CONFIGS")" -lt $CONFIGS_LIMIT ]; then
-    base64 --decode "$CACHE_FILE" 2>/dev/null | while IFS= read -r CONFIG; do
-      process_config "$CONFIG"
-    done
-  fi
-done
-
 for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
   CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
   echo "⏳ Checking $SUBSCRIPTION"
@@ -214,6 +196,24 @@ for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
     while IFS= read -r CONFIG; do
       process_config "$CONFIG"
     done < "$CACHE_FILE"
+  fi
+done
+
+for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
+  CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
+  echo "⏳ Checking $SUBSCRIPTION"
+  if curl -L $PROXY_OPTION --max-time 60 --retry 1 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
+    echo "✅ Updated from remote"
+  elif [ -f "$CACHE_FILE" ]; then
+    echo "⚠️ Using cached version (download failed or unchanged)"
+  else
+    echo "❌ No cache and download failed"
+    continue
+  fi
+  if [ "$(wc -l < "$CONFIGS")" -lt $CONFIGS_LIMIT ]; then
+    base64 --decode "$CACHE_FILE" 2>/dev/null | while IFS= read -r CONFIG; do
+      process_config "$CONFIG"
+    done
   fi
 done
 
