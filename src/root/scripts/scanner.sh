@@ -51,7 +51,7 @@ BASE64_URLS=(
 cd "/tmp" || true
 echo "ℹ️ $PREV_COUNT Previous Configs Found"
 
-if curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:22335" -o "/dev/null" "https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh"; then
+if curl -s -L -I --max-time 1 --retry 1 --socks5-hostname "127.0.0.1:22335" -o "/dev/null" "https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh"; then
   PROXY_OPTION="--socks5-hostname 127.0.0.1:22335"
 fi
 
@@ -87,32 +87,6 @@ test_config() {
   fi
 
   jq --argjson port "$SOCKS_PORT" '. + {
-    "dns": {
-      "servers": [
-        {
-          "address": "tcp://1.1.1.1",
-          "address_resolver": "dns-local",
-          "strategy": "prefer_ipv4",
-          "tag": "dns-remote",
-          "detour": (.outbounds[0].tag)
-        },
-        {
-          "address": "local",
-          "detour": "direct",
-          "tag": "dns-local"
-        }
-      ],
-      "rules": [
-        {
-          "domain": ( [ .outbounds[].server ] | unique ),
-          "server": "dns-local"
-        }
-      ],
-      "final": "dns-remote",
-      "strategy": "prefer_ipv4",
-      "disable_cache": false,
-      "disable_expire": false
-    },
     "inbounds": [
       {
         "type": "socks",
@@ -120,15 +94,7 @@ test_config() {
         "listen": "127.0.0.1",
         "listen_port": $port
       }
-    ],
-    "outbounds": (
-      .outbounds + [
-        {
-          "tag": "direct",
-          "type": "direct"
-        }
-      ]
-    )
+    ]
   }' "$PARSED_CONFIG" >"$JSON_CONFIG"
 
   if [[ ! -f "/tmp/sing-box-$SOCKS_PORT" ]]; then
@@ -137,8 +103,7 @@ test_config() {
 
   /tmp/sing-box-$SOCKS_PORT run -c "$JSON_CONFIG" 2>&1 | while read -r LINE; do
     if echo "$LINE" | grep -q "sing-box started"; then
-      if [ "$(curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://developer.android.com/")" -eq 200 ] && \
-         [ "$(curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://chatgpt.com/")" -eq 200 ]; then
+      if [ "$(curl -s -L -I --max-time 1 --retry 1 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://1.1.1.1/cdn-cgi/trace/")" -eq 200 ]; then
         echo "✅ Successfully ($(wc -l < "$CONFIGS")) ${CONFIG}"
         echo "$CONFIG" >> "$CONFIGS"
       fi
@@ -183,13 +148,12 @@ done
 
 for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
   CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
-  echo "⏳ Checking $SUBSCRIPTION"
   if curl -L $PROXY_OPTION --max-time 60 --retry 1 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
-    echo "✅ Updated from remote"
+    echo "✅ Downloaded subscription $SUBSCRIPTION"
   elif [ -f "$CACHE_FILE" ]; then
-    echo "⚠️ Using cached version (download failed or unchanged)"
+    echo "⚠️ Using cashed $SUBSCRIPTION"
   else
-    echo "❌ No cache and download failed"
+    echo "❌ Failed to download $SUBSCRIPTION"
     continue
   fi
   if [ "$(wc -l < "$CONFIGS")" -lt $CONFIGS_LIMIT ]; then
@@ -201,13 +165,12 @@ done
 
 for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
   CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
-  echo "⏳ Checking $SUBSCRIPTION"
   if curl -L $PROXY_OPTION --max-time 60 --retry 1 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
-    echo "✅ Updated from remote"
+    echo "✅ Downloaded subscription $SUBSCRIPTION"
   elif [ -f "$CACHE_FILE" ]; then
-    echo "⚠️ Using cached version (download failed or unchanged)"
+    echo "⚠️ Using cashed $SUBSCRIPTION"
   else
-    echo "❌ No cache and download failed"
+    echo "❌ Failed to download $SUBSCRIPTION"
     continue
   fi
   if [ "$(wc -l < "$CONFIGS")" -lt $CONFIGS_LIMIT ]; then

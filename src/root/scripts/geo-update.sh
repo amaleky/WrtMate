@@ -3,7 +3,7 @@
 if [ ! -d "/usr/share/v2ray" ]; then mkdir -p "/usr/share/v2ray"; fi
 if [ ! -d "/usr/share/singbox" ]; then mkdir -p "/usr/share/singbox"; fi
 
-if curl -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:22335" --silent --output "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
+if curl -I --max-time 1 --retry 1 --socks5-hostname "127.0.0.1:22335" --silent --output "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
   PROXY_OPTION="--socks5-hostname 127.0.0.1:22335"
 fi
 

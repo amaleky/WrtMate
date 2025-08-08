@@ -11,32 +11,6 @@ kill -9 "$(pgrep -f "/usr/bin/sing-box run -c $OUTPUT_CONFIG")"
   "log": {
     "level": "warning"
   },
-  "dns": {
-    "servers": [
-      {
-        "address": "tcp://1.1.1.1",
-        "address_resolver": "dns-local",
-        "strategy": "prefer_ipv4",
-        "tag": "dns-remote",
-        "detour": (.outbounds[0].tag)
-      },
-      {
-        "address": "local",
-        "detour": "direct",
-        "tag": "dns-local"
-      }
-    ],
-    "rules": [
-      {
-        "domain": ( [ .outbounds[].server ] | unique ),
-        "server": "dns-local"
-      }
-    ],
-    "final": "dns-remote",
-    "strategy": "prefer_ipv4",
-    "disable_cache": false,
-    "disable_expire": false
-  },
   "inbounds": [
     {
       "type": "mixed",
@@ -54,10 +28,6 @@ kill -9 "$(pgrep -f "/usr/bin/sing-box run -c $OUTPUT_CONFIG")"
         "url": $url,
         "interval": "5m",
         "tolerance": 100
-      },
-      {
-        "tag": "direct",
-        "type": "direct"
       }
     ] + .outbounds
   )
