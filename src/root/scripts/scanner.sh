@@ -51,7 +51,7 @@ BASE64_URLS=(
 cd "/tmp" || true
 echo "ℹ️ $PREV_COUNT Previous Configs Found"
 
-if curl -s -L -I --max-time 1 --retry 1 --socks5-hostname "127.0.0.1:22335" -o "/dev/null" "https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh"; then
+if curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:22335" -o "/dev/null" "https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh"; then
   PROXY_OPTION="--socks5-hostname 127.0.0.1:22335"
 fi
 
@@ -103,7 +103,8 @@ test_config() {
 
   /tmp/sing-box-$SOCKS_PORT run -c "$JSON_CONFIG" 2>&1 | while read -r LINE; do
     if echo "$LINE" | grep -q "sing-box started"; then
-      if [ "$(curl -s -L -I --max-time 1 --retry 1 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://developer.android.com/")" -eq 200 ]; then
+      if [ "$(curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://firebase.google.com/")" -eq 200 ] && \
+         [ "$(curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://developer.android.com/")" -eq 200 ]; then
         echo "✅ Successfully ($(wc -l < "$CONFIGS")) ${CONFIG}"
         echo "$CONFIG" >> "$CONFIGS"
       fi
