@@ -12,7 +12,7 @@ fi
 
 if /etc/init.d/ghost enabled; then
   if [ "$(logread | grep "run.sh\[$(pgrep -f '/root/ghost/run.sh')\]" | grep -c "ERROR")" -gt 50 ] || \
-      [ "$(curl -s -L -I --max-time 1 --retry 1 --socks5-hostname "127.0.0.1:22334" -o "/dev/null" -w "%{http_code}" "https://1.1.1.1/cdn-cgi/trace/")" -ne 200 ]; then
+      [ "$(curl -s -L -I --max-time 1 --retry 1 --socks5-hostname "127.0.0.1:22334" -o "/dev/null" -w "%{http_code}" "https://developer.android.com/")" -ne 200 ]; then
     echo "❌ ghost connectivity test failed"
     sed -i '1d' "/root/ghost/configs.conf"
     /etc/init.d/ghost restart
@@ -37,7 +37,7 @@ else
 fi
 
 if /etc/init.d/psiphon enabled; then
-  if [ "$(curl -s -L -I --max-time 1 --retry 1 --socks5-hostname "127.0.0.1:8087" -o "/dev/null" -w "%{http_code}" "https://1.1.1.1/cdn-cgi/trace/")" -ne 200 ]; then
+  if [ "$(curl -s -L -I --max-time 1 --retry 1 --socks5-hostname "127.0.0.1:8087" -o "/dev/null" -w "%{http_code}" "https://developer.android.com/")" -ne 200 ]; then
     echo "❌ psiphon connectivity test failed"
     /etc/init.d/psiphon restart
   else
