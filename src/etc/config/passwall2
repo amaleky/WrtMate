@@ -4,9 +4,7 @@ config nodes 'Splitter'
 	option protocol '_shunt'
 	option Block '_blackhole'
 	option Direct '_direct'
-	option Sanction 'Ghost'
-	option Censorship 'Ghost'
-	option default_node '_direct'
+	option default_node 'Ghost'
 	option domainStrategy 'IPOnDemand'
 	option domainMatcher 'hybrid'
 	option preproxy_enabled '0'
@@ -112,8 +110,8 @@ config global_rules
 	option geoip_update '1'
 	option v2ray_location_asset '/usr/share/v2ray/'
 	option enable_geoview '1'
-	option geoip_url 'https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geoip.dat'
-	option geosite_url 'https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geosite.dat'
+	option geoip_url 'https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geoip-lite.dat'
+	option geosite_url 'https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geosite-lite.dat'
 
 config global_app
 	option xray_file '/usr/bin/xray'
@@ -131,9 +129,9 @@ config global_subscribe
 config global_singbox
 	option sniff_override_destination '0'
 	option geoip_path '/usr/share/singbox/geoip.db'
-	option geoip_url 'https://github.com/Chocolate4U/Iran-sing-box-rules/releases/latest/download/geoip.db'
+	option geoip_url 'https://github.com/Chocolate4U/Iran-sing-box-rules/releases/latest/download/geoip-lite.db'
 	option geosite_path '/usr/share/singbox/geosite.db'
-	option geosite_url 'https://github.com/Chocolate4U/Iran-sing-box-rules/releases/latest/download/geosite.db'
+	option geosite_url 'https://github.com/Chocolate4U/Iran-sing-box-rules/releases/latest/download/geosite-lite.db'
 
 config shunt_rules 'Block'
 	option remarks 'Block'
@@ -337,62 +335,20 @@ full:widgets.pinterest.com
 full:www.cdn.ad.xiaomi.com
 full:yandexadexchange.net
 full:youtube.cleverads.vn'
-	option ip_list 'geoip:malware'
 
 config shunt_rules 'Direct'
 	option remarks 'Direct'
 	option network 'tcp,udp'
-	option domain_list '#geosite:category-ir
+	option domain_list 'geosite:category-ir
 geosite:slack
 domain:ir
 domain:dl.playstation.net
 domain:upenlod.pw
-domain:odlserver.info'
-	option ip_list '#geoip:ir
-#geoip:private'
-
-config shunt_rules 'Sanction'
-	option remarks 'Sanction'
-	option network 'tcp,udp'
-	option domain_list 'geosite:sanctioned
-geosite:category-speedtest
-domain:io
-domain:ai
-domain:dev
-domain:clashroyaleapp.com
-domain:music.youtube.com
-domain:dein-ip-check.de
-domain:geolocation.com
-domain:googleusercontent.com
-domain:infobyip.com
-domain:ip-api.com
-domain:ip2location.com
-domain:ipinfo.io
-domain:ipinfodb.com
-domain:iplocation.com
-domain:iplocation.io
-domain:iplocation.net
-domain:ipstack.com
-domain:showmyip.com
-domain:tools.keycdn.com
-domain:whatismyip.com
-domain:whatismyipaddress.com
-domain:whatsmyip.org
-domain:wieistmeineip.de'
-	option ip_list 'geoip:telegram'
-
-config shunt_rules 'Censorship'
-	option remarks 'Censorship'
-	option network 'tcp,udp'
-	option domain_list 'geosite:social
-geosite:category-porn
-geosite:category-media
-geosite:category-forums
-geosite:category-communication
-geosite:category-entertainment
-geosite:category-anticensorship
-domain:30nama.com
-domain:digimoviez.com
-domain:farsiland.com
-domain:farsiplex.com
-domain:zarfilm.com'
+domain:odlserver.info
+domain:pintapin.local
+domain:pinsvc.net
+domain:snapp.cab
+domain:local
+domain:ptp'
+	option ip_list 'geoip:ir
+geoip:private'
