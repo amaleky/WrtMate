@@ -37,6 +37,7 @@ if /etc/init.d/warp-plus enabled; then
     if /etc/init.d/psiphon enabled; then
       if [ "$(curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:8087" -o "/dev/null" -w "%{http_code}" "https://developer.android.com/")" -ne 200 ]; then
         echo "❌ psiphon connectivity test failed"
+        rm -rfv /.cache/warp-plus/
         /etc/init.d/psiphon restart
       else
         echo "✅ psiphon connectivity test passed"
