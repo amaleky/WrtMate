@@ -153,6 +153,16 @@ install_warp() {
 
   /etc/init.d/psiphon enable
   /etc/init.d/psiphon start
+
+  if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
+  curl -s -L -o "/root/scripts/warp-scanner.sh" "${REPO_URL}/src/root/scripts/warp-scanner.sh" || error "Failed to download warp-scanner.sh."
+  chmod +x /root/scripts/warp-scanner.sh
+
+  curl -s -L -o "/etc/init.d/warp-scanner" "${REPO_URL}/src/etc/init.d/warp-scanner" || error "Failed to download warp-scanner init script."
+  chmod +x /etc/init.d/warp-scanner
+
+  /etc/init.d/warp-scanner enable
+  /etc/init.d/warp-scanner start
 }
 
 install_hiddify() {
