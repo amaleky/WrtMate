@@ -265,7 +265,7 @@ install_server_less() {
   curl -s -L -o "/etc/init.d/serverless" "${REPO_URL}/src/etc/init.d/serverless" || error "Failed to download serverless init script."
   chmod +x /etc/init.d/serverless
 
-  curl -s -L -o "/root/xray/serverless.json" "https://cdn.jsdelivr.net/gh/GFW-knocker/gfw_resist_HTTPS_proxy@main/ServerLess_TLSFrag_with_google_DOH.json" || error "Failed to download ServerLess configs."
+  curl -s -L -o "/root/xray/serverless.json" "${REPO_URL}/src/root/xray/serverless.json" || error "Failed to download ServerLess configs."
 
   /etc/init.d/serverless enable
   /etc/init.d/serverless start
