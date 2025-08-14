@@ -153,26 +153,6 @@ install_warp() {
 
   /etc/init.d/psiphon enable
   /etc/init.d/psiphon start
-
-  if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
-  curl -s -L -o "/root/scripts/warp-scanner.sh" "${REPO_URL}/src/root/scripts/warp-scanner.sh" || error "Failed to download warp-scanner.sh."
-  chmod +x /root/scripts/warp-scanner.sh
-
-  curl -s -L -o "/etc/init.d/warp-scanner" "${REPO_URL}/src/etc/init.d/warp-scanner" || error "Failed to download warp-scanner init script."
-  chmod +x /etc/init.d/warp-scanner
-
-  /etc/init.d/warp-scanner enable
-  /etc/init.d/warp-scanner start
-
-  if [ ! -d /root/xray/ ]; then mkdir /root/xray/; fi
-
-  curl -s -L -o "/etc/init.d/warp-xray" "${REPO_URL}/src/etc/init.d/warp-xray" || error "Failed to download warp-xray init script."
-  chmod +x /etc/init.d/warp-xray
-
-  curl -s -L -o "/root/xray/warp.json" "${REPO_URL}/src/root/xray/warp.json" || error "Failed to download WarpXray configs."
-
-  /etc/init.d/warp-xray enable
-  /etc/init.d/warp-xray start
 }
 
 install_hiddify() {
@@ -275,7 +255,7 @@ install_server_less() {
   curl -s -L -o "/etc/init.d/serverless" "${REPO_URL}/src/etc/init.d/serverless" || error "Failed to download serverless init script."
   chmod +x /etc/init.d/serverless
 
-  curl -s -L -o "/root/xray/serverless.json" "${REPO_URL}/src/root/xray/serverless.json" || error "Failed to download ServerLess configs."
+  curl -s -L -o "/root/xray/serverless.json" "https://cdn.jsdelivr.net/gh/GFW-knocker/gfw_resist_HTTPS_proxy@main/ServerLess_TLSFrag_with_google_DOH.json" || error "Failed to download ServerLess configs."
 
   /etc/init.d/serverless enable
   /etc/init.d/serverless start
