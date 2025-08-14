@@ -1,8 +1,8 @@
 #!/bin/sh
 
 CONFIGS="/root/balancer/configs.conf"
-OUTPUT_CONFIG="/tmp/balancer-configs.json"
 PARSED_CONFIG="/tmp/balancer-parsed.json"
+OUTPUT_CONFIG="/tmp/balancer-configs.json"
 SOCKS_PORT=22335
 
 kill -9 "$(pgrep -f "/usr/bin/sing-box run -c $OUTPUT_CONFIG")"
@@ -22,13 +22,24 @@ kill -9 "$(pgrep -f "/usr/bin/sing-box run -c $OUTPUT_CONFIG")"
   "outbounds": (
     [
       {
+        "type": "selector",
+        "tag": "Select",
+        "outbounds": (["Auto"] + [.outbounds[] | select(.type != "selector") | .tag]),
+        "default": "Auto"
+      },
+      {
         "type": "urltest",
         "tag": "Auto",
         "outbounds": [.outbounds[] | select(.type != "urltest") | .tag],
         "url": "https://1.1.1.1/cdn-cgi/trace/",
-        "interval": "5m",
-        "tolerance": 100
+        "interval": "3m",
+        "tolerance": 50,
+        "interrupt_exist_connections": false
       }
     ] + .outbounds
-  )
-}' "$PARSED_CONFIG" > "$OUTPUT_CONFIG" && /usr/bin/sing-box run -c "$OUTPUT_CONFIG"
+  ),
+  "route": {
+    "auto_detect_interface": true,
+    "final": "Select"
+  }
+}' "$PARSED_CONFIG" >"$OUTPUT_CONFIG" && /usr/bin/sing-box run -c "$OUTPUT_CONFIG"
