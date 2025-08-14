@@ -163,6 +163,16 @@ install_warp() {
 
   /etc/init.d/warp-scanner enable
   /etc/init.d/warp-scanner start
+
+  if [ ! -d /root/xray/ ]; then mkdir /root/xray/; fi
+
+  curl -s -L -o "/etc/init.d/warp-xray" "${REPO_URL}/src/etc/init.d/warp-xray" || error "Failed to download warp-xray init script."
+  chmod +x /etc/init.d/warp-xray
+
+  curl -s -L -o "/root/xray/warp.json" "${REPO_URL}/src/root/xray/warp.json" || error "Failed to download WarpXray configs."
+
+  /etc/init.d/warp-xray enable
+  /etc/init.d/warp-xray start
 }
 
 install_hiddify() {

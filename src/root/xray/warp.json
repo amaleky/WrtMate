@@ -1,0 +1,104 @@
+{
+  "dns": {
+    "queryStrategy": "UseIPv4",
+    "servers": [
+      "8.8.8.8"
+    ],
+    "tag": "dns"
+  },
+  "inbounds": [
+    {
+      "listen": "0.0.0.0",
+      "port": 8088,
+      "protocol": "socks"
+    }
+  ],
+  "log": {
+    "access": "/var/log/warp-access.log",
+    "error": "/var/log/warp-error.log",
+    "warning": "warning"
+  },
+  "outbounds": [
+    {
+      "protocol": "freedom",
+      "settings": {},
+      "tag": "direct"
+    },
+    {
+      "protocol": "freedom",
+      "settings": {
+        "noises": [
+          {
+            "delay": "1-5",
+            "packet": "50-100",
+            "type": "rand"
+          },
+          {
+            "delay": "1-5",
+            "packet": "50-100",
+            "type": "rand"
+          },
+          {
+            "delay": "1-5",
+            "packet": "50-100",
+            "type": "rand"
+          },
+          {
+            "delay": "1-5",
+            "packet": "50-100",
+            "type": "rand"
+          },
+          {
+            "delay": "1-5",
+            "packet": "50-100",
+            "type": "rand"
+          }
+        ]
+      },
+      "tag": "udp-noise"
+    },
+    {
+      "protocol": "wireguard",
+      "settings": {
+        "address": [
+          "172.16.0.2/32",
+          "2606:4700:110:8e94:db62:c66b:207c:3d71/128"
+        ],
+        "mtu": 1280,
+        "noKernelTun": true,
+        "peers": [
+          {
+            "endpoint": "162.159.193.170:7103",
+            "keepAlive": 5,
+            "publicKey": "PUBLIC_KEY_HERE"
+          }
+        ],
+        "reserved": [
+          225,
+          53,
+          111
+        ],
+        "secretKey": "PRIVATE_KEY_HERE"
+      },
+      "streamSettings": {
+        "sockopt": {
+          "dialerProxy": "udp-noise"
+        }
+      },
+      "tag": "proxy-1"
+    }
+  ],
+  "remarks": "Warp",
+  "routing": {
+    "domainStrategy": "AsIs",
+    "rules": [
+      {
+        "inboundTag": [
+          "dns"
+        ],
+        "outboundTag": "direct",
+        "type": "field"
+      }
+    ]
+  }
+}
