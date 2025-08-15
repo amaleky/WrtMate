@@ -122,6 +122,7 @@ process_config() {
 
   if [ "$(wc -l < "$CONFIGS")" -ge $CONFIGS_LIMIT ]; then
     echo "🎉 $(wc -l < "$CONFIGS") Configs Found (previous: $PREV_COUNT)"
+    /etc/init.d/ghost restart
     exit 0
   fi
 
