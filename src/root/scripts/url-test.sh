@@ -11,11 +11,7 @@ if ! top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default'
 fi
 
 if /etc/init.d/ghost enabled; then
-  if [ "$(logread | grep "run.sh\[$(pgrep -f '/root/ghost/run.sh')\]" | grep -c "ERROR")" -gt 50 ] || \
-      [ "$(curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:22334" -o "/dev/null" -w "%{http_code}" "https://telegram.org/")" -ne 200 ] || \
-      [ "$(curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:22334" -o "/dev/null" -w "%{http_code}" "https://www.youtube.com/")" -ne 200 ] || \
-      [ "$(curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:22334" -o "/dev/null" -w "%{http_code}" "https://firebase.google.com/")" -ne 200 ] || \
-      [ "$(curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:22334" -o "/dev/null" -w "%{http_code}" "https://developer.android.com/")" -ne 200 ]; then
+  if ! curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:22334" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
     echo "❌ ghost connectivity test failed"
     /etc/init.d/ghost restart
     /etc/init.d/scanner start
@@ -34,7 +30,7 @@ if /etc/init.d/warp-plus enabled; then
   else
     echo "✅ warp-plus connectivity test passed"
     if /etc/init.d/psiphon enabled; then
-      if [ "$(curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:8087" -o "/dev/null" -w "%{http_code}" "https://developer.android.com/")" -ne 200 ]; then
+      if ! curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:8087" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
         echo "❌ psiphon connectivity test failed"
         rm -rfv /.cache/warp-plus/
         /etc/init.d/psiphon restart
