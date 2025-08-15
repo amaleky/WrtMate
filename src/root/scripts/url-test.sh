@@ -10,6 +10,17 @@ if ! top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default'
   /etc/init.d/passwall2 restart
 fi
 
+if /etc/init.d/ghost enabled; then
+  if ! curl -s -L -I --max-time 1 --retry 5 --socks5-hostname "127.0.0.1:22334" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
+    echo "❌ ghost connectivity test failed"
+    /etc/init.d/ghost restart
+  else
+    echo "✅ ghost connectivity test passed"
+  fi
+else
+  echo "⚠️ ghost is not running"
+fi
+
 if /etc/init.d/warp-plus enabled; then
   if ! curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:8086" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
     echo "❌ warp-plus connectivity test failed"
@@ -43,4 +54,26 @@ if /etc/init.d/ssh-proxy enabled; then
   fi
 else
   echo "⚠️ ssh-proxy is not running"
+fi
+
+if /etc/init.d/serverless enabled; then
+  if ! curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:10808" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
+    echo "❌ serverless connectivity test failed"
+    /etc/init.d/serverless restart
+  else
+    echo "serverless connectivity test passed"
+  fi
+else
+  echo "⚠️ serverless is not running"
+fi
+
+if /etc/init.d/balancer enabled; then
+  if ! curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:22335" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
+    echo "❌ balancer connectivity test failed"
+    /etc/init.d/balancer restart
+  else
+    echo "balancer connectivity test passed"
+  fi
+else
+  echo "⚠️ balancer is not running"
 fi
