@@ -35,11 +35,45 @@ kill -9 "$(pgrep -f "/usr/bin/sing-box run -c $OUTPUT_CONFIG")"
         "interval": "1m",
         "tolerance": 50,
         "interrupt_exist_connections": false
+      },
+      {
+        "tag": "direct",
+        "type": "direct"
       }
     ] + .outbounds
   ),
   "route": {
     "auto_detect_interface": true,
     "final": "Select"
+  },
+  "dns": {
+    "servers": [
+      {
+        "address": "tcp://1.1.1.1",
+        "address_resolver": "dns-local",
+        "strategy": "prefer_ipv4",
+        "tag": "dns-remote",
+        "detour": "Select"
+      },
+      {
+        "address": "8.8.8.8",
+        "detour": "direct",
+        "tag": "dns-local"
+      }
+    ],
+    "rules": [
+      {
+        "domain": ( [ .outbounds[].server ] | unique ),
+        "server": "dns-local"
+      },
+      {
+        "outbound": "direct",
+        "server": "dns-local"
+      }
+    ],
+    "final": "dns-local",
+    "reverse_mapping": true,
+    "strategy": "prefer_ipv4",
+    "independent_cache": true
   }
 }' "$PARSED_CONFIG" >"$OUTPUT_CONFIG" && /usr/bin/sing-box run -c "$OUTPUT_CONFIG"
