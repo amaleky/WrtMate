@@ -32,7 +32,7 @@ kill -9 "$(pgrep -f "/usr/bin/sing-box run -c $OUTPUT_CONFIG")"
         "tag": "Auto",
         "outbounds": [.outbounds[] | select(.type != "urltest") | .tag],
         "url": "https://1.1.1.1/cdn-cgi/trace/",
-        "interval": "3m",
+        "interval": "1m",
         "tolerance": 50,
         "interrupt_exist_connections": false
       }
