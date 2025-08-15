@@ -9,10 +9,10 @@ MAX_PARALLEL=5
 mkdir -p "$CACHE_DIR"
 
 CONFIG_URLS=(
-  "https://raw.githubusercontent.com/hans-thomas/v2ray-subscription/master/servers.txt"
+  "https://raw.githubusercontent.com/Arashtelr/lab/main/FreeVPN-by-ArashZidi"
   "https://raw.githubusercontent.com/ALIILAPRO/v2rayNG-Config/main/server.txt"
   "https://raw.githubusercontent.com/liketolivefree/kobabi/main/sub.txt"
-  "https://raw.githubusercontent.com/Arashtelr/lab/main/FreeVPN-by-ArashZidi"
+  "https://raw.githubusercontent.com/hans-thomas/v2ray-subscription/master/servers.txt"
   "https://raw.githubusercontent.com/Rayan-Config/C-Sub/main/configs/proxy.txt"
   "https://raw.githubusercontent.com/darkvpnapp/CloudflarePlus/main/proxy"
   "https://raw.githubusercontent.com/miladtahanian/V2RayCFGDumper/main/config.txt"
