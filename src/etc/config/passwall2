@@ -341,6 +341,7 @@ config shunt_rules 'Direct'
 	option network 'tcp,udp'
 	option domain_list 'geosite:category-ir
 geosite:slack
+geosite:riot
 domain:ir
 domain:dl.playstation.net
 domain:upenlod.pw
