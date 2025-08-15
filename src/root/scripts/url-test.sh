@@ -44,14 +44,3 @@ if /etc/init.d/ssh-proxy enabled; then
 else
   echo "⚠️ ssh-proxy is not running"
 fi
-
-if /etc/init.d/serverless enabled; then
-  if ! curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:10808" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
-    echo "❌ serverless connectivity test failed"
-    /etc/init.d/serverless restart
-  else
-    echo "serverless connectivity test passed"
-  fi
-else
-  echo "⚠️ serverless is not running"
-fi
