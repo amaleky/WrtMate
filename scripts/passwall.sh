@@ -91,6 +91,26 @@ install_ghost() {
   /etc/init.d/ghost start
 }
 
+install_tor() {
+  info "install_tor"
+
+  ensure_packages "tor tor-geoip obfs4proxy"
+
+  echo "Please paste your Bridges from https://bridges.torproject.org/bridges?transport=obfs4 (press Ctrl+D when done):"
+  {
+    echo "Log notice syslog"
+    echo "DataDirectory /var/lib/tor"
+    echo "SOCKSPort 9050"
+    echo "User tor"
+    echo "UseBridges 1"
+    echo "ClientTransportPlugin obfs4 exec /usr/bin/obfs4proxy"
+    awk 'NF { if ($1 != "Bridge") print "Bridge", $0; else print $0 }'
+  } > /etc/tor/torrc
+
+  /etc/init.d/tor enable
+  /etc/init.d/tor start
+}
+
 install_warp() {
   info "install_warp"
   if [ ! -d /root/.config/warp-plus ]; then mkdir -p /root/.config/warp-plus; fi
@@ -268,6 +288,7 @@ main() {
   install_hiddify
   install_server_less
   install_ghost
+  install_tor
   install_ssh_proxy
   setup_balancer
   setup_url_test

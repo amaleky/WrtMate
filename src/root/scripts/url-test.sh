@@ -44,6 +44,17 @@ else
   echo "⚠️ warp-plus is not running"
 fi
 
+if /etc/init.d/tor enabled; then
+  if ! curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:9050" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
+    echo "❌ tor connectivity test failed"
+    /etc/init.d/tor restart
+  else
+    echo "✅ tor connectivity test passed"
+  fi
+else
+  echo "⚠️ tor is not running"
+fi
+
 if /etc/init.d/ssh-proxy enabled; then
   if ! curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:1080" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
     echo "❌ ssh-proxy connectivity test failed"
