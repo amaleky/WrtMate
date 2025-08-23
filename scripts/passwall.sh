@@ -96,16 +96,18 @@ install_tor() {
 
   ensure_packages "tor tor-geoip obfs4proxy"
 
+  if ! grep -q '^Bridge obfs4' /etc/tor/torrc; then
   echo "Please paste your Bridges from https://bridges.torproject.org/bridges?transport=obfs4 (press Ctrl+D when done):"
-  {
-    echo "Log notice syslog"
-    echo "DataDirectory /var/lib/tor"
-    echo "SOCKSPort 9050"
-    echo "User tor"
-    echo "UseBridges 1"
-    echo "ClientTransportPlugin obfs4 exec /usr/bin/obfs4proxy"
-    awk 'NF { if ($1 != "Bridge") print "Bridge", $0; else print $0 }'
-  } > /etc/tor/torrc
+    {
+      echo "Log notice syslog"
+      echo "DataDirectory /var/lib/tor"
+      echo "SOCKSPort 9050"
+      echo "User tor"
+      echo "UseBridges 1"
+      echo "ClientTransportPlugin obfs4 exec /usr/bin/obfs4proxy"
+      awk 'NF { if ($1 != "Bridge") print "Bridge", $0; else print $0 }'
+    } > /etc/tor/torrc
+  fi
 
   /etc/init.d/tor enable
   /etc/init.d/tor start
