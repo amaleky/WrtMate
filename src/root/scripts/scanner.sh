@@ -53,8 +53,8 @@ BASE64_URLS=(
 cd "/tmp" || true
 echo "ℹ️ $PREV_COUNT Previous Configs Found"
 
-if curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:22335" -o "/dev/null" "https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh"; then
-  PROXY_OPTION="--socks5-hostname 127.0.0.1:22335"
+if curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:9801" -o "/dev/null" "https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh"; then
+  PROXY_OPTION="--socks5-hostname 127.0.0.1:9801"
 fi
 
 if ! ping -c 1 -W 2 "217.218.155.155" > /dev/null 2>&1; then

@@ -47,9 +47,7 @@ setup_balancer() {
   info "setup_balancer"
   if [ ! -d /root/balancer/ ]; then mkdir /root/balancer/; fi
 
-  if [[ ! -f /root/balancer/configs.conf ]]; then
-    curl -s -L -o "/root/balancer/configs.conf" "${REPO_URL}/src/root/balancer/configs.conf" || error "Failed to download balancer configs."
-  fi
+  curl -s -L -o "/root/balancer/configs.conf" "${REPO_URL}/src/root/balancer/configs.conf" || error "Failed to download balancer configs."
 
   curl -s -L -o "/etc/init.d/balancer" "${REPO_URL}/src/etc/init.d/balancer" || error "Failed to download balancer init script."
   chmod +x /etc/init.d/balancer
@@ -101,7 +99,7 @@ install_tor() {
     {
       echo "Log notice syslog"
       echo "DataDirectory /var/lib/tor"
-      echo "SOCKSPort 9050"
+      echo "SOCKSPort 9805"
       echo "User tor"
       echo "UseBridges 1"
       echo "ClientTransportPlugin obfs4 exec /usr/bin/obfs4proxy"
@@ -243,7 +241,7 @@ install_ssh_proxy() {
   info "install_ssh_proxy"
   if [ ! -d /root/.ssh/ ]; then mkdir /root/.ssh/; fi
 
-  if [ ! -e "/etc/init.d/ssh-proxy" ]; then
+  if [ ! -f "/etc/init.d/ssh-proxy" ]; then
     curl -s -L -o "/etc/init.d/ssh-proxy" "${REPO_URL}/src/etc/init.d/ssh-proxy" || error "Failed to download ssh-proxy init script."
     chmod +x /etc/init.d/ssh-proxy
   fi
@@ -277,7 +275,7 @@ install_server_less() {
   curl -s -L -o "/etc/init.d/serverless" "${REPO_URL}/src/etc/init.d/serverless" || error "Failed to download serverless init script."
   chmod +x /etc/init.d/serverless
 
-  curl -s -L -o "/root/xray/serverless.json" "https://cdn.jsdelivr.net/gh/GFW-knocker/gfw_resist_HTTPS_proxy@main/ServerLess_TLSFrag_with_google_DOH.json" || error "Failed to download ServerLess configs."
+  curl -s -L -o "/root/xray/serverless.json" "${REPO_URL}/src/root/xray/serverless.json" || error "Failed to download ServerLess configs."
 
   /etc/init.d/serverless enable
   /etc/init.d/serverless start

@@ -21,7 +21,7 @@
         "tls"
       ],
       "listen": "127.0.0.1",
-      "port": 10808,
+      "port": 9807,
       "protocol": "socks",
       "settings": {
         "auth": "noauth",
@@ -36,22 +36,6 @@
         "enabled": true
       },
       "tag": "socks-in"
-    },
-    {
-      "listen": "127.0.0.1",
-      "port": 10809,
-      "protocol": "http",
-      "settings": {
-        "userLevel": 8
-      },
-      "sniffing": {
-        "destOverride": [
-          "http",
-          "tls"
-        ],
-        "enabled": true
-      },
-      "tag": "http-in"
     }
   ],
   "log": {
@@ -163,8 +147,7 @@
       {
         "enabled": true,
         "inboundTag": [
-          "socks-in",
-          "http-in"
+          "socks-in"
         ],
         "outboundTag": "dns-out",
         "port": "53",
@@ -173,8 +156,7 @@
       {
         "enabled": true,
         "inboundTag": [
-          "socks-in",
-          "http-in"
+          "socks-in"
         ],
         "outboundTag": "fragment-out",
         "port": "0-65535",
