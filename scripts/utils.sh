@@ -84,10 +84,11 @@ restart_network_services() {
 
 add_cron_job() {
   local cron_job="$1"
-  if ! grep -qF "$cron_job" /etc/crontabs/root; then
-    echo "$cron_job" >>/etc/crontabs/root
-    /etc/init.d/cron restart
-  fi
+  local script_path
+  script_path=$(echo "$cron_job" | awk '{print $6}')
+  sed -i "\|$script_path|d" /etc/crontabs/root
+  echo "$cron_job" >> /etc/crontabs/root
+  /etc/init.d/cron restart
   /etc/init.d/cron enable
 }
 
