@@ -119,7 +119,6 @@ install_warp() {
   LOCAL_VERSION="$(cat /root/.config/warp-plus/version 2>/dev/null || echo 'none')"
 
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
-    echo "$REMOTE_VERSION" > /root/.config/warp-plus/version
     case "$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2)" in
       mipsel_24kc)
         DETECTED_ARCH="mipslesoftfloat"
@@ -154,12 +153,14 @@ install_warp() {
       *)
         error "Unsupported CPU architecture: $(uname -m)"
         ;;
-      esac
+    esac
 
-      curl -s -L -o "/tmp/warp.zip" "https://github.com/bepass-org/warp-plus/releases/latest/download/warp-plus_linux-${DETECTED_ARCH}.zip" || error "Failed to download WARP zip."
-      unzip -o /tmp/warp.zip -d /tmp
-      mv /tmp/warp-plus /usr/bin/warp-plus
-      chmod +x /usr/bin/warp-plus
+    curl -s -L -o "/tmp/warp.zip" "https://github.com/bepass-org/warp-plus/releases/latest/download/warp-plus_linux-${DETECTED_ARCH}.zip" || error "Failed to download WARP zip."
+    unzip -o /tmp/warp.zip -d /tmp
+    mv /tmp/warp-plus /usr/bin/warp-plus
+    chmod +x /usr/bin/warp-plus
+
+    echo "$REMOTE_VERSION" > /root/.config/warp-plus/version
   fi
 
   curl -s -L -o "/etc/init.d/warp-plus" "${REPO_URL}/src/etc/init.d/warp-plus" || error "Failed to download warp-plus init script."
@@ -183,7 +184,6 @@ install_hiddify() {
   LOCAL_VERSION="$(cat /root/.config/hiddify-cli/version 2>/dev/null || echo 'none')"
 
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
-    echo "$REMOTE_VERSION" > /root/.config/hiddify-cli/version
     case "$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2)" in
     x86_64)
       DETECTED_ARCH="amd64"
@@ -234,6 +234,8 @@ install_hiddify() {
     tar -xvzf /tmp/hiddify.tar.gz -C /tmp
     mv /tmp/HiddifyCli /usr/bin/hiddify-cli
     chmod +x /usr/bin/hiddify-cli
+
+    echo "$REMOTE_VERSION" > /root/.config/hiddify-cli/version
   fi
 }
 
