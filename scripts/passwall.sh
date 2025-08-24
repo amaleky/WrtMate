@@ -110,6 +110,10 @@ install_ghost() {
 
   /etc/init.d/scanner disable
 
+  if [ ! -f "/root/ghost/configs.conf" ] || [ "$(wc -l < "/root/ghost/configs.conf")" -eq 0 ]; then
+      /etc/init.d/scanner start
+  fi
+
   add_cron_job "0 * * * * /etc/init.d/scanner start"
 
   if [ ! -d /root/ghost/ ]; then mkdir /root/ghost/; fi
