@@ -1,20 +1,59 @@
 #!/bin/bash
 # Passwall configuration for OpenWRT
 
+case "$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2)" in
+  mipsel_24kc)
+    DETECTED_ARCH="mipslesoftfloat"
+    ;;
+  mips_24kc)
+    DETECTED_ARCH="mipssoftfloat"
+    ;;
+  mipsel*)
+    DETECTED_ARCH="mipsle"
+    ;;
+  mips64el*)
+    DETECTED_ARCH="mips64le"
+    ;;
+  mips64*)
+    DETECTED_ARCH="mips64"
+    ;;
+  mips*)
+    DETECTED_ARCH="mips"
+    ;;
+  aarch64* | arm64* | armv8*)
+    DETECTED_ARCH="arm64"
+    ;;
+  arm*)
+    DETECTED_ARCH="arm7"
+    ;;
+  x86_64)
+    DETECTED_ARCH="amd64"
+    ;;
+  riscv64*)
+    DETECTED_ARCH="riscv64"
+    ;;
+  *)
+    error "Unsupported CPU architecture: $(uname -m)"
+    ;;
+esac
+
 install_passwall() {
   info "install_passwall"
-  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | grep "browser_download_url" | grep -o 'https://[^"]*luci-[^_]*_luci-app-passwall2_[^_]*_all\.ipk' | head -n1 | sed -n 's/.*luci-app-passwall2_\([^_]*\)_all\.ipk.*/\1/p')" || error "Failed to detect openwrt version."
-  LOCAL_VERSION=$(opkg list-installed | grep "^luci-app-passwall2" | awk '{print $3}')
+  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | jq -r '.tag_name')" || error "Failed to detect passwall version."
+  LOCAL_VERSION="$(cat "/root/.passwall2_version" 2>/dev/null || echo 'none')"
+
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
     opkg remove dnsmasq
     ensure_packages "dnsmasq-full kmod-nft-socket kmod-nft-tproxy binutils"
 
     curl -s -L -o "/tmp/packages.zip" "https://github.com/xiaorouji/openwrt-passwall2/releases/latest/download/passwall_packages_ipk_$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2).zip" || error "Failed to download Passwall packages."
-    unzip -o /tmp/packages.zip -d /tmp/passwall
+    unzip -o /tmp/packages.zip -d /tmp/passwall > /dev/null 2>&1
     for pkg in /tmp/passwall/*.ipk; do opkg install "$pkg"; done
 
     curl -s -L -o "/tmp/passwall2.ipk" "$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | grep "browser_download_url" | grep -o 'https://[^"]*luci-[^_]*_luci-app-passwall2_[^_]*_all\.ipk' | head -n1)" || error "Failed to download Passwall2 package."
     opkg install /tmp/passwall2.ipk || error "Failed to install Passwall2."
+
+    echo "$REMOTE_VERSION" > "/root/.passwall2_version"
   fi
 
   curl -s -L -o "/etc/config/passwall2" "${REPO_URL}/src/etc/config/passwall2" || error "Failed to download passwall2 config."
@@ -113,54 +152,15 @@ install_tor() {
 
 install_warp() {
   info "install_warp"
-  if [ ! -d /root/.config/warp-plus ]; then mkdir -p /root/.config/warp-plus; fi
 
   REMOTE_VERSION="$(curl -s "https://api.github.com/repos/bepass-org/warp-plus/releases/latest" | jq -r '.tag_name')" || error "Failed to detect warp-plus version."
-  LOCAL_VERSION="$(cat /root/.config/warp-plus/version 2>/dev/null || echo 'none')"
+  LOCAL_VERSION="$(cat "/root/.warp_version" 2>/dev/null || echo 'none')"
 
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
-    case "$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2)" in
-      mipsel_24kc)
-        DETECTED_ARCH="mipslesoftfloat"
-        ;;
-      mips_24kc)
-        DETECTED_ARCH="mipssoftfloat"
-        ;;
-      mipsel*)
-        DETECTED_ARCH="mipsle"
-        ;;
-      mips64el*)
-        DETECTED_ARCH="mips64le"
-        ;;
-      mips64*)
-        DETECTED_ARCH="mips64"
-        ;;
-      mips*)
-        DETECTED_ARCH="mips"
-        ;;
-      aarch64* | arm64* | armv8*)
-        DETECTED_ARCH="arm64"
-        ;;
-      arm*)
-        DETECTED_ARCH="arm7"
-        ;;
-      x86_64)
-        DETECTED_ARCH="amd64"
-        ;;
-      riscv64*)
-        DETECTED_ARCH="riscv64"
-        ;;
-      *)
-        error "Unsupported CPU architecture: $(uname -m)"
-        ;;
-    esac
-
-    curl -s -L -o "/tmp/warp.zip" "https://github.com/bepass-org/warp-plus/releases/latest/download/warp-plus_linux-${DETECTED_ARCH}.zip" || error "Failed to download WARP zip."
-    unzip -o /tmp/warp.zip -d /tmp
-    mv /tmp/warp-plus /usr/bin/warp-plus
+    curl -L -o "/usr/bin/warp-plus" "https://github.com/amaleky/WrtMate/releases/latest/download/warp_linux-${DETECTED_ARCH}" || error "Failed to download warp-plus."
     chmod +x /usr/bin/warp-plus
 
-    echo "$REMOTE_VERSION" > /root/.config/warp-plus/version
+    echo "$REMOTE_VERSION" > "/root/.warp_version"
   fi
 
   curl -s -L -o "/etc/init.d/warp-plus" "${REPO_URL}/src/etc/init.d/warp-plus" || error "Failed to download warp-plus init script."
@@ -168,9 +168,26 @@ install_warp() {
 
   /etc/init.d/warp-plus enable
   /etc/init.d/warp-plus start
+}
+
+install_psiphon() {
+  info "install_psiphon"
+  if [ ! -d /root/psiphon/ ]; then mkdir /root/psiphon/; fi
+
+  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/Psiphon-Labs/psiphon-tunnel-core/releases/latest" | jq -r '.tag_name')" || error "Failed to detect psiphon version."
+  LOCAL_VERSION="$(cat "/root/.psiphon_version" 2>/dev/null || echo 'none')"
+
+  if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
+    curl -L -o "/usr/bin/psiphon" "https://github.com/amaleky/WrtMate/releases/latest/download/psiphon_linux-${DETECTED_ARCH}" || error "Failed to download psiphon."
+    chmod +x "/usr/bin/psiphon"
+
+    echo "$REMOTE_VERSION" > "/root/.psiphon_version"
+  fi
 
   curl -s -L -o "/etc/init.d/psiphon" "${REPO_URL}/src/etc/init.d/psiphon" || error "Failed to download psiphon init script."
   chmod +x /etc/init.d/psiphon
+
+  curl -s -L -o "/root/psiphon/client.config" "https://raw.githubusercontent.com/amaleky/WrtMate/main/src/root/psiphon/client.config" || error "Failed to download psiphon configs."
 
   /etc/init.d/psiphon enable
   /etc/init.d/psiphon start
@@ -178,64 +195,15 @@ install_warp() {
 
 install_hiddify() {
   info "install_hiddify"
-  if [ ! -d /root/.config/hiddify-cli ]; then mkdir -p /root/.config/hiddify-cli; fi
 
   REMOTE_VERSION="$(curl -s "https://api.github.com/repos/hiddify/hiddify-core/releases/latest" | jq -r '.tag_name')" || error "Failed to detect hiddify-core version."
-  LOCAL_VERSION="$(cat /root/.config/hiddify-cli/version 2>/dev/null || echo 'none')"
+  LOCAL_VERSION="$(cat "/root/.hiddify_version" 2>/dev/null || echo 'none')"
 
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
-    case "$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2)" in
-    x86_64)
-      DETECTED_ARCH="amd64"
-      ;;
-    i386 | i686)
-      DETECTED_ARCH="386"
-      ;;
-    aarch64* | arm64* | armv8*)
-      DETECTED_ARCH="arm64"
-      ;;
-    armv5* | arm926ej-s)
-      DETECTED_ARCH="armv5"
-      ;;
-    armv6*)
-      DETECTED_ARCH="armv6"
-      ;;
-    arm*)
-      DETECTED_ARCH="armv7"
-      ;;
-    mips_24kc)
-      DETECTED_ARCH="mips-softfloat"
-      ;;
-    mipsel_24kc)
-      DETECTED_ARCH="mipsel-softfloat"
-      ;;
-    mips64el*)
-      DETECTED_ARCH="mips64el"
-      ;;
-    mipsel*)
-      DETECTED_ARCH="mipsel-hardfloat"
-      ;;
-    mips64*)
-      DETECTED_ARCH="mips64"
-      ;;
-    mips*)
-      DETECTED_ARCH="mips-hardfloat"
-      ;;
-    s390x)
-      DETECTED_ARCH="s390x"
-      ;;
-    *)
-      echo "Unsupported architecture: $(uname -m)"
-      exit 1
-      ;;
-    esac
-
-    curl -L -o /tmp/hiddify.tar.gz "https://github.com/hiddify/hiddify-core/releases/latest/download/hiddify-cli-linux-${DETECTED_ARCH}.tar.gz" || error "Failed to download Hiddify."
-    tar -xvzf /tmp/hiddify.tar.gz -C /tmp
-    mv /tmp/HiddifyCli /usr/bin/hiddify-cli
+    curl -L -o "/usr/bin/hiddify-cli" "https://github.com/amaleky/WrtMate/releases/latest/download/hiddify_linux-${DETECTED_ARCH}" || error "Failed to download hiddify-cli."
     chmod +x /usr/bin/hiddify-cli
 
-    echo "$REMOTE_VERSION" > /root/.config/hiddify-cli/version
+    echo "$REMOTE_VERSION" > "/root/.hiddify_version"
   fi
 }
 
@@ -284,9 +252,10 @@ install_server_less() {
 }
 
 main() {
-  check_min_requirements 200 100 2
+  check_min_requirements 200 500 2
 
   install_warp
+  install_psiphon
   install_hiddify
   install_server_less
   install_ghost

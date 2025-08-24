@@ -15,7 +15,7 @@
 To ensure optimal performance, your device should meet the following minimum specifications:
 
 - **RAM:** 200 MB
-- **Storage:** 100 MB available space
+- **Storage:** 500 MB available space
 - **CPU:** Dual-core processor
 
 ## Prerequisites
