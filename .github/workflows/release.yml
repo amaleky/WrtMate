@@ -1,0 +1,107 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+          - goos: linux
+            goarch: arm64
+          - goos: linux
+            goarch: arm
+            goarm: 7
+          - goos: linux
+            goarch: riscv64
+          - goos: linux
+            goarch: mips64
+          - goos: linux
+            goarch: mips64le
+          - goos: linux
+            goarch: mips
+          - goos: linux
+            goarch: mipsle
+          - goos: linux
+            goarch: mips64
+            gomips: softfloat
+          - goos: linux
+            goarch: mips64le
+            gomips: softfloat
+          - goos: linux
+            goarch: mips
+            gomips: softfloat
+          - goos: linux
+            goarch: mipsle
+            gomips: softfloat
+
+    runs-on: ubuntu-latest
+    env:
+      GOOS: ${{ matrix.goos }}
+      GOARCH: ${{ matrix.goarch }}
+      GOARM: ${{ matrix.goarm }}
+      GOMIPS: ${{ matrix.gomips }}
+      CGO_ENABLED: 0
+      ASSET_NAME: ${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goarm }}${{ matrix.gomips }}
+    steps:
+      - name: Checkout codebase
+        uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          check-latest: true
+
+      - name: Build Psiphon
+        run: |
+          git clone --depth 1 https://github.com/Psiphon-Labs/psiphon-tunnel-core.git
+          pushd ./psiphon-tunnel-core || exit 1
+          go build -o ../psiphon_${{ env.ASSET_NAME }} -trimpath -ldflags "-s -w -buildid= -checklinkname=0 -X main.version=${{ github.ref }}" ./ConsoleClient
+          popd || exit 1
+
+      - name: Upload Psiphon
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: psiphon_${{ env.ASSET_NAME }}
+          tag: ${{ github.ref }}
+          overwrite: true
+
+      - name: Build Hiddify
+        run: |
+          git clone --depth 1 https://github.com/hiddify/hiddify-core.git
+          pushd ./hiddify-core || exit 1
+          go build -o ../hiddify_${{ env.ASSET_NAME }} -trimpath -ldflags "-s -w -buildid= -checklinkname=0 -X main.version=${{ github.ref }}" ./cli
+          popd || exit 1
+
+      - name: Upload Hiddify
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: hiddify_${{ env.ASSET_NAME }}
+          tag: ${{ github.ref }}
+          overwrite: true
+
+      - name: Build Warp
+        run: |
+          git clone --depth 1 https://github.com/bepass-org/warp-plus.git
+          pushd ./warp-plus || exit 1
+          go build -o ../warp_${{ env.ASSET_NAME }} -trimpath -ldflags "-s -w -buildid= -checklinkname=0 -X main.version=${{ github.ref }}" ./cmd/warp-plus
+          popd || exit 1
+
+      - name: Upload Warp
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: warp_${{ env.ASSET_NAME }}
+          tag: ${{ github.ref }}
+          overwrite: true
