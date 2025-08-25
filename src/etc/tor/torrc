@@ -1,0 +1,6 @@
+Log notice syslog
+DataDirectory /var/lib/tor
+SOCKSPort 0.0.0.0:9805
+User tor
+UseBridges 1
+ClientTransportPlugin obfs4 exec /usr/bin/obfs4proxy

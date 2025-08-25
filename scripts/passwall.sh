@@ -137,17 +137,15 @@ install_tor() {
 
   ensure_packages "tor tor-geoip obfs4proxy"
 
-  if ! grep -q '^Bridge obfs4' /etc/tor/torrc; then
+  grep '^Bridge' /etc/tor/torrc > /etc/tor/torrc.back
+  curl -s -L -o "/etc/tor/torrc" "${REPO_URL}/src/etc/tor/torrc" || error "Failed to download tor config."
+  cat /etc/tor/torrc.back >> /etc/tor/torrc
+
+  if ! grep -q '^Bridge' /etc/tor/torrc; then
   echo "Please paste your Bridges from https://bridges.torproject.org/bridges?transport=obfs4 (press Ctrl+D when done):"
     {
-      echo "Log notice syslog"
-      echo "DataDirectory /var/lib/tor"
-      echo "SOCKSPort 0.0.0.0:9805"
-      echo "User tor"
-      echo "UseBridges 1"
-      echo "ClientTransportPlugin obfs4 exec /usr/bin/obfs4proxy"
       awk 'NF { if ($1 != "Bridge") print "Bridge", $0; else print $0 }'
-    } > /etc/tor/torrc
+    } >> /etc/tor/torrc
   fi
 
   /etc/init.d/tor enable
