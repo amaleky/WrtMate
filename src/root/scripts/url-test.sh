@@ -11,7 +11,7 @@ if ! top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default'
 fi
 
 if /etc/init.d/ghost enabled; then
-  if ! curl -s -L -I --max-time 1 --retry 5 --socks5-hostname "127.0.0.1:9802" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
+  if ! curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:9802" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
     echo "❌ ghost connectivity test failed"
     /etc/init.d/ghost restart
   else
@@ -28,20 +28,20 @@ if /etc/init.d/warp-plus enabled; then
     /etc/init.d/warp-plus restart
   else
     echo "✅ warp-plus connectivity test passed"
-    if /etc/init.d/psiphon enabled; then
-      if ! curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:9804" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
-        echo "❌ psiphon connectivity test failed"
-        rm -rfv /.cache/warp-plus/
-        /etc/init.d/psiphon restart
-      else
-        echo "✅ psiphon connectivity test passed"
-      fi
-    else
-      echo "⚠️ psiphon is not running"
-    fi
   fi
 else
   echo "⚠️ warp-plus is not running"
+fi
+
+if /etc/init.d/psiphon enabled; then
+  if ! curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:9804" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
+    echo "❌ psiphon connectivity test failed"
+    /etc/init.d/psiphon restart
+  else
+    echo "✅ psiphon connectivity test passed"
+  fi
+else
+  echo "⚠️ psiphon is not running"
 fi
 
 if /etc/init.d/tor enabled; then
