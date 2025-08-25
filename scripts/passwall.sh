@@ -142,7 +142,7 @@ install_tor() {
     {
       echo "Log notice syslog"
       echo "DataDirectory /var/lib/tor"
-      echo "SOCKSPort 9805"
+      echo "SOCKSPort 0.0.0.0:9805"
       echo "User tor"
       echo "UseBridges 1"
       echo "ClientTransportPlugin obfs4 exec /usr/bin/obfs4proxy"
