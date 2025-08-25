@@ -212,28 +212,34 @@ install_hiddify() {
 install_ssh_proxy() {
   info "install_ssh_proxy"
   if [ ! -d /root/.ssh/ ]; then mkdir /root/.ssh/; fi
+  ensure_packages "openssh-client"
 
-  if [ ! -f "/etc/init.d/ssh-proxy" ]; then
-    curl -s -L -o "/etc/init.d/ssh-proxy" "${REPO_URL}/src/etc/init.d/ssh-proxy" || error "Failed to download ssh-proxy init script."
-    chmod +x /etc/init.d/ssh-proxy
+  if [ -f "/etc/init.d/ssh-proxy" ]; then
+    SSH_HOST=$(grep -E "^SSH_HOST=" /etc/init.d/ssh-proxy | cut -d'=' -f2-)
+    SSH_PORT=$(grep -E "^SSH_PORT=" /etc/init.d/ssh-proxy | cut -d'=' -f2-)
   fi
 
-  if ! is_package_installed "openssh-client"; then
-    ensure_packages "openssh-client"
-
-    info "Please paste your SSH private key (press Ctrl+D when done):"
-    cat >/root/.ssh/id_rsa
-    chmod 600 /root/.ssh/id_rsa
-
+  if [ -z "$SSH_HOST" ]; then
     read -r -p "Enter SSH hostname: " SSH_HOST
-    if [ -n "$SSH_HOST" ]; then
-      sed -i "s/^SSH_HOST=.*/SSH_HOST=${SSH_HOST}/" "/etc/init.d/ssh-proxy"
-    fi
-
+  fi
+  if [ -z "$SSH_PORT" ]; then
     read -r -p "Enter SSH port: " SSH_PORT
-    if [ -n "$SSH_PORT" ]; then
-      sed -i "s/^SSH_PORT=.*/SSH_PORT=${SSH_PORT}/" "/etc/init.d/ssh-proxy"
-    fi
+  fi
+
+  curl -s -L -o "/etc/init.d/ssh-proxy" "${REPO_URL}/src/etc/init.d/ssh-proxy" || error "Failed to download ssh-proxy init script."
+  chmod +x "/etc/init.d/ssh-proxy"
+
+  if [ -n "$SSH_HOST" ]; then
+    sed -i "s/^SSH_HOST=.*/SSH_HOST=${SSH_HOST}/" "/etc/init.d/ssh-proxy"
+  fi
+  if [ -n "$SSH_PORT" ]; then
+    sed -i "s/^SSH_PORT=.*/SSH_PORT=${SSH_PORT}/" "/etc/init.d/ssh-proxy"
+  fi
+
+  if [[ ! -f "/root/.ssh/id_rsa" ]]; then
+    info "Please paste your SSH private key (press Ctrl+D when done):"
+    cat >"/root/.ssh/id_rsa"
+    chmod 600 "/root/.ssh/id_rsa"
   fi
 
   /etc/init.d/ssh-proxy enable
