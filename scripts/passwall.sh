@@ -236,10 +236,10 @@ install_ssh_proxy() {
     if [ -n "$SSH_PORT" ]; then
       sed -i "s/^SSH_PORT=.*/SSH_PORT=${SSH_PORT}/" "/etc/init.d/ssh-proxy"
     fi
-
-    /etc/init.d/ssh-proxy enable
-    /etc/init.d/ssh-proxy start
   fi
+
+  /etc/init.d/ssh-proxy enable
+  /etc/init.d/ssh-proxy start
 }
 
 install_server_less() {
