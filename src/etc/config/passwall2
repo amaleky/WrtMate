@@ -351,10 +351,6 @@ config shunt_rules 'Direct'
 geosite:slack
 geosite:riot
 domain:ir
-domain:dl.playstation.net
-domain:upenlod.pw
-domain:odlserver.info
-domain:pintapin.local
 domain:pinsvc.net
 domain:snapp.cab
 domain:local
