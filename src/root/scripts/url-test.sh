@@ -11,7 +11,7 @@ if ! top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default'
 fi
 
 if /etc/init.d/ghost enabled; then
-  if ! curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:9802" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
+  if ! curl -s -L -I --max-time 1 --socks5-hostname "127.0.0.1:9802" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
     echo "❌ ghost connectivity test failed"
     /etc/init.d/ghost restart
   else
@@ -22,7 +22,7 @@ else
 fi
 
 if /etc/init.d/warp-plus enabled; then
-  if ! curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:9803" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
+  if ! curl -s -L -I --max-time 1 --socks5-hostname "127.0.0.1:9803" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
     echo "❌ warp-plus connectivity test failed"
     rm -rfv /.cache/warp-plus/
     /etc/init.d/warp-plus restart
@@ -34,7 +34,7 @@ else
 fi
 
 if /etc/init.d/psiphon enabled; then
-  if ! curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:9804" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
+  if ! curl -s -L -I --max-time 1 --socks5-hostname "127.0.0.1:9804" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
     echo "❌ psiphon connectivity test failed"
     /etc/init.d/psiphon restart
   else
@@ -45,7 +45,7 @@ else
 fi
 
 if /etc/init.d/tor enabled; then
-  if ! curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:9805" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
+  if ! curl -s -L -I --max-time 1 --socks5-hostname "127.0.0.1:9805" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
     echo "❌ tor connectivity test failed"
     /etc/init.d/tor restart
   else
@@ -56,7 +56,7 @@ else
 fi
 
 if /etc/init.d/ssh-proxy enabled; then
-  if ! curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:9806" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
+  if ! curl -s -L -I --max-time 1 --socks5-hostname "127.0.0.1:9806" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
     echo "❌ ssh-proxy connectivity test failed"
     rm -fv /root/.ssh/known_hosts
     /etc/init.d/ssh-proxy restart
@@ -68,7 +68,7 @@ else
 fi
 
 if /etc/init.d/serverless enabled; then
-  if ! curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:9807" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
+  if ! curl -s -L -I --max-time 1 --socks5-hostname "127.0.0.1:9807" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
     echo "❌ serverless connectivity test failed"
     /etc/init.d/serverless restart
   else
@@ -79,7 +79,7 @@ else
 fi
 
 if /etc/init.d/balancer enabled; then
-  if ! curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:9801" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
+  if ! curl -s -L -I --max-time 1 --socks5-hostname "127.0.0.1:9801" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
     echo "❌ balancer connectivity test failed"
     /etc/init.d/balancer restart
   else

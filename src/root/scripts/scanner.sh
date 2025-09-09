@@ -4,7 +4,6 @@ CONFIGS="/root/ghost/configs.conf"
 PREV_COUNT=$(wc -l < "$CONFIGS")
 CACHE_DIR="/root/.cache/subscriptions"
 CONFIGS_LIMIT=40
-MAX_PARALLEL=5
 
 mkdir -p "$CACHE_DIR"
 
@@ -58,7 +57,7 @@ BASE64_URLS=(
 cd "/tmp" || true
 echo "ℹ️ $PREV_COUNT Previous Configs Found"
 
-if curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:9801" -o "/dev/null" "https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh"; then
+if curl -s -L -I --max-time 1 --socks5-hostname "127.0.0.1:9801" -o "/dev/null" "https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh"; then
   PROXY_OPTION="--socks5-hostname 127.0.0.1:9801"
 fi
 
@@ -67,25 +66,21 @@ if ! ping -c 1 -W 2 "217.218.155.155" > /dev/null 2>&1; then
   exit 0
 fi
 
-get_random_port() {
-  for i in $(seq 1 100); do
-    port=$(( (RANDOM % 16384) + 49152 ))
-    nc -z 127.0.0.1 "$port" 2>/dev/null
-    if [ $? -ne 0 ]; then
-      echo "$port"
-      return 0
-    fi
-  done
-  echo "❌ Could not find free port after 100 tries" >&2
-  return 1
-}
-
-test_config() {
+process_config() {
   local CONFIG="$1"
-  SOCKS_PORT=$(get_random_port)
-  local TEMP_CONFIG="/tmp/test.${SOCKS_PORT}.config.conf"
-  local PARSED_CONFIG="/tmp/test.${SOCKS_PORT}.parsed.json"
-  local JSON_CONFIG="/tmp/test.${SOCKS_PORT}.xray.json"
+  local SOCKS_PORT=9898
+  local TEMP_CONFIG="/tmp/test.config.conf"
+  local PARSED_CONFIG="/tmp/test.parsed.json"
+  local JSON_CONFIG="/tmp/test.xray.json"
+
+  if [ "$(wc -l < "$CONFIGS")" -ge $CONFIGS_LIMIT ]; then
+    echo "🎉 $(wc -l < "$CONFIGS") Configs Found (previous: $PREV_COUNT)"
+    exit 0
+  fi
+
+  if [[ -z "$CONFIG" ]] || [[ "$CONFIG" == \#* ]]; then
+    return
+  fi
 
   echo "$CONFIG" >"$TEMP_CONFIG"
 
@@ -110,8 +105,7 @@ test_config() {
 
   /tmp/sing-box-$SOCKS_PORT run -c "$JSON_CONFIG" 2>&1 | while read -r LINE; do
     if echo "$LINE" | grep -q "sing-box started"; then
-      if [ "$(curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://firebase.google.com/")" -eq 200 ] && \
-         [ "$(curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://developer.android.com/")" -eq 200 ]; then
+      if [ "$(curl -s -L -I --max-time 1 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://developer.android.com/")" -eq 200 ]; then
         echo "✅ Successfully ($(wc -l < "$CONFIGS")) ${CONFIG}"
         echo "$CONFIG" >> "$CONFIGS"
       fi
@@ -122,25 +116,6 @@ test_config() {
   done
 }
 
-process_config() {
-  local CONFIG="$1"
-
-  if [ "$(wc -l < "$CONFIGS")" -ge $CONFIGS_LIMIT ]; then
-    echo "🎉 $(wc -l < "$CONFIGS") Configs Found (previous: $PREV_COUNT)"
-    exit 0
-  fi
-
-  while [ "$(pgrep -f "/tmp/sing-box-.* run -c .*" | wc -l)" -ge "$MAX_PARALLEL" ]; do
-    sleep 1
-  done
-
-  if [[ -z "$CONFIG" ]] || [[ "$CONFIG" == \#* ]]; then
-    return
-  fi
-
-  test_config "$CONFIG" &
-}
-
 BACKUP="$(cat "$CONFIGS")"
 echo -n >"$CONFIGS"
 
@@ -149,14 +124,9 @@ while IFS= read -r CONFIG; do
   process_config "$CONFIG"
 done <<< "$BACKUP"
 
-echo "⏳ Testing https://the3rf.com/api.php"
-curl -f $PROXY_OPTION --max-time 60 --retry 1 "https://the3rf.com/api.php" | jq -r '.[]' | while IFS= read -r CONFIG; do
-  process_config "$CONFIG"
-done
-
 for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
   CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
-  if curl -L $PROXY_OPTION --max-time 60 --retry 1 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
+  if curl -L $PROXY_OPTION --max-time 60 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
     echo "✅ Downloaded subscription $SUBSCRIPTION"
   elif [ -f "$CACHE_FILE" ]; then
     echo "⚠️ Using cashed $SUBSCRIPTION"
@@ -173,7 +143,7 @@ done
 
 for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
   CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
-  if curl -L $PROXY_OPTION --max-time 60 --retry 1 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
+  if curl -L $PROXY_OPTION --max-time 60 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
     echo "✅ Downloaded subscription $SUBSCRIPTION"
   elif [ -f "$CACHE_FILE" ]; then
     echo "⚠️ Using cashed $SUBSCRIPTION"
