@@ -1,12 +1,14 @@
 #!/bin/sh
 
-CONFIGS="/root/ghost/configs.conf"
+INPUT_CONFIGS="/root/ghost/configs.conf"
 PARSED_CONFIG="/tmp/ghost-parsed.json"
-OUTPUT_CONFIG="/tmp/ghost-configs.json"
+OUTPUT_CONFIG="/tmp/ghost-final.json"
 
 kill -9 "$(pgrep -f "/usr/bin/sing-box run -c $OUTPUT_CONFIG")"
 
-/usr/bin/hiddify-cli parse "$CONFIGS" -o "$PARSED_CONFIG" > /dev/null 2>&1 && jq '{
+/usr/bin/hiddify-cli parse "$INPUT_CONFIGS" -o "$PARSED_CONFIG" > /dev/null 2>&1 || exit 1
+
+jq '{
   "log": {
     "level": "warning"
   },
@@ -75,4 +77,6 @@ kill -9 "$(pgrep -f "/usr/bin/sing-box run -c $OUTPUT_CONFIG")"
     "strategy": "prefer_ipv4",
     "independent_cache": true
   }
-}' "$PARSED_CONFIG" >"$OUTPUT_CONFIG" && /usr/bin/sing-box run -c "$OUTPUT_CONFIG"
+}' "$PARSED_CONFIG" >"$OUTPUT_CONFIG" || exit 0
+
+/usr/bin/sing-box run -c "$OUTPUT_CONFIG"

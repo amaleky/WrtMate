@@ -3,10 +3,6 @@
 if [ ! -d "/usr/share/v2ray" ]; then mkdir -p "/usr/share/v2ray"; fi
 if [ ! -d "/usr/share/singbox" ]; then mkdir -p "/usr/share/singbox"; fi
 
-if curl -I --max-time 1 --socks5-hostname "127.0.0.1:9801" --silent --output "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
-  PROXY_OPTION="--socks5-hostname 127.0.0.1:9801"
-fi
-
 download() {
   FILE="$1"
   URL="$2"
@@ -21,7 +17,7 @@ download() {
   if [ "$REMOTE_SIZE" != "$LOCAL_SIZE" ] && [ "$REMOTE_SIZE" -gt 0 ]; then
     echo "Downloading $URL REMOTE_SIZE: $REMOTE_SIZE LOCAL_SIZE: $LOCAL_SIZE"
     TEMP_FILE="$(mktemp)"
-    if curl -L $PROXY_OPTION -o "$TEMP_FILE" "$URL"; then
+    if curl -L -o "$TEMP_FILE" "$URL"; then
       mv "$TEMP_FILE" "$FILE"
     fi
   fi

@@ -57,10 +57,6 @@ BASE64_URLS=(
 cd "/tmp" || true
 echo "ℹ️ $PREV_COUNT Previous Configs Found"
 
-if curl -s -L -I --max-time 1 --socks5-hostname "127.0.0.1:9801" -o "/dev/null" "https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh"; then
-  PROXY_OPTION="--socks5-hostname 127.0.0.1:9801"
-fi
-
 if ! ping -c 1 -W 2 "217.218.155.155" > /dev/null 2>&1; then
   echo "ERROR: Connectivity test failed."
   exit 0
@@ -126,7 +122,7 @@ done <<< "$BACKUP"
 
 for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
   CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
-  if curl -L $PROXY_OPTION --max-time 60 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
+  if curl -L --max-time 60 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
     echo "✅ Downloaded subscription $SUBSCRIPTION"
   elif [ -f "$CACHE_FILE" ]; then
     echo "⚠️ Using cashed $SUBSCRIPTION"
@@ -143,7 +139,7 @@ done
 
 for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
   CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
-  if curl -L $PROXY_OPTION --max-time 60 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
+  if curl -L --max-time 60 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
     echo "✅ Downloaded subscription $SUBSCRIPTION"
   elif [ -f "$CACHE_FILE" ]; then
     echo "⚠️ Using cashed $SUBSCRIPTION"
