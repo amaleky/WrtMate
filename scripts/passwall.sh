@@ -94,7 +94,7 @@ setup_balancer() {
   curl -s -L -o "/root/balancer/run.sh" "${REPO_URL}/src/root/balancer/run.sh" || error "Failed to download balancer run.sh configs."
   chmod +x /root/balancer/run.sh
 
-  if [ -z "$INPUT_CONFIGS" ]; then
+  if [ -z "$INPUT_CONFIGS" ] || [ "$INPUT_CONFIGS" = '""' ]; then
     read -r -p "Enter Your Sing-Box Subscription: " INPUT_CONFIGS
   fi
   if [ -n "$INPUT_CONFIGS" ]; then
@@ -226,10 +226,10 @@ install_ssh_proxy() {
     SSH_PORT=$(grep -E "^SSH_PORT=" /etc/init.d/ssh-proxy | cut -d'=' -f2-)
   fi
 
-  if [ -z "$SSH_HOST" ]; then
+  if [ -z "$SSH_HOST" ] || [ "$SSH_HOST" = '""' ]; then
     read -r -p "Enter SSH hostname: " SSH_HOST
   fi
-  if [ -z "$SSH_PORT" ]; then
+  if [ -z "$SSH_PORT" ] || [ "$SSH_PORT" = '""' ]; then
     read -r -p "Enter SSH port: " SSH_PORT
   fi
 
