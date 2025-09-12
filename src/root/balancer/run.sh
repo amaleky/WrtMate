@@ -1,14 +1,14 @@
 #!/bin/sh
 
-INPUT_CONFIGS=""
-PARSED_CONFIG="/root/balancer/subscription.json"
-OUTPUT_CONFIG="/tmp/balancer-final.json"
+SUBSCRIPTION_URL=""
+CONFIGS="/root/balancer/subscription.json"
+SUBSCRIPTION="$(mktemp)"
 
-kill -9 "$(pgrep -f "/usr/bin/sing-box run -c $OUTPUT_CONFIG")"
+kill -9 "$(pgrep -f "/usr/bin/sing-box run -c $SUBSCRIPTION")"
 
 TEMP_FILE="$(mktemp)"
-if curl -L -o "$TEMP_FILE" "$INPUT_CONFIGS"; then
-  mv "$TEMP_FILE" "$PARSED_CONFIG"
+if curl -L -o "$TEMP_FILE" "$SUBSCRIPTION_URL"; then
+  mv "$TEMP_FILE" "$CONFIGS"
 fi
 
 jq '{
@@ -46,6 +46,6 @@ jq '{
     "auto_detect_interface": true,
     "final": "Select"
   }
-}' "$PARSED_CONFIG" >"$OUTPUT_CONFIG" || exit 0
+}' "$CONFIGS" >"$SUBSCRIPTION" || exit 0
 
-/usr/bin/sing-box run -c "$OUTPUT_CONFIG"
+/usr/bin/sing-box run -c "$SUBSCRIPTION"

@@ -1,12 +1,12 @@
 #!/bin/sh
 
-INPUT_CONFIGS="/root/ghost/configs.conf"
-PARSED_CONFIG="/tmp/ghost-parsed.json"
-OUTPUT_CONFIG="/tmp/ghost-final.json"
+SUBSCRIPTION_PATH="/root/ghost/configs.conf"
+CONFIGS="$(mktemp)"
+SUBSCRIPTION="$(mktemp)"
 
-kill -9 "$(pgrep -f "/usr/bin/sing-box run -c $OUTPUT_CONFIG")"
+kill -9 "$(pgrep -f "/usr/bin/sing-box run -c $SUBSCRIPTION")"
 
-/usr/bin/hiddify-cli parse "$INPUT_CONFIGS" -o "$PARSED_CONFIG" >/dev/null 2>&1 || exit 1
+/usr/bin/hiddify-cli parse "$SUBSCRIPTION_PATH" -o "$CONFIGS" >/dev/null 2>&1 || exit 1
 
 jq '{
   "log": {
@@ -43,6 +43,6 @@ jq '{
     "auto_detect_interface": true,
     "final": "Select"
   }
-}' "$PARSED_CONFIG" >"$OUTPUT_CONFIG" || exit 0
+}' "$CONFIGS" >"$SUBSCRIPTION" || exit 0
 
-/usr/bin/sing-box run -c "$OUTPUT_CONFIG"
+/usr/bin/sing-box run -c "$SUBSCRIPTION"

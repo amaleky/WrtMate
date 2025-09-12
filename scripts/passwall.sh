@@ -86,7 +86,7 @@ setup_balancer() {
   info "setup_balancer"
   if [ ! -d /root/balancer/ ]; then mkdir /root/balancer/; fi
 
-  INPUT_CONFIGS=$(grep -E "^INPUT_CONFIGS=" "/root/balancer/run.sh" | cut -d'=' -f2-)
+  SUBSCRIPTION_URL=$(grep -E "^SUBSCRIPTION_URL=" "/root/balancer/run.sh" | cut -d'=' -f2-)
 
   curl -s -L -o "/etc/init.d/balancer" "${REPO_URL}/src/etc/init.d/balancer" || error "Failed to download balancer init script."
   chmod +x /etc/init.d/balancer
@@ -94,11 +94,11 @@ setup_balancer() {
   curl -s -L -o "/root/balancer/run.sh" "${REPO_URL}/src/root/balancer/run.sh" || error "Failed to download balancer run.sh configs."
   chmod +x /root/balancer/run.sh
 
-  if [ -z "$INPUT_CONFIGS" ] || [ "$INPUT_CONFIGS" = '""' ]; then
-    read -r -p "Enter Your Sing-Box Subscription: " INPUT_CONFIGS
+  if [ -z "$SUBSCRIPTION_URL" ] || [ "$SUBSCRIPTION_URL" = '""' ]; then
+    read -r -p "Enter Your Sing-Box Subscription: " SUBSCRIPTION_URL
   fi
-  if [ -n "$INPUT_CONFIGS" ]; then
-    sed -i "s|^INPUT_CONFIGS=.*|INPUT_CONFIGS=${INPUT_CONFIGS}|" "/root/balancer/run.sh"
+  if [ -n "$SUBSCRIPTION_URL" ]; then
+    sed -i "s|^SUBSCRIPTION_URL=.*|SUBSCRIPTION_URL=${SUBSCRIPTION_URL}|" "/root/balancer/run.sh"
   fi
 
   /etc/init.d/balancer enable
