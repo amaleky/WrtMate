@@ -85,7 +85,7 @@ configure_lan_ip() {
 }
 
 install_recommended_packages() {
-  ensure_packages "htop nload luci-app-irqbalance zram-swap"
+  ensure_packages "htop nload luci-app-irqbalance zram-swap openssh-sftp-server"
   uci set irqbalance.irqbalance.enabled='1'
 }
 
