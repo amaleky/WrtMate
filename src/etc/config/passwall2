@@ -118,7 +118,7 @@ config global_rules
 	option geoip_update '1'
 	option v2ray_location_asset '/usr/share/v2ray/'
 	option enable_geoview '1'
-	option geoip_url 'https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geoip.dat'
+	option geoip_url 'https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geoip-lite.dat'
 	option geosite_url 'https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geosite.dat'
 
 config global_app
@@ -137,7 +137,7 @@ config global_subscribe
 config global_singbox
 	option sniff_override_destination '0'
 	option geoip_path '/usr/share/singbox/geoip.db'
-	option geoip_url 'https://github.com/Chocolate4U/Iran-sing-box-rules/releases/latest/download/geoip.db'
+	option geoip_url 'https://github.com/Chocolate4U/Iran-sing-box-rules/releases/latest/download/geoip-lite.db'
 	option geosite_path '/usr/share/singbox/geosite.db'
 	option geosite_url 'https://github.com/Chocolate4U/Iran-sing-box-rules/releases/latest/download/geosite.db'
 
