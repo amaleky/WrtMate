@@ -26,34 +26,26 @@ configure_samba() {
 extend_storage() {
   # Create partition table and partition
   info "Creating partition table..."
-  parted -s /dev/sda mklabel gpt || error "Failed to create GPT label"
-  parted -s /dev/sda mkpart primary ext4 1MiB 100% || error "Failed to create partition"
 
-  mkfs.ext4 /dev/sda1 || error "Failed to format USB storage."
-  block detect | uci import fstab || error "Failed to detect block devices."
-  uci set fstab.@mount[-1].enabled='1'
-  uci set fstab.@global[0].check_fs='1'
-  uci commit fstab
-  /etc/init.d/fstab boot || error "Failed to boot fstab."
-
-  parted -s /dev/sda -- mklabel gpt mkpart extroot 2048s -2048s || error "Failed to partition USB storage."
-  DEVICE="$(block info | sed -n -e '/MOUNT="\S*\/overlay"/s/:\s.*$//p')"
-  uci -q delete fstab.rwm
-  uci set fstab.rwm="mount"
-  uci set fstab.rwm.device="${DEVICE}"
-  uci set fstab.rwm.target="/rwm"
-  uci commit fstab
-  DEVICE="/dev/sda1"
+  DISK="/dev/sda"
+  parted -s ${DISK} -- mklabel gpt mkpart extroot 2048s -2048s || error "Failed to partition USB storage."
+  DEVICE="${DISK}1"
   mkfs.ext4 -L extroot ${DEVICE} || error "Failed to format extroot."
-  eval $(block info ${DEVICE} | grep -o -e 'UUID="\S*"')
-  eval $(block info | grep -o -e 'MOUNT="\S*/overlay"')
+  eval "$(block info ${DEVICE} | grep -o -e 'UUID="\S*"')"
+  eval "$(block info | grep -o -e 'MOUNT="\S*/overlay"')"
   uci -q delete fstab.extroot
   uci set fstab.extroot="mount"
   uci set fstab.extroot.uuid="${UUID}"
   uci set fstab.extroot.target="${MOUNT}"
   uci commit fstab
-  mount ${DEVICE} /mnt || error "Failed to mount extroot."
-  tar -C ${MOUNT} -cvf - . | tar -C /mnt -xf - || error "Failed to copy overlay data."
+  ORIG="$(block info | sed -n -e '/MOUNT="\S*\/overlay"/s/:\s.*$//p')"
+  uci -q delete fstab.rwm
+  uci set fstab.rwm="mount"
+  uci set fstab.rwm.device="${ORIG}"
+  uci set fstab.rwm.target="/rwm"
+  uci commit fstab
+  mount "${DEVICE}" /mnt || error "Failed to mount extroot."
+  tar -C "${MOUNT}" -cvf - . | tar -C /mnt -xf - || error "Failed to copy overlay data."
 }
 
 main() {
