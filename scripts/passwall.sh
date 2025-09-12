@@ -125,7 +125,7 @@ install_ghost() {
 
   if [ ! -d /root/ghost/ ]; then mkdir /root/ghost/; fi
 
-  if [[ ! -f /root/ghost/configs.conf ]]; then
+  if [[ ! -f "/root/ghost/configs.conf" ]]; then
     curl -s -L -o "/root/ghost/configs.conf" "${REPO_URL}/src/root/ghost/configs.conf" || error "Failed to download ghost configs."
   fi
 

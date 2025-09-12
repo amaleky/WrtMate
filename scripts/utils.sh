@@ -86,7 +86,9 @@ add_cron_job() {
   local cron_job="$1"
   local script_path
   script_path=$(echo "$cron_job" | awk '{print $6}')
-  sed -i "\|$script_path|d" /etc/crontabs/root
+  if [[ ! -f "/etc/crontabs/root" ]]; then
+    sed -i "\|$script_path|d" /etc/crontabs/root
+  fi
   echo "$cron_job" >>/etc/crontabs/root
   /etc/init.d/cron restart
   /etc/init.d/cron enable
