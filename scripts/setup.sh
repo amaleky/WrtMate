@@ -108,9 +108,9 @@ main() {
     change_root_password
     configure_timezone
     configure_wifi
-    configure_lan_ip
     install_recommended_packages
     remove_ipv6_interfaces
+    configure_lan_ip
   fi
 
   success "Setup completed successfully"
