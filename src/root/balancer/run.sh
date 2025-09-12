@@ -1,12 +1,15 @@
 #!/bin/sh
 
 INPUT_CONFIGS=""
-PARSED_CONFIG="/tmp/balancer-parsed.json"
+PARSED_CONFIG="/root/balancer/subscription.json"
 OUTPUT_CONFIG="/tmp/balancer-final.json"
 
 kill -9 "$(pgrep -f "/usr/bin/sing-box run -c $OUTPUT_CONFIG")"
 
-curl -L -o "$PARSED_CONFIG" "$INPUT_CONFIGS"
+TEMP_FILE="$(mktemp)"
+if curl -L -o "$TEMP_FILE" "$INPUT_CONFIGS"; then
+  mv "$TEMP_FILE" "$PARSED_CONFIG"
+fi
 
 jq '{
   "log": {
