@@ -6,7 +6,7 @@ OUTPUT_CONFIG="/tmp/ghost-final.json"
 
 kill -9 "$(pgrep -f "/usr/bin/sing-box run -c $OUTPUT_CONFIG")"
 
-/usr/bin/hiddify-cli parse "$INPUT_CONFIGS" -o "$PARSED_CONFIG" > /dev/null 2>&1 || exit 1
+/usr/bin/hiddify-cli parse "$INPUT_CONFIGS" -o "$PARSED_CONFIG" >/dev/null 2>&1 || exit 1
 
 jq '{
   "log": {

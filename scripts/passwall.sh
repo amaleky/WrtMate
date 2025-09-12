@@ -2,39 +2,39 @@
 # Passwall configuration for OpenWRT
 
 case "$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2)" in
-  mipsel_24kc)
-    DETECTED_ARCH="mipslesoftfloat"
-    ;;
-  mips_24kc)
-    DETECTED_ARCH="mipssoftfloat"
-    ;;
-  mipsel*)
-    DETECTED_ARCH="mipsle"
-    ;;
-  mips64el*)
-    DETECTED_ARCH="mips64le"
-    ;;
-  mips64*)
-    DETECTED_ARCH="mips64"
-    ;;
-  mips*)
-    DETECTED_ARCH="mips"
-    ;;
-  aarch64* | arm64* | armv8*)
-    DETECTED_ARCH="arm64"
-    ;;
-  arm*)
-    DETECTED_ARCH="arm7"
-    ;;
-  x86_64)
-    DETECTED_ARCH="amd64"
-    ;;
-  riscv64*)
-    DETECTED_ARCH="riscv64"
-    ;;
-  *)
-    error "Unsupported CPU architecture: $(uname -m)"
-    ;;
+mipsel_24kc)
+  DETECTED_ARCH="mipslesoftfloat"
+  ;;
+mips_24kc)
+  DETECTED_ARCH="mipssoftfloat"
+  ;;
+mipsel*)
+  DETECTED_ARCH="mipsle"
+  ;;
+mips64el*)
+  DETECTED_ARCH="mips64le"
+  ;;
+mips64*)
+  DETECTED_ARCH="mips64"
+  ;;
+mips*)
+  DETECTED_ARCH="mips"
+  ;;
+aarch64* | arm64* | armv8*)
+  DETECTED_ARCH="arm64"
+  ;;
+arm*)
+  DETECTED_ARCH="arm7"
+  ;;
+x86_64)
+  DETECTED_ARCH="amd64"
+  ;;
+riscv64*)
+  DETECTED_ARCH="riscv64"
+  ;;
+*)
+  error "Unsupported CPU architecture: $(uname -m)"
+  ;;
 esac
 
 install_passwall() {
@@ -47,13 +47,13 @@ install_passwall() {
     ensure_packages "dnsmasq-full kmod-nft-socket kmod-nft-tproxy binutils"
 
     curl -s -L -o "/tmp/packages.zip" "https://github.com/xiaorouji/openwrt-passwall2/releases/latest/download/passwall_packages_ipk_$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2).zip" || error "Failed to download Passwall packages."
-    unzip -o /tmp/packages.zip -d /tmp/passwall > /dev/null 2>&1
+    unzip -o /tmp/packages.zip -d /tmp/passwall >/dev/null 2>&1
     for pkg in /tmp/passwall/*.ipk; do opkg install "$pkg"; done
 
     curl -s -L -o "/tmp/passwall2.ipk" "$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | grep "browser_download_url" | grep -o 'https://[^"]*luci-[^_]*_luci-app-passwall2_[^_]*_all\.ipk' | head -n1)" || error "Failed to download Passwall2 package."
     opkg install /tmp/passwall2.ipk || error "Failed to install Passwall2."
 
-    echo "$REMOTE_VERSION" > "/root/.passwall2_version"
+    echo "$REMOTE_VERSION" >"/root/.passwall2_version"
   fi
 
   curl -s -L -o "/etc/config/passwall2" "${REPO_URL}/src/etc/config/passwall2" || error "Failed to download passwall2 config."
@@ -117,8 +117,8 @@ install_ghost() {
 
   /etc/init.d/scanner disable
 
-  if [ ! -f "/root/ghost/configs.conf" ] || [ "$(wc -l < "/root/ghost/configs.conf")" -eq 0 ]; then
-      /etc/init.d/scanner start
+  if [ ! -f "/root/ghost/configs.conf" ] || [ "$(wc -l <"/root/ghost/configs.conf")" -eq 0 ]; then
+    /etc/init.d/scanner start
   fi
 
   add_cron_job "0 * * * * /etc/init.d/scanner start"
@@ -144,15 +144,15 @@ install_tor() {
 
   ensure_packages "tor tor-geoip obfs4proxy"
 
-  grep '^Bridge' /etc/tor/torrc > /etc/tor/torrc.back
+  grep '^Bridge' /etc/tor/torrc >/etc/tor/torrc.back
   curl -s -L -o "/etc/tor/torrc" "${REPO_URL}/src/etc/tor/torrc" || error "Failed to download tor config."
-  cat /etc/tor/torrc.back >> /etc/tor/torrc
+  cat /etc/tor/torrc.back >>/etc/tor/torrc
 
   if ! grep -q '^Bridge' /etc/tor/torrc; then
-  echo "Please paste your Bridges from https://bridges.torproject.org/bridges?transport=obfs4 (press Ctrl+D when done):"
+    echo "Please paste your Bridges from https://bridges.torproject.org/bridges?transport=obfs4 (press Ctrl+D when done):"
     {
       awk 'NF { if ($1 != "Bridge") print "Bridge", $0; else print $0 }'
-    } >> /etc/tor/torrc
+    } >>/etc/tor/torrc
   fi
 
   /etc/init.d/tor enable
@@ -169,7 +169,7 @@ install_warp() {
     curl -L -o "/usr/bin/warp-plus" "https://github.com/amaleky/WrtMate/releases/latest/download/warp_linux-${DETECTED_ARCH}" || error "Failed to download warp-plus."
     chmod +x /usr/bin/warp-plus
 
-    echo "$REMOTE_VERSION" > "/root/.warp_version"
+    echo "$REMOTE_VERSION" >"/root/.warp_version"
   fi
 
   curl -s -L -o "/etc/init.d/warp-plus" "${REPO_URL}/src/etc/init.d/warp-plus" || error "Failed to download warp-plus init script."
@@ -190,7 +190,7 @@ install_psiphon() {
     curl -L -o "/usr/bin/psiphon" "https://github.com/amaleky/WrtMate/releases/latest/download/psiphon_linux-${DETECTED_ARCH}" || error "Failed to download psiphon."
     chmod +x "/usr/bin/psiphon"
 
-    echo "$REMOTE_VERSION" > "/root/.psiphon_version"
+    echo "$REMOTE_VERSION" >"/root/.psiphon_version"
   fi
 
   curl -s -L -o "/etc/init.d/psiphon" "${REPO_URL}/src/etc/init.d/psiphon" || error "Failed to download psiphon init script."
@@ -212,7 +212,7 @@ install_hiddify() {
     curl -L -o "/usr/bin/hiddify-cli" "https://github.com/amaleky/WrtMate/releases/latest/download/hiddify_linux-${DETECTED_ARCH}" || error "Failed to download hiddify-cli."
     chmod +x /usr/bin/hiddify-cli
 
-    echo "$REMOTE_VERSION" > "/root/.hiddify_version"
+    echo "$REMOTE_VERSION" >"/root/.hiddify_version"
   fi
 }
 

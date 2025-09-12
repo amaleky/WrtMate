@@ -9,7 +9,7 @@ download() {
   REMOTE_SIZE=$(curl -s -I -L "$URL" | grep -i Content-Length | tail -n1 | awk '{print $2}' | tr -d '\r')
 
   if [ -f "$FILE" ]; then
-    LOCAL_SIZE=$(wc -c < "$FILE" | tr -d ' ')
+    LOCAL_SIZE=$(wc -c <"$FILE" | tr -d ' ')
   else
     LOCAL_SIZE=0
   fi

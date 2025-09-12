@@ -1,7 +1,7 @@
 #!/bin/bash
 
 CONFIGS="/root/ghost/configs.conf"
-PREV_COUNT=$(wc -l < "$CONFIGS")
+PREV_COUNT=$(wc -l <"$CONFIGS")
 CACHE_DIR="/root/.cache/subscriptions"
 CONFIGS_LIMIT=40
 
@@ -57,7 +57,7 @@ BASE64_URLS=(
 cd "/tmp" || true
 echo "ℹ️ $PREV_COUNT Previous Configs Found"
 
-if ! ping -c 1 -W 2 "217.218.155.155" > /dev/null 2>&1; then
+if ! ping -c 1 -W 2 "217.218.155.155" >/dev/null 2>&1; then
   echo "ERROR: Connectivity test failed."
   exit 0
 fi
@@ -69,8 +69,8 @@ process_config() {
   local PARSED_CONFIG="/tmp/test.parsed.json"
   local JSON_CONFIG="/tmp/test.xray.json"
 
-  if [ "$(wc -l < "$CONFIGS")" -ge $CONFIGS_LIMIT ]; then
-    echo "🎉 $(wc -l < "$CONFIGS") Configs Found (previous: $PREV_COUNT)"
+  if [ "$(wc -l <"$CONFIGS")" -ge $CONFIGS_LIMIT ]; then
+    echo "🎉 $(wc -l <"$CONFIGS") Configs Found (previous: $PREV_COUNT)"
     exit 0
   fi
 
@@ -102,8 +102,8 @@ process_config() {
   /tmp/sing-box-$SOCKS_PORT run -c "$JSON_CONFIG" 2>&1 | while read -r LINE; do
     if echo "$LINE" | grep -q "sing-box started"; then
       if [ "$(curl -s -L -I --max-time 1 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://developer.android.com/")" -eq 200 ]; then
-        echo "✅ Successfully ($(wc -l < "$CONFIGS")) ${CONFIG}"
-        echo "$CONFIG" >> "$CONFIGS"
+        echo "✅ Successfully ($(wc -l <"$CONFIGS")) ${CONFIG}"
+        echo "$CONFIG" >>"$CONFIGS"
       fi
       kill -9 $(pgrep -f "/tmp/sing-box-$SOCKS_PORT run -c .*")
       wait
@@ -118,7 +118,7 @@ echo -n >"$CONFIGS"
 echo "⏳ Testing $CONFIGS"
 while IFS= read -r CONFIG; do
   process_config "$CONFIG"
-done <<< "$BACKUP"
+done <<<"$BACKUP"
 
 for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
   CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
@@ -130,10 +130,10 @@ for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
     echo "❌ Failed to download $SUBSCRIPTION"
     continue
   fi
-  if [ "$(wc -l < "$CONFIGS")" -lt $CONFIGS_LIMIT ]; then
+  if [ "$(wc -l <"$CONFIGS")" -lt $CONFIGS_LIMIT ]; then
     while IFS= read -r CONFIG; do
       process_config "$CONFIG"
-    done < "$CACHE_FILE"
+    done <"$CACHE_FILE"
   fi
 done
 
@@ -147,7 +147,7 @@ for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
     echo "❌ Failed to download $SUBSCRIPTION"
     continue
   fi
-  if [ "$(wc -l < "$CONFIGS")" -lt $CONFIGS_LIMIT ]; then
+  if [ "$(wc -l <"$CONFIGS")" -lt $CONFIGS_LIMIT ]; then
     base64 --decode "$CACHE_FILE" 2>/dev/null | while IFS= read -r CONFIG; do
       process_config "$CONFIG"
     done

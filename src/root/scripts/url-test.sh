@@ -1,11 +1,11 @@
 #!/bin/sh
 
-if ! ping -c 1 -W 2 "217.218.155.155" > /dev/null 2>&1; then
+if ! ping -c 1 -W 2 "217.218.155.155" >/dev/null 2>&1; then
   echo "❌ Connectivity test failed."
   exit 0
 fi
 
-if ! top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default' | grep 'global' > /dev/null; then
+if ! top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default' | grep 'global' >/dev/null; then
   echo "❌ passwall2 is not running."
   /etc/init.d/passwall2 restart
 fi

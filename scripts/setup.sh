@@ -90,7 +90,7 @@ install_recommended_packages() {
 }
 
 remove_ipv6_interfaces() {
-  INTERFACES=$(uci show network | grep "proto='dhcpv6'" | cut -d. -f2 | cut -d= -f1);
+  INTERFACES=$(uci show network | grep "proto='dhcpv6'" | cut -d. -f2 | cut -d= -f1)
   if [ -n "$INTERFACES" ]; then
     for INTERFACE_V6 in $INTERFACES; do
       uci del "network.${INTERFACE_V6}"
