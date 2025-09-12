@@ -83,7 +83,7 @@ config global
 	option remote_fakedns '0'
 	option dns_redirect '0'
 	option node 'Splitter'
-	option remote_dns '1.1.1.1'
+	option remote_dns '208.67.222.2'
 	option node_socks_bind_local '0'
 
 config global_haproxy

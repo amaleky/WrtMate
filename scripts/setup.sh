@@ -73,14 +73,14 @@ configure_wifi() {
   fi
 }
 
-configure_lan_ip() {
-  echo "Enter Your Router IP [default: $LAN_IPADDR]: "
-  read -r -e -i "$LAN_IPADDR" CUSTOM_LAN_IPADDR
-  if [[ "$CUSTOM_LAN_IPADDR" != "$LAN_IPADDR" ]]; then
-    uci set network.lan.ipaddr="$CUSTOM_LAN_IPADDR"
-    uci set network.lan.netmask='255.255.255.0'
+configure_dns() {
+  INTERFACES=$(uci show network | grep "proto='dhcp'" | cut -d. -f2 | cut -d= -f1)
+  if [ -n "$INTERFACES" ]; then
+    for INTERFACE_V4 in $INTERFACES; do
+      uci set network.${INTERFACE_V4}.peerdns='0'
+      uci add_list network.${INTERFACE_V4}.dns='208.67.220.2'
+    done
     uci commit network
-    /etc/init.d/network reload
   fi
 }
 
@@ -96,7 +96,16 @@ remove_ipv6_interfaces() {
       uci del "network.${INTERFACE_V6}"
     done
     uci commit network
-    /etc/init.d/network reload
+  fi
+}
+
+configure_lan_ip() {
+  echo "Enter Your Router IP [default: $LAN_IPADDR]: "
+  read -r -e -i "$LAN_IPADDR" CUSTOM_LAN_IPADDR
+  if [[ "$CUSTOM_LAN_IPADDR" != "$LAN_IPADDR" ]]; then
+    uci set network.lan.ipaddr="$CUSTOM_LAN_IPADDR"
+    uci set network.lan.netmask='255.255.255.0'
+    uci commit network
   fi
 }
 
@@ -111,6 +120,8 @@ main() {
     install_recommended_packages
     remove_ipv6_interfaces
     configure_lan_ip
+
+    /etc/init.d/network reload
   fi
 
   success "Setup completed successfully"
