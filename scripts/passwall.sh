@@ -86,7 +86,7 @@ setup_balancer() {
   info "setup_balancer"
   if [ ! -d /root/balancer/ ]; then mkdir /root/balancer/; fi
 
-  INPUT_CONFIGS=$(grep -E "^INPUT_CONFIGS=" /root/balancer/run.sh | cut -d'=' -f2-)
+  INPUT_CONFIGS=$(grep -E "^INPUT_CONFIGS=" "/root/balancer/run.sh" | cut -d'=' -f2-)
 
   curl -s -L -o "/etc/init.d/balancer" "${REPO_URL}/src/etc/init.d/balancer" || error "Failed to download balancer init script."
   chmod +x /etc/init.d/balancer
@@ -98,7 +98,7 @@ setup_balancer() {
     read -r -p "Enter Your Sing-Box Subscription: " INPUT_CONFIGS
   fi
   if [ -n "$INPUT_CONFIGS" ]; then
-    sed -i "s/^INPUT_CONFIGS=.*/INPUT_CONFIGS=${INPUT_CONFIGS}/" "/root/balancer/run.sh"
+    sed -i "s|^INPUT_CONFIGS=.*|INPUT_CONFIGS=${INPUT_CONFIGS}|" "/root/balancer/run.sh"
   fi
 
   /etc/init.d/balancer enable
@@ -222,8 +222,8 @@ install_ssh_proxy() {
   ensure_packages "openssh-client"
 
   if [ -f "/etc/init.d/ssh-proxy" ]; then
-    SSH_HOST=$(grep -E "^SSH_HOST=" /etc/init.d/ssh-proxy | cut -d'=' -f2-)
-    SSH_PORT=$(grep -E "^SSH_PORT=" /etc/init.d/ssh-proxy | cut -d'=' -f2-)
+    SSH_HOST=$(grep -E "^SSH_HOST=" "/etc/init.d/ssh-proxy" | cut -d'=' -f2-)
+    SSH_PORT=$(grep -E "^SSH_PORT=" "/etc/init.d/ssh-proxy" | cut -d'=' -f2-)
   fi
 
   if [ -z "$SSH_HOST" ] || [ "$SSH_HOST" = '""' ]; then
@@ -237,10 +237,10 @@ install_ssh_proxy() {
   chmod +x "/etc/init.d/ssh-proxy"
 
   if [ -n "$SSH_HOST" ]; then
-    sed -i "s/^SSH_HOST=.*/SSH_HOST=${SSH_HOST}/" "/etc/init.d/ssh-proxy"
+    sed -i "s|^SSH_HOST=.*|SSH_HOST=${SSH_HOST}|" "/etc/init.d/ssh-proxy"
   fi
   if [ -n "$SSH_PORT" ]; then
-    sed -i "s/^SSH_PORT=.*/SSH_PORT=${SSH_PORT}/" "/etc/init.d/ssh-proxy"
+    sed -i "s|^SSH_PORT=.*|SSH_PORT=${SSH_PORT}|" "/etc/init.d/ssh-proxy"
   fi
 
   if [[ ! -f "/root/.ssh/id_rsa" ]]; then
