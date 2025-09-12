@@ -86,7 +86,9 @@ setup_balancer() {
   info "setup_balancer"
   if [ ! -d /root/balancer/ ]; then mkdir /root/balancer/; fi
 
-  SUBSCRIPTION_URL=$(grep -E "^SUBSCRIPTION_URL=" "/root/balancer/run.sh" | cut -d'=' -f2-)
+  if [[ ! -f "/root/balancer/run.sh" ]]; then
+    SUBSCRIPTION_URL=$(grep -E "^SUBSCRIPTION_URL=" "/root/balancer/run.sh" | cut -d'=' -f2-)
+  fi
 
   curl -s -L -o "/etc/init.d/balancer" "${REPO_URL}/src/etc/init.d/balancer" || error "Failed to download balancer init script."
   chmod +x /etc/init.d/balancer
