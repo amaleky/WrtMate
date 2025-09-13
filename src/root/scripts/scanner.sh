@@ -62,25 +62,50 @@ if ! ping -c 1 -W 2 "217.218.155.155" >/dev/null 2>&1; then
   exit 0
 fi
 
-process_config() {
-  local CONFIG="$1"
-  local SOCKS_PORT=9898
-  local TEMP_CONFIG="/tmp/test.config.conf"
-  local PARSED_CONFIG="/tmp/test.parsed.json"
-  local JSON_CONFIG="/tmp/test.xray.json"
-
+balance_resource() {
+  local CPU_USAGE MEM_AVAILABLE
+  CPU_USAGE=$(top -n 1 | awk '
+  /CPU:/ {cpu = 100 - $8; gsub(/%/, "", cpu); print int(cpu); exit}
+  /Cpu\(s\):/ {gsub(/%.*/, "", $2); print int($2); exit}
+  ')
+  MEM_AVAILABLE=$(free -m | awk '/^Mem:/ {print $7}')
+  if [ "$CPU_USAGE" -gt 90 ] || [ "$MEM_AVAILABLE" -lt 100000 ]; then
+    sleep 1
+  fi
   if [ "$(wc -l <"$CONFIGS")" -ge $CONFIGS_LIMIT ]; then
     echo "🎉 $(wc -l <"$CONFIGS") Configs Found (previous: $PREV_COUNT)"
     exit 0
   fi
+}
+
+get_random_port() {
+  for i in $(seq 1 100); do
+    port=$(((RANDOM % 16384) + 49152))
+    nc -z 127.0.0.1 "$port" 2>/dev/null
+    if [ $? -ne 0 ]; then
+      echo "$port"
+      return 0
+    fi
+  done
+  echo "❌ Could not find free port after 100 tries" >&2
+  return 1
+}
+
+process_config() {
+  local CONFIG SOCKS_PORT RAW_CONFIG PARSED_CONFIG FINAL_CONFIG
+  CONFIG="$1"
+  SOCKS_PORT="$(get_random_port)"
+  RAW_CONFIG="$(mktemp)"
+  PARSED_CONFIG="$(mktemp)"
+  FINAL_CONFIG="$(mktemp)"
 
   if [[ -z "$CONFIG" ]] || [[ "$CONFIG" == \#* ]]; then
     return
   fi
 
-  echo "$CONFIG" >"$TEMP_CONFIG"
+  echo "$CONFIG" >"$RAW_CONFIG"
 
-  if grep -qxF "$CONFIG" "$CONFIGS" || /usr/bin/hiddify-cli parse "$TEMP_CONFIG" -o "$PARSED_CONFIG" 2>&1 | grep -qiE "error|fatal"; then
+  if grep -qxF "$CONFIG" "$CONFIGS" || /usr/bin/hiddify-cli parse "$RAW_CONFIG" -o "$PARSED_CONFIG" 2>&1 | grep -qiE "error|fatal"; then
     return
   fi
 
@@ -93,21 +118,20 @@ process_config() {
         "listen_port": $port
       }
     ]
-  }' "$PARSED_CONFIG" >"$JSON_CONFIG"
+  }' "$PARSED_CONFIG" >"$FINAL_CONFIG"
 
   if [[ ! -f "/tmp/sing-box-$SOCKS_PORT" ]]; then
     ln -s "/usr/bin/sing-box" "/tmp/sing-box-$SOCKS_PORT"
   fi
 
-  /tmp/sing-box-$SOCKS_PORT run -c "$JSON_CONFIG" 2>&1 | while read -r LINE; do
+  /tmp/sing-box-$SOCKS_PORT run -c "$FINAL_CONFIG" 2>&1 | while read -r LINE; do
     if echo "$LINE" | grep -q "sing-box started"; then
       if [ "$(curl -s -L -I --max-time 1 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://developer.android.com/")" -eq 200 ]; then
         echo "✅ Successfully ($(wc -l <"$CONFIGS")) ${CONFIG}"
         echo "$CONFIG" >>"$CONFIGS"
       fi
       kill -9 $(pgrep -f "/tmp/sing-box-$SOCKS_PORT run -c .*")
-      wait
-      rm -rf "$TEMP_CONFIG" "$PARSED_CONFIG" "$JSON_CONFIG" "/tmp/sing-box-$SOCKS_PORT"
+      rm -rf "$RAW_CONFIG" "$PARSED_CONFIG" "$FINAL_CONFIG" "/tmp/sing-box-$SOCKS_PORT"
     fi
   done
 }
@@ -117,7 +141,8 @@ echo -n >"$CONFIGS"
 
 echo "⏳ Testing $CONFIGS"
 while IFS= read -r CONFIG; do
-  process_config "$CONFIG"
+  balance_resource
+  process_config "$CONFIG" &
 done <<<"$BACKUP"
 
 for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
@@ -132,7 +157,8 @@ for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
   fi
   if [ "$(wc -l <"$CONFIGS")" -lt $CONFIGS_LIMIT ]; then
     while IFS= read -r CONFIG; do
-      process_config "$CONFIG"
+      balance_resource
+      process_config "$CONFIG" &
     done <"$CACHE_FILE"
   fi
 done
@@ -149,7 +175,8 @@ for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
   fi
   if [ "$(wc -l <"$CONFIGS")" -lt $CONFIGS_LIMIT ]; then
     base64 --decode "$CACHE_FILE" 2>/dev/null | while IFS= read -r CONFIG; do
-      process_config "$CONFIG"
+      balance_resource
+      process_config "$CONFIG" &
     done
   fi
 done
