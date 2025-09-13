@@ -86,7 +86,7 @@ setup_balancer() {
   info "setup_balancer"
   if [ ! -d /root/balancer/ ]; then mkdir /root/balancer/; fi
 
-  if [[ ! -f "/root/balancer/run.sh" ]]; then
+  if [[ -f "/root/balancer/run.sh" ]]; then
     SUBSCRIPTION_URL=$(grep -E "^SUBSCRIPTION_URL=" "/root/balancer/run.sh" | cut -d'=' -f2-)
   fi
 
