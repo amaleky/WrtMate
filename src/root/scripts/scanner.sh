@@ -95,9 +95,9 @@ process_config() {
   local CONFIG SOCKS_PORT RAW_CONFIG PARSED_CONFIG FINAL_CONFIG
   CONFIG="$1"
   SOCKS_PORT="$(get_random_port)"
-  RAW_CONFIG="$(mktemp)"
-  PARSED_CONFIG="$(mktemp)"
-  FINAL_CONFIG="$(mktemp)"
+  RAW_CONFIG="/tmp/scanner.raw.${SOCKS_PORT}"
+  PARSED_CONFIG="/tmp/scanner.parsed.${SOCKS_PORT}"
+  FINAL_CONFIG="/tmp/scanner.final.${SOCKS_PORT}"
 
   if [[ -z "$CONFIG" ]] || [[ "$CONFIG" == \#* ]]; then
     return
@@ -106,6 +106,7 @@ process_config() {
   echo "$CONFIG" >"$RAW_CONFIG"
 
   if grep -qxF "$CONFIG" "$CONFIGS" || /usr/bin/hiddify-cli parse "$RAW_CONFIG" -o "$PARSED_CONFIG" 2>&1 | grep -qiE "error|fatal"; then
+    rm -rf "$RAW_CONFIG" "$PARSED_CONFIG"
     return
   fi
 
@@ -131,9 +132,10 @@ process_config() {
         echo "$CONFIG" >>"$CONFIGS"
       fi
       kill -9 $(pgrep -f "/tmp/sing-box-$SOCKS_PORT run -c .*")
-      rm -rf "$RAW_CONFIG" "$PARSED_CONFIG" "$FINAL_CONFIG" "/tmp/sing-box-$SOCKS_PORT"
     fi
   done
+
+  rm -rf "$RAW_CONFIG" "$PARSED_CONFIG" "$FINAL_CONFIG" "/tmp/sing-box-$SOCKS_PORT"
 }
 
 BACKUP="$(cat "$CONFIGS")"

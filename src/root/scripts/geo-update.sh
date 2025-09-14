@@ -20,6 +20,7 @@ download() {
     if curl -L -o "$TEMP_FILE" "$URL"; then
       mv "$TEMP_FILE" "$FILE"
     fi
+    rm -rf "$TEMP_FILE"
   fi
 }
 

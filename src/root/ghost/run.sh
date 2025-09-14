@@ -1,12 +1,12 @@
 #!/bin/sh
 
 SUBSCRIPTION_PATH="/root/ghost/configs.conf"
-CONFIGS="$(mktemp)"
-SUBSCRIPTION="$(mktemp)"
+CONFIGS="/tmp/ghost-parsed.json"
+SUBSCRIPTION="/tmp/ghost-subscription.json"
 
 kill -9 "$(pgrep -f "/usr/bin/sing-box run -c $SUBSCRIPTION")"
 
-/usr/bin/hiddify-cli parse "$SUBSCRIPTION_PATH" -o "$CONFIGS" >/dev/null 2>&1 || exit 1
+/usr/bin/hiddify-cli parse "$SUBSCRIPTION_PATH" -o "$CONFIGS" || exit 1
 
 jq '{
   "log": {

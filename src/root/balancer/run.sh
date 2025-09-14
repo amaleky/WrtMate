@@ -2,11 +2,11 @@
 
 SUBSCRIPTION_URL=""
 CONFIGS="/root/balancer/subscription.json"
-SUBSCRIPTION="$(mktemp)"
+TEMP_FILE="/tmp/balancer-tmp.json"
+SUBSCRIPTION="/tmp/balancer-subscription.json"
 
 kill -9 "$(pgrep -f "/usr/bin/sing-box run -c $SUBSCRIPTION")"
 
-TEMP_FILE="$(mktemp)"
 if curl -L -o "$TEMP_FILE" "$SUBSCRIPTION_URL"; then
   mv "$TEMP_FILE" "$CONFIGS"
 fi
