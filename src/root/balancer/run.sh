@@ -43,7 +43,6 @@ jq '{
     ] + .outbounds
   ),
   "route": {
-    "auto_detect_interface": true,
     "final": "Select"
   }
 }' "$CONFIGS" >"$SUBSCRIPTION" || exit 0
