@@ -90,6 +90,10 @@ setup_balancer() {
     SUBSCRIPTION_URL=$(grep -E "^SUBSCRIPTION_URL=" "/root/balancer/run.sh" | cut -d'=' -f2-)
   fi
 
+  if [[ -f "/etc/init.d/balancer" ]]; then
+    /etc/init.d/balancer stop
+  fi
+
   curl -s -L -o "/etc/init.d/balancer" "${REPO_URL}/src/etc/init.d/balancer" || error "Failed to download balancer init script."
   chmod +x /etc/init.d/balancer
 
@@ -114,6 +118,10 @@ install_ghost() {
   curl -s -L -o "/root/scripts/scanner.sh" "${REPO_URL}/src/root/scripts/scanner.sh" || error "Failed to download scanner.sh."
   chmod +x /root/scripts/scanner.sh
 
+  if [[ -f "/etc/init.d/scanner" ]]; then
+    /etc/init.d/scanner stop
+  fi
+
   curl -s -L -o "/etc/init.d/scanner" "${REPO_URL}/src/etc/init.d/scanner" || error "Failed to download scanner init script."
   chmod +x /etc/init.d/scanner
 
@@ -129,6 +137,10 @@ install_ghost() {
 
   if [[ ! -f "/root/ghost/configs.conf" ]]; then
     curl -s -L -o "/root/ghost/configs.conf" "${REPO_URL}/src/root/ghost/configs.conf" || error "Failed to download ghost configs."
+  fi
+
+  if [[ -f "/etc/init.d/ghost" ]]; then
+    /etc/init.d/ghost stop
   fi
 
   curl -s -L -o "/etc/init.d/ghost" "${REPO_URL}/src/etc/init.d/ghost" || error "Failed to download ghost init script."
@@ -174,6 +186,10 @@ install_warp() {
     echo "$REMOTE_VERSION" >"/root/.warp_version"
   fi
 
+  if [[ -f "/etc/init.d/warp-plus" ]]; then
+    /etc/init.d/warp-plus stop
+  fi
+
   curl -s -L -o "/etc/init.d/warp-plus" "${REPO_URL}/src/etc/init.d/warp-plus" || error "Failed to download warp-plus init script."
   chmod +x /etc/init.d/warp-plus
 
@@ -193,6 +209,10 @@ install_psiphon() {
     chmod +x "/usr/bin/psiphon"
 
     echo "$REMOTE_VERSION" >"/root/.psiphon_version"
+  fi
+
+  if [[ -f "/etc/init.d/psiphon" ]]; then
+    /etc/init.d/psiphon stop
   fi
 
   curl -s -L -o "/etc/init.d/psiphon" "${REPO_URL}/src/etc/init.d/psiphon" || error "Failed to download psiphon init script."
@@ -235,6 +255,10 @@ install_ssh_proxy() {
     read -r -p "Enter SSH port: " SSH_PORT
   fi
 
+  if [[ -f "/etc/init.d/ssh-proxy" ]]; then
+    /etc/init.d/ssh-proxy stop
+  fi
+
   curl -s -L -o "/etc/init.d/ssh-proxy" "${REPO_URL}/src/etc/init.d/ssh-proxy" || error "Failed to download ssh-proxy init script."
   chmod +x "/etc/init.d/ssh-proxy"
 
@@ -258,6 +282,10 @@ install_ssh_proxy() {
 install_server_less() {
   info "install_server_less"
   if [ ! -d /root/xray/ ]; then mkdir /root/xray/; fi
+
+  if [[ -f "/etc/init.d/serverless" ]]; then
+    /etc/init.d/ssh-proxy stop
+  fi
 
   curl -s -L -o "/etc/init.d/serverless" "${REPO_URL}/src/etc/init.d/serverless" || error "Failed to download serverless init script."
   chmod +x /etc/init.d/serverless
