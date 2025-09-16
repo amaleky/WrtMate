@@ -119,7 +119,7 @@ config global_rules
 	option v2ray_location_asset '/usr/share/v2ray/'
 	option enable_geoview '1'
 	option geoip_url 'https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geoip-lite.dat'
-	option geosite_url 'https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geosite.dat'
+	option geosite_url 'https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geosite-lite.dat'
 
 config global_app
 	option xray_file '/usr/bin/xray'
@@ -139,16 +139,16 @@ config global_singbox
 	option geoip_path '/usr/share/singbox/geoip.db'
 	option geoip_url 'https://github.com/Chocolate4U/Iran-sing-box-rules/releases/latest/download/geoip-lite.db'
 	option geosite_path '/usr/share/singbox/geosite.db'
-	option geosite_url 'https://github.com/Chocolate4U/Iran-sing-box-rules/releases/latest/download/geosite.db'
+	option geosite_url 'https://github.com/Chocolate4U/Iran-sing-box-rules/releases/latest/download/geosite-lite.db'
 
 config shunt_rules 'Block'
 	option remarks 'Block'
 	option network 'tcp,udp'
-	option domain_list 'geosite:malware
-geosite:phishing
-geosite:cryptominers
-geosite:category-ads-all
-geosite:category-public-tracker
+	option domain_list 'rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-malware.srs
+rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-phishing.srs
+rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-cryptominers.srs
+rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-category-ads-all.srs
+rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-category-public-tracker.srs
 domain:webengage.com
 domain:googletagmanager.com
 full:a.mouseflow.com
@@ -343,17 +343,26 @@ full:widgets.pinterest.com
 full:www.cdn.ad.xiaomi.com
 full:yandexadexchange.net
 full:youtube.cleverads.vn'
+	option ip_list 'rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geoip-malware.srs
+rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geoip-phishing.srs'
 
 config shunt_rules 'Direct'
 	option remarks 'Direct'
 	option network 'tcp,udp'
-	option domain_list 'geosite:category-ir
-geosite:slack
-geosite:riot
-domain:ir
+	option domain_list 'rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-ir.srs
+rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-private.srs
+rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-slack.srs
+rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-whatsapp.srs
+rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-linkedin.srs
 domain:pinsvc.net
 domain:snapp.cab
 domain:local
-domain:ptp'
-	option ip_list 'geoip:ir
-geoip:private'
+domain:ptp
+# riot
+domain:qq.com
+domain:pvp.net
+domain:myqcloud.com
+domain:akamaized.net
+domain:riotgames.com'
+	option ip_list 'rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geoip-ir.srs
+rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geoip-private.srs'
