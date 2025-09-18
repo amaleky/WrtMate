@@ -144,11 +144,11 @@ config global_singbox
 config shunt_rules 'Block'
 	option remarks 'Block'
 	option network 'tcp,udp'
-	option domain_list 'rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-malware.srs
-rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-phishing.srs
-rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-cryptominers.srs
-rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-category-ads-all.srs
-rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-category-public-tracker.srs
+	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-malware.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-phishing.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-cryptominers.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-category-ads-all.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-category-public-tracker.srs
 domain:webengage.com
 domain:googletagmanager.com
 full:a.mouseflow.com
@@ -343,26 +343,35 @@ full:widgets.pinterest.com
 full:www.cdn.ad.xiaomi.com
 full:yandexadexchange.net
 full:youtube.cleverads.vn'
-	option ip_list 'rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geoip-malware.srs
-rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geoip-phishing.srs'
+	option ip_list 'rule-set:local:/usr/share/singbox/rule-set/geoip-malware.srs
+rule-set:local:/usr/share/singbox/rule-set/geoip-phishing.srs'
 
 config shunt_rules 'Direct'
 	option remarks 'Direct'
 	option network 'tcp,udp'
-	option domain_list 'rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-ir.srs
-rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-private.srs
-rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-slack.srs
-rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-whatsapp.srs
-rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-linkedin.srs
+	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-ir.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-private.srs
 domain:pinsvc.net
 domain:snapp.cab
 domain:local
 domain:ptp
+# slack
+domain:slackb.com
+domain:slack.com
+domain:slack-edge.com
+# whatsapp
+domain:whatsapp.com
+domain:whatsapp.net
+# linkedin
+domain:linkedin.com
+domain:licdn.com
+# meet
+domain:meet.google.com
 # riot
 domain:qq.com
 domain:pvp.net
 domain:myqcloud.com
 domain:akamaized.net
 domain:riotgames.com'
-	option ip_list 'rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geoip-ir.srs
-rule-set:remote:https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geoip-private.srs'
+	option ip_list 'rule-set:local:/usr/share/singbox/rule-set/geoip-ir.srs
+rule-set:local:/usr/share/singbox/rule-set/geoip-private.srs'
