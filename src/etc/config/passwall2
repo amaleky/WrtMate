@@ -351,6 +351,7 @@ config shunt_rules 'Direct'
 	option network 'tcp,udp'
 	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-ir.srs
 rule-set:local:/usr/share/singbox/rule-set/geosite-private.srs
+domain:ir
 domain:pinsvc.net
 domain:snapp.cab
 domain:local
