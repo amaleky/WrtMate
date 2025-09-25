@@ -110,7 +110,7 @@ process_config() {
     return
   fi
 
-  jq --argjson port "$SOCKS_PORT" '. + {
+  jq --argjson port "$SOCKS_PORT" '{
     "inbounds": [
       {
         "type": "mixed",
@@ -118,7 +118,30 @@ process_config() {
         "listen": "127.0.0.1",
         "listen_port": $port
       }
-    ]
+    ],
+    "dns": {
+      "servers": [
+        {
+          "tag": "remote",
+          "type": "tls",
+          "server": "208.67.222.2"
+        }
+      ],
+      "strategy": "ipv4_only"
+    },
+    "route": {
+      "rules": [
+        {
+          "action": "sniff"
+        },
+        {
+          "protocol": "dns",
+          "action": "hijack-dns"
+        }
+      ],
+      "default_domain_resolver": "remote",
+    },
+    "outbounds": [.outbounds[] | select(.type | IN("selector","urltest","direct") | not)]
   }' "$PARSED_CONFIG" >"$FINAL_CONFIG"
 
   if [[ ! -f "/tmp/sing-box-$SOCKS_PORT" ]]; then
