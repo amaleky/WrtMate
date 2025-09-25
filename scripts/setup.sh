@@ -85,8 +85,10 @@ configure_dns() {
 }
 
 install_recommended_packages() {
-  ensure_packages "htop nload luci-app-irqbalance zram-swap openssh-sftp-server"
+  ensure_packages "htop nload luci-app-irqbalance zram-swap openssh-sftp-server luci-app-sqm"
   uci set irqbalance.irqbalance.enabled='1'
+  uci commit irqbalance
+  /etc/init.d/irqbalance restart
 }
 
 remove_ipv6_interfaces() {
