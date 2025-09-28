@@ -5,9 +5,11 @@ if ! ping -c 1 -W 2 "217.218.155.155" >/dev/null 2>&1; then
   exit 0
 fi
 
-if ! top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default' | grep 'global' >/dev/null; then
-  echo "❌ passwall2 is not running."
-  /etc/init.d/passwall2 restart
+if [ "$(uci get passwall2.@global[0].enabled 2>/dev/null)" = "1" ]; then
+  if ! top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default' | grep 'global' >/dev/null; then
+    echo "❌ passwall2 is not running."
+    /etc/init.d/passwall2 restart
+  fi
 fi
 
 if /etc/init.d/ghost enabled; then
