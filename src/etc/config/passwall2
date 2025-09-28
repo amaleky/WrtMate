@@ -74,7 +74,7 @@ config global
 	option acl_enable '0'
 	option direct_dns_protocol 'auto'
 	option direct_dns_query_strategy 'UseIPv4'
-	option remote_dns_protocol 'tcp'
+	option remote_dns_protocol 'doh'
 	option remote_dns_query_strategy 'UseIPv4'
 	option log_node '1'
 	option loglevel 'error'
@@ -83,7 +83,7 @@ config global
 	option remote_fakedns '0'
 	option dns_redirect '0'
 	option node 'Splitter'
-	option remote_dns '208.67.222.2'
+	option remote_dns_doh 'https://9.9.9.9/dns-query'
 	option node_socks_bind_local '0'
 
 config global_haproxy
@@ -140,6 +140,8 @@ config global_singbox
 	option geoip_url 'https://github.com/Chocolate4U/Iran-sing-box-rules/releases/latest/download/geoip-lite.db'
 	option geosite_path '/usr/share/singbox/geosite.db'
 	option geosite_url 'https://github.com/Chocolate4U/Iran-sing-box-rules/releases/latest/download/geosite-lite.db'
+	option record_fragment '0'
+	option fragment '0'
 
 config shunt_rules 'Block'
 	option remarks 'Block'
