@@ -23,12 +23,6 @@ jq '{
   "outbounds": (
     [
       {
-        "type": "selector",
-        "tag": "Select",
-        "outbounds": (["Auto"] + [.outbounds[] | select(.type | IN("selector","urltest","direct") | not) | .tag]),
-        "default": "Auto"
-      },
-      {
         "type": "urltest",
         "tag": "Auto",
         "outbounds": [.outbounds[] | select(.type | IN("selector","urltest","direct") | not) | .tag],
@@ -37,7 +31,7 @@ jq '{
         "tolerance": 50,
         "interrupt_exist_connections": false
       }
-    ] + [.outbounds[] | select(.tag | IN("Select","Auto") | not) | select(.type | IN("selector","urltest","direct") | not)]
+    ] + [.outbounds[] | select(.type | IN("selector","urltest","direct") | not)]
   ),
   "dns": {
     "servers": [
@@ -60,7 +54,7 @@ jq '{
       }
     ],
     "default_domain_resolver": "remote",
-    "final": "Select"
+    "final": "Auto"
   }
 }' "$CONFIGS" >"$SUBSCRIPTION" || exit 0
 
