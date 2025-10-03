@@ -56,7 +56,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: '1.24'
           check-latest: true
@@ -66,7 +66,7 @@ jobs:
           git clone --depth 1 https://github.com/Psiphon-Labs/psiphon-tunnel-core.git
           pushd ./psiphon-tunnel-core || exit 1
           go build -o ../psiphon_${{ env.ASSET_NAME }} -trimpath -ldflags "-s -w -buildid= -checklinkname=0 -X main.version=${{ github.ref }}" ./ConsoleClient
-          popd || exit 1
+          popd
 
       - name: Upload Psiphon
         uses: svenstaro/upload-release-action@v2
@@ -81,7 +81,7 @@ jobs:
           git clone --depth 1 https://github.com/hiddify/hiddify-core.git
           pushd ./hiddify-core || exit 1
           go build -o ../hiddify_${{ env.ASSET_NAME }} -trimpath -ldflags "-s -w -buildid= -checklinkname=0 -X main.version=${{ github.ref }}" ./cli
-          popd || exit 1
+          popd
 
       - name: Upload Hiddify
         uses: svenstaro/upload-release-action@v2
@@ -96,7 +96,7 @@ jobs:
           git clone --depth 1 https://github.com/bepass-org/warp-plus.git
           pushd ./warp-plus || exit 1
           go build -o ../warp_${{ env.ASSET_NAME }} -trimpath -ldflags "-s -w -buildid= -checklinkname=0 -X main.version=${{ github.ref }}" ./cmd/warp-plus
-          popd || exit 1
+          popd
 
       - name: Upload Warp
         uses: svenstaro/upload-release-action@v2
