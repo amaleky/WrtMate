@@ -80,7 +80,7 @@ if /etc/init.d/serverless enabled; then
     echo "❌ serverless connectivity test failed"
     /etc/init.d/serverless restart
   else
-    echo "serverless connectivity test passed"
+    echo "✅ serverless connectivity test passed"
   fi
 else
   echo "⚠️ serverless is not running"
@@ -91,7 +91,7 @@ if /etc/init.d/balancer enabled; then
     echo "❌ balancer connectivity test failed"
     /etc/init.d/balancer restart
   else
-    echo "balancer connectivity test passed"
+    echo "✅ balancer connectivity test passed"
   fi
 else
   echo "⚠️ balancer is not running"
