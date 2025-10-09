@@ -23,19 +23,7 @@ jq '{
       "listen_port": 9802
     }
   ],
-  "outbounds": (
-    [
-      {
-        "type": "urltest",
-        "tag": "Auto",
-        "outbounds": [.outbounds[] | select(.type | IN("selector","urltest","direct") | not) | .tag],
-        "url": "https://1.1.1.1/cdn-cgi/trace/",
-        "interval": "1m",
-        "tolerance": 50,
-        "interrupt_exist_connections": false
-      }
-    ] + [.outbounds[] | select(.type | IN("selector","urltest","direct") | not)]
-  ),
+  "outbounds": .outbounds,
   "dns": {
     "servers": [
       {
@@ -56,8 +44,7 @@ jq '{
         "action": "hijack-dns"
       }
     ],
-    "default_domain_resolver": "remote",
-    "final": "Auto"
+    "default_domain_resolver": "remote"
   }
 }' "$CONFIGS" >"$SUBSCRIPTION" || exit 0
 
