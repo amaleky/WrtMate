@@ -1,12 +1,15 @@
 #!/bin/sh
 
 SUBSCRIPTION_PATH="/root/ghost/configs.conf"
+FIRST_CONFIG="/tmp/ghost-first.conf"
 CONFIGS="/tmp/ghost-parsed.json"
 SUBSCRIPTION="/tmp/ghost-subscription.json"
 
 kill -9 $(pgrep -f "/usr/bin/sing-box run -c $SUBSCRIPTION")
 
-/usr/bin/hiddify-cli parse "$SUBSCRIPTION_PATH" -o "$CONFIGS" || exit 1
+sed -n '1p' "$SUBSCRIPTION_PATH" > "$FIRST_CONFIG"
+
+/usr/bin/hiddify-cli parse "$FIRST_CONFIG" -o "$CONFIGS" || exit 1
 
 jq '{
   "log": {

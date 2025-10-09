@@ -13,9 +13,15 @@ if [ "$(uci get passwall2.@global[0].enabled 2>/dev/null)" = "1" ]; then
 fi
 
 if /etc/init.d/ghost enabled; then
-  if ! curl -s -L -I --max-time 1 --socks5-hostname "127.0.0.1:9802" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
+  if [ "$(logread | grep "run.sh\[$(pgrep -f '/root/ghost/run.sh')\]" | grep -c "ERROR")" -gt 50 ] || \
+    [ "$(curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:9802" -o "/dev/null" -w "%{http_code}" "https://telegram.org/")" -ne 200 ] || \
+    [ "$(curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:9802" -o "/dev/null" -w "%{http_code}" "https://www.youtube.com/")" -ne 200 ] || \
+    [ "$(curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:9802" -o "/dev/null" -w "%{http_code}" "https://firebase.google.com/")" -ne 200 ] || \
+    [ "$(curl -s -L -I --max-time 1 --retry 3 --socks5-hostname "127.0.0.1:9802" -o "/dev/null" -w "%{http_code}" "https://developer.android.com/")" -ne 200 ]; then
     echo "❌ ghost connectivity test failed"
+    sed -i '1d' "/root/ghost/configs.conf"
     /etc/init.d/ghost restart
+    /etc/init.d/scanner start
   else
     echo "✅ ghost connectivity test passed"
   fi
