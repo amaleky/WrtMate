@@ -179,15 +179,15 @@ install_warp() {
   REMOTE_VERSION="$(curl -s "https://api.github.com/repos/bepass-org/warp-plus/releases/latest" | jq -r '.tag_name')" || error "Failed to detect warp-plus version."
   LOCAL_VERSION="$(cat "/root/.warp_version" 2>/dev/null || echo 'none')"
 
+  if [[ -f "/etc/init.d/warp-plus" ]]; then
+    /etc/init.d/warp-plus stop
+  fi
+
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
     curl -L -o "/usr/bin/warp-plus" "https://github.com/amaleky/WrtMate/releases/latest/download/warp_linux-${DETECTED_ARCH}" || error "Failed to download warp-plus."
     chmod +x /usr/bin/warp-plus
 
     echo "$REMOTE_VERSION" >"/root/.warp_version"
-  fi
-
-  if [[ -f "/etc/init.d/warp-plus" ]]; then
-    /etc/init.d/warp-plus stop
   fi
 
   curl -s -L -o "/etc/init.d/warp-plus" "${REPO_URL}/src/etc/init.d/warp-plus" || error "Failed to download warp-plus init script."
@@ -204,15 +204,15 @@ install_psiphon() {
   REMOTE_VERSION="$(curl -s "https://api.github.com/repos/Psiphon-Labs/psiphon-tunnel-core/releases/latest" | jq -r '.tag_name')" || error "Failed to detect psiphon version."
   LOCAL_VERSION="$(cat "/root/.psiphon_version" 2>/dev/null || echo 'none')"
 
+  if [[ -f "/etc/init.d/psiphon" ]]; then
+    /etc/init.d/psiphon stop
+  fi
+
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
     curl -L -o "/usr/bin/psiphon" "https://github.com/amaleky/WrtMate/releases/latest/download/psiphon_linux-${DETECTED_ARCH}" || error "Failed to download psiphon."
     chmod +x "/usr/bin/psiphon"
 
     echo "$REMOTE_VERSION" >"/root/.psiphon_version"
-  fi
-
-  if [[ -f "/etc/init.d/psiphon" ]]; then
-    /etc/init.d/psiphon stop
   fi
 
   curl -s -L -o "/etc/init.d/psiphon" "${REPO_URL}/src/etc/init.d/psiphon" || error "Failed to download psiphon init script."
