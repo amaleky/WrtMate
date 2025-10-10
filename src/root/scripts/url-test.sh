@@ -44,7 +44,9 @@ if [ "$(get_retry_count "ghost")" -le 5 ]; then
     [ "$(curl -s -L -I --max-time 2 --retry 2 --socks5-hostname "127.0.0.1:9802" -o "/dev/null" -w "%{http_code}" "https://firebase.google.com/")" -ne 200 ] || \
     [ "$(curl -s -L -I --max-time 2 --retry 2 --socks5-hostname "127.0.0.1:9802" -o "/dev/null" -w "%{http_code}" "https://developer.android.com/")" -ne 200 ]; do
     echo "❌ ghost connectivity test failed"
-    sed -i '1d' "/root/ghost/configs.conf"
+    if [ "$(wc -l < "/root/ghost/configs.conf")" -gt 1 ]; then
+      sed -i '1d' "/root/ghost/configs.conf"
+    fi
     set_retry_count "ghost"
     /etc/init.d/ghost restart
     /etc/init.d/scanner start
