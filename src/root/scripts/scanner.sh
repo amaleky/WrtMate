@@ -65,7 +65,7 @@ if ! ping -c 1 -W 2 "217.218.155.155" >/dev/null 2>&1; then
   exit 0
 fi
 
-balance_resource() {
+throttle() {
   local CPU_USAGE MEM_AVAILABLE
   CPU_USAGE=$(top -n 1 | awk '
   /CPU:/ {cpu = 100 - $8; gsub(/%/, "", cpu); print int(cpu); exit}
@@ -73,7 +73,7 @@ balance_resource() {
   ')
   MEM_AVAILABLE=$(free -m | awk '/^Mem:/ {print $7}')
   if [ "$CPU_USAGE" -gt 90 ] || [ "$MEM_AVAILABLE" -lt 100000 ]; then
-    sleep 1
+    wait
   fi
   if [ "$(wc -l <"$CONFIGS")" -ge $CONFIGS_LIMIT ]; then
     echo "🎉 $(wc -l <"$CONFIGS") Configs Found (previous: $PREV_COUNT)"
@@ -144,7 +144,7 @@ process_config() {
       ],
       "default_domain_resolver": "remote",
     },
-    "outbounds": [.outbounds[] | select(.type | IN("selector","urltest","direct") | not)]
+    "outbounds": .outbounds
   }' "$PARSED_CONFIG" >"$FINAL_CONFIG"
 
   if [[ ! -f "/tmp/sing-box-$SOCKS_PORT" ]]; then
@@ -169,7 +169,7 @@ echo -n >"$CONFIGS"
 
 echo "⏳ Testing $CONFIGS"
 while IFS= read -r CONFIG; do
-  balance_resource
+  throttle
   process_config "$CONFIG" &
 done <<<"$BACKUP"
 
@@ -185,7 +185,7 @@ for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
   fi
   if [ "$(wc -l <"$CONFIGS")" -lt $CONFIGS_LIMIT ]; then
     while IFS= read -r CONFIG; do
-      balance_resource
+      throttle
       process_config "$CONFIG" &
     done <"$CACHE_FILE"
   fi
@@ -203,7 +203,7 @@ for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
   fi
   if [ "$(wc -l <"$CONFIGS")" -lt $CONFIGS_LIMIT ]; then
     base64 --decode "$CACHE_FILE" 2>/dev/null | while IFS= read -r CONFIG; do
-      balance_resource
+      throttle
       process_config "$CONFIG" &
     done
   fi
