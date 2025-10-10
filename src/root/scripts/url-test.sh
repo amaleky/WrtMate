@@ -26,7 +26,7 @@ if [ "$(uci get passwall2.@global[0].enabled 2>/dev/null)" = "1" ]; then
 fi
 
 if [ "$(get_retry_count "balancer")" -le 5 ]; then
-  if ! curl -s -L -I --max-time 2 --socks5-hostname "127.0.0.1:9801" -o "/dev/null" "http://www.gstatic.com/generate_204"; then
+  if ! curl -s -L -I --max-time 2 --retry 2 --socks5-hostname "127.0.0.1:9801" -o "/dev/null" "http://www.gstatic.com/generate_204"; then
     echo "❌ balancer connectivity test failed"
     set_retry_count "balancer"
     /etc/init.d/balancer restart
@@ -39,10 +39,10 @@ fi
 
 if [ "$(get_retry_count "ghost")" -le 5 ]; then
   while [ "$(logread | grep "run.sh\[$(pgrep -f '/root/ghost/run.sh')\]" | grep -c "ERROR")" -gt 50 ] || \
-    [ "$(curl -s -L -I --max-time 2 --retry 3 --socks5-hostname "127.0.0.1:9802" -o "/dev/null" -w "%{http_code}" "https://telegram.org/")" -ne 200 ] || \
-    [ "$(curl -s -L -I --max-time 2 --retry 3 --socks5-hostname "127.0.0.1:9802" -o "/dev/null" -w "%{http_code}" "https://www.youtube.com/")" -ne 200 ] || \
-    [ "$(curl -s -L -I --max-time 2 --retry 3 --socks5-hostname "127.0.0.1:9802" -o "/dev/null" -w "%{http_code}" "https://firebase.google.com/")" -ne 200 ] || \
-    [ "$(curl -s -L -I --max-time 2 --retry 3 --socks5-hostname "127.0.0.1:9802" -o "/dev/null" -w "%{http_code}" "https://developer.android.com/")" -ne 200 ]; do
+    [ "$(curl -s -L -I --max-time 2 --retry 2 --socks5-hostname "127.0.0.1:9802" -o "/dev/null" -w "%{http_code}" "https://telegram.org/")" -ne 200 ] || \
+    [ "$(curl -s -L -I --max-time 2 --retry 2 --socks5-hostname "127.0.0.1:9802" -o "/dev/null" -w "%{http_code}" "https://www.youtube.com/")" -ne 200 ] || \
+    [ "$(curl -s -L -I --max-time 2 --retry 2 --socks5-hostname "127.0.0.1:9802" -o "/dev/null" -w "%{http_code}" "https://firebase.google.com/")" -ne 200 ] || \
+    [ "$(curl -s -L -I --max-time 2 --retry 2 --socks5-hostname "127.0.0.1:9802" -o "/dev/null" -w "%{http_code}" "https://developer.android.com/")" -ne 200 ]; do
     echo "❌ ghost connectivity test failed"
     sed -i '1d' "/root/ghost/configs.conf"
     set_retry_count "ghost"
@@ -56,7 +56,7 @@ else
 fi
 
 if [ "$(get_retry_count "warp-plus")" -le 5 ]; then
-  if ! curl -s -L -I --max-time 2 --socks5-hostname "127.0.0.1:9803" -o "/dev/null" "http://www.gstatic.com/generate_204"; then
+  if ! curl -s -L -I --max-time 2 --retry 2 --socks5-hostname "127.0.0.1:9803" -o "/dev/null" "http://www.gstatic.com/generate_204"; then
     echo "❌ warp-plus connectivity test failed"
     rm -rfv /.cache/warp-plus/
     set_retry_count "warp-plus"
@@ -69,7 +69,7 @@ else
 fi
 
 if [ "$(get_retry_count "psiphon")" -le 5 ]; then
-  if ! curl -s -L -I --max-time 2 --socks5-hostname "127.0.0.1:9804" -o "/dev/null" "http://www.gstatic.com/generate_204"; then
+  if ! curl -s -L -I --max-time 2 --retry 2 --socks5-hostname "127.0.0.1:9804" -o "/dev/null" "http://www.gstatic.com/generate_204"; then
     echo "❌ psiphon connectivity test failed"
     set_retry_count "psiphon"
     /etc/init.d/psiphon restart
@@ -81,7 +81,7 @@ else
 fi
 
 if [ "$(get_retry_count "tor")" -le 5 ]; then
-  if ! curl -s -L -I --max-time 2 --socks5-hostname "127.0.0.1:9805" -o "/dev/null" "http://www.gstatic.com/generate_204"; then
+  if ! curl -s -L -I --max-time 2 --retry 2 --socks5-hostname "127.0.0.1:9805" -o "/dev/null" "http://www.gstatic.com/generate_204"; then
     echo "❌ tor connectivity test failed"
     set_retry_count "tor"
     /etc/init.d/tor restart
@@ -93,7 +93,7 @@ else
 fi
 
 if [ "$(get_retry_count "ssh-proxy")" -le 5 ]; then
-  if ! curl -s -L -I --max-time 2 --socks5-hostname "127.0.0.1:9806" -o "/dev/null" "http://www.gstatic.com/generate_204"; then
+  if ! curl -s -L -I --max-time 2 --retry 2 --socks5-hostname "127.0.0.1:9806" -o "/dev/null" "http://www.gstatic.com/generate_204"; then
     echo "❌ ssh-proxy connectivity test failed"
     rm -fv /root/.ssh/known_hosts
     set_retry_count "ssh-proxy"
@@ -106,7 +106,7 @@ else
 fi
 
 if [ "$(get_retry_count "serverless")" -le 5 ]; then
-  if ! curl -s -L -I --max-time 2 --socks5-hostname "127.0.0.1:9807" -o "/dev/null" "http://www.gstatic.com/generate_204"; then
+  if ! curl -s -L -I --max-time 2 --retry 2 --socks5-hostname "127.0.0.1:9807" -o "/dev/null" "http://www.gstatic.com/generate_204"; then
     echo "❌ serverless connectivity test failed"
     set_retry_count "serverless"
     /etc/init.d/serverless restart
