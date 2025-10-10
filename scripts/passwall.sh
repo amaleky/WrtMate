@@ -82,8 +82,22 @@ setup_url_test() {
   chmod +x /etc/hotplug.d/iface/99-url-test
 }
 
-setup_balancer() {
-  info "setup_balancer"
+install_hiddify() {
+  info "install_hiddify"
+
+  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/hiddify/hiddify-core/releases/latest" | jq -r '.tag_name')" || error "Failed to detect hiddify-core version."
+  LOCAL_VERSION="$(cat "/root/.hiddify_version" 2>/dev/null || echo 'none')"
+
+  if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
+    curl -L -o "/usr/bin/hiddify-cli" "https://github.com/amaleky/WrtMate/releases/latest/download/hiddify_linux-${DETECTED_ARCH}" || error "Failed to download hiddify-cli."
+    chmod +x /usr/bin/hiddify-cli
+
+    echo "$REMOTE_VERSION" >"/root/.hiddify_version"
+  fi
+}
+
+install_balancer() {
+  info "install_balancer"
   if [ ! -d /root/balancer/ ]; then mkdir /root/balancer/; fi
 
   if [[ -f "/root/balancer/run.sh" ]]; then
@@ -153,26 +167,6 @@ install_ghost() {
   /etc/init.d/ghost start
 }
 
-install_tor() {
-  info "install_tor"
-
-  ensure_packages "tor tor-geoip obfs4proxy"
-
-  grep '^Bridge' /etc/tor/torrc >/etc/tor/torrc.back
-  curl -s -L -o "/etc/tor/torrc" "${REPO_URL}/src/etc/tor/torrc" || error "Failed to download tor config."
-  cat /etc/tor/torrc.back >>/etc/tor/torrc
-
-  if ! grep -q '^Bridge' /etc/tor/torrc; then
-    echo "Please paste your Bridges from https://bridges.torproject.org/bridges?transport=obfs4 (press Ctrl+D when done):"
-    {
-      awk 'NF { if ($1 != "Bridge") print "Bridge", $0; else print $0 }'
-    } >>/etc/tor/torrc
-  fi
-
-  /etc/init.d/tor enable
-  /etc/init.d/tor start
-}
-
 install_warp() {
   info "install_warp"
 
@@ -224,18 +218,24 @@ install_psiphon() {
   /etc/init.d/psiphon start
 }
 
-install_hiddify() {
-  info "install_hiddify"
+install_tor() {
+  info "install_tor"
 
-  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/hiddify/hiddify-core/releases/latest" | jq -r '.tag_name')" || error "Failed to detect hiddify-core version."
-  LOCAL_VERSION="$(cat "/root/.hiddify_version" 2>/dev/null || echo 'none')"
+  ensure_packages "tor tor-geoip obfs4proxy"
 
-  if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
-    curl -L -o "/usr/bin/hiddify-cli" "https://github.com/amaleky/WrtMate/releases/latest/download/hiddify_linux-${DETECTED_ARCH}" || error "Failed to download hiddify-cli."
-    chmod +x /usr/bin/hiddify-cli
+  grep '^Bridge' /etc/tor/torrc >/etc/tor/torrc.back
+  curl -s -L -o "/etc/tor/torrc" "${REPO_URL}/src/etc/tor/torrc" || error "Failed to download tor config."
+  cat /etc/tor/torrc.back >>/etc/tor/torrc
 
-    echo "$REMOTE_VERSION" >"/root/.hiddify_version"
+  if ! grep -q '^Bridge' /etc/tor/torrc; then
+    echo "Please paste your Bridges from https://bridges.torproject.org/bridges?transport=obfs4 (press Ctrl+D when done):"
+    {
+      awk 'NF { if ($1 != "Bridge") print "Bridge", $0; else print $0 }'
+    } >>/etc/tor/torrc
   fi
+
+  /etc/init.d/tor enable
+  /etc/init.d/tor start
 }
 
 install_ssh_proxy() {
@@ -299,14 +299,14 @@ install_server_less() {
 main() {
   check_min_requirements 200 500 2
 
+  install_hiddify
+  install_balancer
+  install_ghost
   install_warp
   install_psiphon
-  install_hiddify
-  install_server_less
-  install_ghost
   install_tor
   install_ssh_proxy
-  setup_balancer
+  install_server_less
   setup_url_test
   setup_geo_update
   install_passwall

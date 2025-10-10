@@ -12,6 +12,17 @@ if [ "$(uci get passwall2.@global[0].enabled 2>/dev/null)" = "1" ]; then
   fi
 fi
 
+if /etc/init.d/balancer enabled; then
+  if ! curl -s -L -I --max-time 1 --socks5-hostname "127.0.0.1:9801" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
+    echo "❌ balancer connectivity test failed"
+    /etc/init.d/balancer restart
+  else
+    echo "✅ balancer connectivity test passed"
+  fi
+else
+  echo "⚠️ balancer is not running"
+fi
+
 if /etc/init.d/ghost enabled; then
   while [ "$(logread | grep "run.sh\[$(pgrep -f '/root/ghost/run.sh')\]" | grep -c "ERROR")" -gt 50 ] || \
     [ "$(curl -s -L -I --max-time 2 --retry 3 --socks5-hostname "127.0.0.1:9802" -o "/dev/null" -w "%{http_code}" "https://telegram.org/")" -ne 200 ] || \
@@ -84,15 +95,4 @@ if /etc/init.d/serverless enabled; then
   fi
 else
   echo "⚠️ serverless is not running"
-fi
-
-if /etc/init.d/balancer enabled; then
-  if ! curl -s -L -I --max-time 1 --socks5-hostname "127.0.0.1:9801" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
-    echo "❌ balancer connectivity test failed"
-    /etc/init.d/balancer restart
-  else
-    echo "✅ balancer connectivity test passed"
-  fi
-else
-  echo "⚠️ balancer is not running"
 fi
