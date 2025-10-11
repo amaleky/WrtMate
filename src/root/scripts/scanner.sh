@@ -77,6 +77,7 @@ throttle() {
   fi
   if [ "$(wc -l <"$CONFIGS")" -ge $CONFIGS_LIMIT ]; then
     echo "🎉 $(wc -l <"$CONFIGS") Configs Found (previous: $PREV_COUNT)"
+    /etc/init.d/ghost start
     exit 0
   fi
 }
