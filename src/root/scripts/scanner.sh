@@ -3,7 +3,7 @@
 CONFIGS="/root/ghost/configs.conf"
 PREV_COUNT=$(wc -l <"$CONFIGS")
 CACHE_DIR="/root/.cache/subscriptions"
-CONFIGS_LIMIT=40
+CONFIGS_LIMIT=1000
 
 mkdir -p "$CACHE_DIR"
 
@@ -184,12 +184,10 @@ for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
     echo "❌ Failed to download $SUBSCRIPTION"
     continue
   fi
-  if [ "$(wc -l <"$CONFIGS")" -lt $CONFIGS_LIMIT ]; then
-    while IFS= read -r CONFIG; do
-      throttle
-      process_config "$CONFIG" &
-    done <"$CACHE_FILE"
-  fi
+  while IFS= read -r CONFIG; do
+    throttle
+    process_config "$CONFIG" &
+  done <"$CACHE_FILE"
 done
 
 for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
@@ -202,12 +200,10 @@ for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
     echo "❌ Failed to download $SUBSCRIPTION"
     continue
   fi
-  if [ "$(wc -l <"$CONFIGS")" -lt $CONFIGS_LIMIT ]; then
-    base64 --decode "$CACHE_FILE" 2>/dev/null | while IFS= read -r CONFIG; do
-      throttle
-      process_config "$CONFIG" &
-    done
-  fi
+  base64 --decode "$CACHE_FILE" 2>/dev/null | while IFS= read -r CONFIG; do
+    throttle
+    process_config "$CONFIG" &
+  done
 done
 
 rm -rf /tmp/test* /tmp/sing-box*
