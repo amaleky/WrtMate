@@ -1,4 +1,8 @@
 #!/bin/bash
+# V2ray/Xray Subscription Scanner
+#
+# Usage:    bash -c "$(wget -qO- https://github.com/amaleky/WrtMate/raw/main/src/root/scripts/scanner.sh)"
+#
 
 CONFIGS="/root/ghost/configs.conf"
 PREV_COUNT=$(wc -l <"$CONFIGS")
