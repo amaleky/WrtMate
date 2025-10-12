@@ -3,9 +3,9 @@
 CONFIGS="/root/ghost/configs.conf"
 PREV_COUNT=$(wc -l <"$CONFIGS")
 CACHE_DIR="/root/.cache/subscriptions"
-CONFIGS_LIMIT=1000
+CONFIGS_LIMIT=100
 
-mkdir -p "$CACHE_DIR"
+mkdir -p "$CACHE_DIR" "/root/ghost"
 
 CONFIG_URLS=(
   "https://raw.githubusercontent.com/Arashtelr/lab/main/FreeVPN-by-ArashZidi"
@@ -66,17 +66,19 @@ if ! ping -c 1 -W 2 "217.218.155.155" >/dev/null 2>&1; then
 fi
 
 throttle() {
-  local CPU_USAGE MEM_AVAILABLE
-  CPU_USAGE=$(top -n 1 | awk '
-  /CPU:/ {cpu = 100 - $8; gsub(/%/, "", cpu); print int(cpu); exit}
-  /Cpu\(s\):/ {gsub(/%.*/, "", $2); print int($2); exit}
-  ')
-  MEM_AVAILABLE=$(free -m | awk '/^Mem:/ {print $7}')
-  if [ "$CPU_USAGE" -gt 90 ] || [ "$MEM_AVAILABLE" -lt 100000 ]; then
-    wait
+  if [ -f "/etc/openwrt_release" ]; then
+    local CPU_USAGE MEM_AVAILABLE
+    CPU_USAGE=$(top -n 1 | awk '
+    /CPU:/ {cpu = 100 - $8; gsub(/%/, "", cpu); print int(cpu); exit}
+    /Cpu\(s\):/ {gsub(/%.*/, "", $2); print int($2); exit}
+    ')
+    MEM_AVAILABLE=$(free -m | awk '/^Mem:/ {print $7}')
+    if [ "$CPU_USAGE" -gt 90 ] || [ "$MEM_AVAILABLE" -lt 100000 ]; then
+      wait
+    fi
   fi
   if [ "$(wc -l <"$CONFIGS")" -ge $CONFIGS_LIMIT ]; then
-    echo "🎉 $(wc -l <"$CONFIGS") Configs Found (previous: $PREV_COUNT)"
+    echo "🎉 $(wc -l <"$CONFIGS") Configs Found (previous: $PREV_COUNT) in $CONFIGS"
     /etc/init.d/ghost start
     exit 0
   fi
