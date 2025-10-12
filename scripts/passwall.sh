@@ -37,8 +37,8 @@ riscv64*)
   ;;
 esac
 
-install_passwall() {
-  info "install_passwall"
+passwall() {
+  info "passwall"
   REMOTE_VERSION="$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | jq -r '.tag_name')" || error "Failed to detect passwall version."
   LOCAL_VERSION="$(cat "/root/.passwall2_version" 2>/dev/null || echo 'none')"
 
@@ -62,8 +62,8 @@ install_passwall() {
   /etc/init.d/passwall2 restart
 }
 
-setup_geo_update() {
-  info "setup_geo_update"
+geo_update() {
+  info "geo_update"
   if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
   curl -s -L -o "/root/scripts/geo-update.sh" "${REPO_URL}/src/root/scripts/geo-update.sh" || error "Failed to download geo-update.sh."
   chmod +x /root/scripts/geo-update.sh
@@ -71,8 +71,8 @@ setup_geo_update() {
   /root/scripts/geo-update.sh
 }
 
-setup_url_test() {
-  info "setup_url_test"
+url_test() {
+  info "url_test"
   if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
   curl -s -L -o "/root/scripts/url-test.sh" "${REPO_URL}/src/root/scripts/url-test.sh" || error "Failed to download url-test.sh."
   chmod +x /root/scripts/url-test.sh
@@ -82,8 +82,8 @@ setup_url_test() {
   chmod +x /etc/hotplug.d/iface/99-url-test
 }
 
-install_hiddify() {
-  info "install_hiddify"
+hiddify() {
+  info "hiddify"
 
   REMOTE_VERSION="$(curl -s "https://api.github.com/repos/hiddify/hiddify-core/releases/latest" | jq -r '.tag_name')" || error "Failed to detect hiddify-core version."
   LOCAL_VERSION="$(cat "/root/.hiddify_version" 2>/dev/null || echo 'none')"
@@ -96,8 +96,8 @@ install_hiddify() {
   fi
 }
 
-install_balancer() {
-  info "install_balancer"
+balancer() {
+  info "balancer"
   if [ ! -d /root/balancer/ ]; then mkdir /root/balancer/; fi
 
   if [[ -f "/root/balancer/run.sh" ]]; then
@@ -125,8 +125,8 @@ install_balancer() {
   /etc/init.d/balancer start
 }
 
-install_ghost() {
-  info "install_ghost"
+ghost() {
+  info "ghost"
   if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
 
   curl -s -L -o "/root/scripts/scanner.sh" "${REPO_URL}/src/root/scripts/scanner.sh" || error "Failed to download scanner.sh."
@@ -167,8 +167,8 @@ install_ghost() {
   /etc/init.d/ghost start
 }
 
-install_warp() {
-  info "install_warp"
+warp() {
+  info "warp"
 
   REMOTE_VERSION="$(curl -s "https://api.github.com/repos/bepass-org/warp-plus/releases/latest" | jq -r '.tag_name')" || error "Failed to detect warp-plus version."
   LOCAL_VERSION="$(cat "/root/.warp_version" 2>/dev/null || echo 'none')"
@@ -191,8 +191,8 @@ install_warp() {
   /etc/init.d/warp-plus start
 }
 
-install_psiphon() {
-  info "install_psiphon"
+psiphon() {
+  info "psiphon"
   if [ ! -d /root/psiphon/ ]; then mkdir /root/psiphon/; fi
 
   REMOTE_VERSION="$(curl -s "https://api.github.com/repos/Psiphon-Labs/psiphon-tunnel-core/releases/latest" | jq -r '.tag_name')" || error "Failed to detect psiphon version."
@@ -218,8 +218,8 @@ install_psiphon() {
   /etc/init.d/psiphon start
 }
 
-install_tor() {
-  info "install_tor"
+tor() {
+  info "tor"
 
   ensure_packages "tor tor-geoip obfs4proxy"
 
@@ -238,8 +238,8 @@ install_tor() {
   /etc/init.d/tor start
 }
 
-install_ssh_proxy() {
-  info "install_ssh_proxy"
+ssh_proxy() {
+  info "ssh_proxy"
   if [ ! -d /root/.ssh/ ]; then mkdir /root/.ssh/; fi
   ensure_packages "openssh-client"
 
@@ -279,8 +279,8 @@ install_ssh_proxy() {
   /etc/init.d/ssh-proxy start
 }
 
-install_server_less() {
-  info "install_server_less"
+server_less() {
+  info "server_less"
   if [ ! -d /root/xray/ ]; then mkdir /root/xray/; fi
 
   if [[ -f "/etc/init.d/serverless" ]]; then
@@ -297,19 +297,22 @@ install_server_less() {
 }
 
 main() {
-  check_min_requirements 200 500 2
-
-  install_hiddify
-  install_balancer
-  install_ghost
-  install_warp
-  install_psiphon
-  install_tor
-  install_ssh_proxy
-  install_server_less
-  setup_url_test
-  setup_geo_update
-  install_passwall
+  if [ -n "${1-}" ]; then
+    "$1"
+  else
+    check_min_requirements 200 500 2
+    hiddify
+    balancer
+    ghost
+    warp
+    psiphon
+    tor
+    ssh_proxy
+    server_less
+    url_test
+    geo_update
+    passwall
+  fi
 
   success "PassWall configuration completed successfully"
 }
