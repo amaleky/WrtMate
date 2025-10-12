@@ -75,33 +75,3 @@ jobs:
           file: psiphon_${{ env.ASSET_NAME }}
           tag: ${{ github.ref }}
           overwrite: true
-
-      - name: Build Hiddify
-        run: |
-          git clone --depth 1 https://github.com/hiddify/hiddify-core.git
-          pushd ./hiddify-core || exit 1
-          go build -o ../hiddify_${{ env.ASSET_NAME }} -trimpath -ldflags "-s -w -buildid= -checklinkname=0 -X main.version=${{ github.ref }}" ./cli
-          popd
-
-      - name: Upload Hiddify
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: hiddify_${{ env.ASSET_NAME }}
-          tag: ${{ github.ref }}
-          overwrite: true
-
-      - name: Build Warp
-        run: |
-          git clone --depth 1 https://github.com/bepass-org/warp-plus.git
-          pushd ./warp-plus || exit 1
-          go build -o ../warp_${{ env.ASSET_NAME }} -trimpath -ldflags "-s -w -buildid= -checklinkname=0 -X main.version=${{ github.ref }}" ./cmd/warp-plus
-          popd
-
-      - name: Upload Warp
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: warp_${{ env.ASSET_NAME }}
-          tag: ${{ github.ref }}
-          overwrite: true

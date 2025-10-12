@@ -1,42 +1,6 @@
 #!/bin/bash
 # Passwall configuration for OpenWRT
 
-case "$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2)" in
-mipsel_24kc)
-  DETECTED_ARCH="mipslesoftfloat"
-  ;;
-mips_24kc)
-  DETECTED_ARCH="mipssoftfloat"
-  ;;
-mipsel*)
-  DETECTED_ARCH="mipsle"
-  ;;
-mips64el*)
-  DETECTED_ARCH="mips64le"
-  ;;
-mips64*)
-  DETECTED_ARCH="mips64"
-  ;;
-mips*)
-  DETECTED_ARCH="mips"
-  ;;
-aarch64* | arm64* | armv8*)
-  DETECTED_ARCH="arm64"
-  ;;
-arm*)
-  DETECTED_ARCH="arm7"
-  ;;
-x86_64)
-  DETECTED_ARCH="amd64"
-  ;;
-riscv64*)
-  DETECTED_ARCH="riscv64"
-  ;;
-*)
-  error "Unsupported CPU architecture: $(uname -m)"
-  ;;
-esac
-
 passwall() {
   info "passwall"
   REMOTE_VERSION="$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | jq -r '.tag_name')" || error "Failed to detect passwall version."
@@ -89,9 +53,7 @@ hiddify() {
   LOCAL_VERSION="$(cat "/root/.hiddify_version" 2>/dev/null || echo 'none')"
 
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
-    curl -L -o "/usr/bin/hiddify-cli" "https://github.com/amaleky/WrtMate/releases/latest/download/hiddify_linux-${DETECTED_ARCH}" || error "Failed to download hiddify-cli."
-    chmod +x /usr/bin/hiddify-cli
-
+    source <(wget -qO- "${REPO_URL}/scripts/packages/hiddify.sh")
     echo "$REMOTE_VERSION" >"/root/.hiddify_version"
   fi
 }
@@ -178,9 +140,7 @@ warp() {
   fi
 
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
-    curl -L -o "/usr/bin/warp-plus" "https://github.com/amaleky/WrtMate/releases/latest/download/warp_linux-${DETECTED_ARCH}" || error "Failed to download warp-plus."
-    chmod +x /usr/bin/warp-plus
-
+    source <(wget -qO- "${REPO_URL}/scripts/packages/warp.sh")
     echo "$REMOTE_VERSION" >"/root/.warp_version"
   fi
 
@@ -203,9 +163,7 @@ psiphon() {
   fi
 
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
-    curl -L -o "/usr/bin/psiphon" "https://github.com/amaleky/WrtMate/releases/latest/download/psiphon_linux-${DETECTED_ARCH}" || error "Failed to download psiphon."
-    chmod +x "/usr/bin/psiphon"
-
+    source <(wget -qO- "${REPO_URL}/scripts/packages/psiphon.sh")
     echo "$REMOTE_VERSION" >"/root/.psiphon_version"
   fi
 
