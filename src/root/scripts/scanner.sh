@@ -4,12 +4,14 @@
 # Usage:    bash -c "$(wget -qO- https://github.com/amaleky/WrtMate/raw/main/src/root/scripts/scanner.sh)"
 #
 
-CONFIGS="/root/ghost/configs.conf"
+[ -z "$HOME" ] || [ "$HOME" = "/" ] && HOME="/root"
+
+CONFIGS="$HOME/ghost/configs.conf"
 PREV_COUNT=$(wc -l <"$CONFIGS")
-CACHE_DIR="/root/.cache/subscriptions"
+CACHE_DIR="$HOME/.cache/subscriptions"
 CONFIGS_LIMIT=100
 
-mkdir -p "$CACHE_DIR" "/root/ghost"
+mkdir -p "$CACHE_DIR" "$HOME/ghost"
 
 CONFIG_URLS=(
   "https://raw.githubusercontent.com/Arashtelr/lab/main/FreeVPN-by-ArashZidi"
