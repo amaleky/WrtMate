@@ -1,10 +1,11 @@
 #!/bin/bash
 # V2ray/Xray Subscription Scanner
 #
-# Usage:    bash -c "$(wget -qO- https://github.com/amaleky/WrtMate/raw/main/src/root/scripts/scanner.sh)"
+# Usage:    sudo bash -c "$(wget -qO- https://github.com/amaleky/WrtMate/raw/main/src/root/scripts/scanner.sh)"
 #
 
 [ -z "$HOME" ] || [ "$HOME" = "/" ] && HOME="/root"
+[ "$(id -u)" -eq 0 ] || error "This script must be run as root (use sudo)"
 
 CONFIGS="$HOME/ghost/configs.conf"
 PREV_COUNT=$(wc -l <"$CONFIGS")
@@ -62,6 +63,13 @@ BASE64_URLS=(
   "https://raw.githubusercontent.com/DaBao-Lee/V2RayN-NodeShare/main/base64"
   "https://raw.githubusercontent.com/ripaojiedian/freenode/main/sub"
 )
+
+if [[ ! -f "/usr/bin/hiddify-cli" ]]; then
+  source <(wget -qO- "https://github.com/amaleky/WrtMate/raw/main/scripts/packages/hiddify.sh")
+fi
+if [[ ! -f "/usr/bin/sing-box" ]]; then
+  source <(wget -qO- "https://github.com/amaleky/WrtMate/raw/main/scripts/packages/sing-box.sh")
+fi
 
 cd "/tmp" || true
 echo "ℹ️ $PREV_COUNT Previous Configs Found"
