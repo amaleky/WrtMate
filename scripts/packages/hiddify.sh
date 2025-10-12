@@ -48,7 +48,24 @@ main() {
       ;;
     esac
   else
-    DETECTED_ARCH="amd64"
+    case "$(uname -m)" in
+      x86_64)
+        DETECTED_ARCH="amd64"
+        ;;
+      i386 | i686)
+        DETECTED_ARCH="386"
+        ;;
+      aarch64 | arm64)
+        DETECTED_ARCH="arm64"
+        ;;
+      arm*)
+        DETECTED_ARCH="armv7"
+        ;;
+      *)
+        echo "Unsupported architecture: $(uname -m)"
+        exit 1
+        ;;
+    esac
   fi
   curl -L -o /tmp/hiddify.tar.gz "https://github.com/hiddify/hiddify-core/releases/latest/download/hiddify-cli-linux-${DETECTED_ARCH}.tar.gz" || error "Failed to download Hiddify."
   tar -xvzf /tmp/hiddify.tar.gz -C /tmp

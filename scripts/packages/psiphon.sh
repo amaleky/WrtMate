@@ -38,7 +38,21 @@ main() {
       ;;
     esac
   else
-    DETECTED_ARCH="amd64"
+    case "$(uname -m)" in
+      x86_64)
+        DETECTED_ARCH="amd64"
+        ;;
+      aarch64 | arm64)
+        DETECTED_ARCH="arm64"
+        ;;
+      arm*)
+        DETECTED_ARCH="arm7"
+        ;;
+      *)
+        echo "Unsupported architecture: $(uname -m)"
+        exit 1
+        ;;
+    esac
   fi
   curl -L -o "/usr/bin/psiphon" "https://github.com/amaleky/WrtMate/releases/latest/download/psiphon_linux-${DETECTED_ARCH}" || error "Failed to download psiphon."
   chmod +x "/usr/bin/psiphon"

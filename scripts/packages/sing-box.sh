@@ -48,7 +48,24 @@ main() {
       ;;
     esac
   else
-    DETECTED_ARCH="amd64"
+    case "$(uname -m)" in
+      x86_64)
+        DETECTED_ARCH="amd64"
+        ;;
+      i386 | i686)
+        DETECTED_ARCH="386"
+        ;;
+      aarch64 | arm64)
+        DETECTED_ARCH="arm64"
+        ;;
+      arm*)
+        DETECTED_ARCH="armv7"
+        ;;
+      *)
+        echo "Unsupported architecture: $(uname -m)"
+        exit 1
+        ;;
+    esac
   fi
   REMOTE_VERSION="$(curl -s "https://api.github.com/repos/SagerNet/sing-box/releases/latest" | jq -r '.tag_name | ltrimstr("v")')"
   curl -L -o /tmp/sing-box.tar.gz "https://github.com/SagerNet/sing-box/releases/latest/download/sing-box-${REMOTE_VERSION}-linux-${DETECTED_ARCH}.tar.gz" || error "Failed to download sing-box."

@@ -38,7 +38,21 @@ main() {
         ;;
     esac
   else
-    DETECTED_ARCH="amd64"
+    case "$(uname -m)" in
+      x86_64)
+        DETECTED_ARCH="amd64"
+        ;;
+      aarch64 | arm64)
+        DETECTED_ARCH="arm64"
+        ;;
+      arm*)
+        DETECTED_ARCH="arm7"
+        ;;
+      *)
+        echo "Unsupported architecture: $(uname -m)"
+        exit 1
+        ;;
+    esac
   fi
   curl -s -L -o "/tmp/warp.zip" "https://github.com/bepass-org/warp-plus/releases/latest/download/warp-plus_linux-${DETECTED_ARCH}.zip" || error "Failed to download WARP zip."
   unzip -o /tmp/warp.zip -d /tmp
