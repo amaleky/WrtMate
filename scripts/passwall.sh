@@ -155,7 +155,7 @@ psiphon() {
   info "psiphon"
   if [ ! -d /root/psiphon/ ]; then mkdir /root/psiphon/; fi
 
-  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/Psiphon-Labs/psiphon-tunnel-core/releases/latest" | jq -r '.tag_name')" || error "Failed to detect psiphon version."
+  REMOTE_VERSION="$(curl -s "https://api.github.com/amaleky/WrtMate/releases/latest" | jq -r '.tag_name')" || error "Failed to detect psiphon version."
   LOCAL_VERSION="$(cat "/root/.psiphon_version" 2>/dev/null || echo 'none')"
 
   if [[ -f "/etc/init.d/psiphon" ]]; then
