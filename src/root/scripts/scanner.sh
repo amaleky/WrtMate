@@ -74,7 +74,7 @@ fi
 cd "/tmp" || true
 echo "ℹ️ $PREV_COUNT Previous Configs Found"
 
-if ! ping -c 1 -W 2 "217.218.155.155" >/dev/null 2>&1; then
+if ! ping -c 1 -W 2 "78.157.42.100" >/dev/null 2>&1; then
   echo "ERROR: Connectivity test failed."
   exit 0
 fi
