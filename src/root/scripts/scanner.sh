@@ -1,7 +1,7 @@
 #!/bin/bash
 # V2ray/Xray Subscription Scanner
 #
-# Usage:    sudo bash -c "$(wget -qO- https://github.com/amaleky/WrtMate/raw/raw/main/src/root/scripts/scanner.sh)"
+# Usage:    sudo bash -c "$(wget -qO- https://github.com/amaleky/WrtMate/raw/main/src/root/scripts/scanner.sh)"
 #
 
 [ -z "$HOME" ] || [ "$HOME" = "/" ] && HOME="/root"
