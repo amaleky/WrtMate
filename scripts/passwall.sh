@@ -3,7 +3,7 @@
 
 passwall() {
   info "passwall"
-  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | jq -r '.tag_name')" || error "Failed to detect passwall version."
+  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | jq -r '.tag_name')"
   LOCAL_VERSION="$(cat "/root/.passwall2_version" 2>/dev/null || echo 'none')"
 
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
@@ -14,10 +14,14 @@ passwall() {
     unzip -o /tmp/packages.zip -d /tmp/passwall >/dev/null 2>&1
     for pkg in /tmp/passwall/*.ipk; do opkg install "$pkg"; done
 
-    curl -s -L -o "/tmp/passwall2.ipk" "$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | grep "browser_download_url" | grep -o 'https://[^"]*luci-[^_]*_luci-app-passwall2_[^_]*_all\.ipk' | head -n1)" || error "Failed to download Passwall2 package."
+    TAG=$(curl -s -L "https://github.com/xiaorouji/openwrt-passwall2/releases/latest" | grep -oE '/xiaorouji/openwrt-passwall2/releases/tag/[^"]+' | head -n1 | awk -F'/tag/' '{print $2}') || error "Failed to find passwall2 tab."
+    URL=$(curl -s -L "https://github.com/xiaorouji/openwrt-passwall2/releases/expanded_assets/$TAG" | grep -o 'href="[^"]*luci-[^"]*luci-app-passwall2_'"$TAG"'_all\.ipk"' | sed 's/href="//;s/"$//' | sed 's|^/|https://github.com/|' | head -n1) || error "Failed to find passwall2 url."
+    curl -s -L -o "/tmp/passwall2.ipk" "$URL" || error "Failed to download Passwall2 package."
     opkg install /tmp/passwall2.ipk || error "Failed to install Passwall2."
 
-    echo "$REMOTE_VERSION" >"/root/.passwall2_version"
+    if [ -n "$REMOTE_VERSION" ]; then
+      echo "$REMOTE_VERSION" >"/root/.passwall2_version"
+    fi
   fi
 
   curl -s -L -o "/etc/config/passwall2" "${REPO_URL}/src/etc/config/passwall2" || error "Failed to download passwall2 config."
@@ -49,12 +53,14 @@ url_test() {
 hiddify() {
   info "hiddify"
 
-  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/hiddify/hiddify-core/releases/latest" | jq -r '.tag_name')" || error "Failed to detect hiddify-core version."
+  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/hiddify/hiddify-core/releases/latest" | jq -r '.tag_name')"
   LOCAL_VERSION="$(cat "/root/.hiddify_version" 2>/dev/null || echo 'none')"
 
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
     source <(wget -qO- "${REPO_URL}/scripts/packages/hiddify.sh")
-    echo "$REMOTE_VERSION" >"/root/.hiddify_version"
+    if [ -n "$REMOTE_VERSION" ]; then
+      echo "$REMOTE_VERSION" >"/root/.hiddify_version"
+    fi
   fi
 }
 
@@ -132,7 +138,7 @@ ghost() {
 warp() {
   info "warp"
 
-  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/bepass-org/warp-plus/releases/latest" | jq -r '.tag_name')" || error "Failed to detect warp-plus version."
+  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/bepass-org/warp-plus/releases/latest" | jq -r '.tag_name')"
   LOCAL_VERSION="$(cat "/root/.warp_version" 2>/dev/null || echo 'none')"
 
   if [[ -f "/etc/init.d/warp-plus" ]]; then
@@ -141,7 +147,9 @@ warp() {
 
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
     source <(wget -qO- "${REPO_URL}/scripts/packages/warp.sh")
-    echo "$REMOTE_VERSION" >"/root/.warp_version"
+    if [ -n "$REMOTE_VERSION" ]; then
+      echo "$REMOTE_VERSION" >"/root/.warp_version"
+    fi
   fi
 
   curl -s -L -o "/etc/init.d/warp-plus" "${REPO_URL}/src/etc/init.d/warp-plus" || error "Failed to download warp-plus init script."
@@ -155,7 +163,7 @@ psiphon() {
   info "psiphon"
   if [ ! -d /root/psiphon/ ]; then mkdir /root/psiphon/; fi
 
-  REMOTE_VERSION="$(curl -s "https://api.github.com/amaleky/WrtMate/releases/latest" | jq -r '.tag_name')" || error "Failed to detect psiphon version."
+  REMOTE_VERSION="$(curl -s "https://api.github.com/amaleky/WrtMate/releases/latest" | jq -r '.tag_name')"
   LOCAL_VERSION="$(cat "/root/.psiphon_version" 2>/dev/null || echo 'none')"
 
   if [[ -f "/etc/init.d/psiphon" ]]; then
@@ -164,7 +172,9 @@ psiphon() {
 
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
     source <(wget -qO- "${REPO_URL}/scripts/packages/psiphon.sh")
-    echo "$REMOTE_VERSION" >"/root/.psiphon_version"
+    if [ -n "$REMOTE_VERSION" ]; then
+      echo "$REMOTE_VERSION" >"/root/.psiphon_version"
+    fi
   fi
 
   curl -s -L -o "/etc/init.d/psiphon" "${REPO_URL}/src/etc/init.d/psiphon" || error "Failed to download psiphon init script."
