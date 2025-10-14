@@ -132,7 +132,7 @@ process_config() {
     return
   fi
 
-  jq --argjson port "$SOCKS_PORT" '{
+  /usr/bin/jq --argjson port "$SOCKS_PORT" '{
     "inbounds": [
       {
         "type": "mixed",
