@@ -1,7 +1,7 @@
 #!/bin/bash
 # V2ray/Xray Subscription Scanner
 #
-# Usage:    sudo bash -c "$(wget -qO- https://github.com/amaleky/WrtMate/raw/main/src/root/scripts/scanner.sh)"
+# Usage:    sudo bash -c "$(wget -qO- https://github.com/amaleky/WrtMate/raw/main/src/root/scripts/scanner.sh) run"
 #
 
 [ -z "$HOME" ] || [ "$HOME" = "/" ] && HOME="/root"
@@ -90,13 +90,13 @@ throttle() {
     if [ "$CPU_USAGE" -gt 90 ] || [ "$MEM_AVAILABLE" -lt 100000 ]; then
       wait
     fi
-  fi
-  if [ "$(wc -l <"$CONFIGS")" -ge $CONFIGS_LIMIT ]; then
-    echo "🎉 $(wc -l <"$CONFIGS") Configs Found (previous: $PREV_COUNT) in $CONFIGS"
-    if [ -f "/etc/init.d/ghost" ]; then
-      /etc/init.d/ghost start
+    if [ "$(wc -l <"$CONFIGS")" -ge $CONFIGS_LIMIT ]; then
+      echo "🎉 $(wc -l <"$CONFIGS") Configs Found (previous: $PREV_COUNT) in $CONFIGS"
+      if [ -f "/etc/init.d/ghost" ]; then
+        /etc/init.d/ghost start
+      fi
+      exit 0
     fi
-    exit 0
   fi
 }
 
@@ -121,7 +121,7 @@ process_config() {
   PARSED_CONFIG="/tmp/scanner.parsed.${SOCKS_PORT}"
   FINAL_CONFIG="/tmp/scanner.final.${SOCKS_PORT}"
 
-  if [[ -z "$CONFIG" ]] || [[ "$CONFIG" == \#* ]]; then
+  if [[ -z "$CONFIG" ]] || [[ "$CONFIG" == \#* ]] || [ "$(wc -l <"$CONFIGS")" -ge "$CONFIGS_LIMIT" ]; then
     return
   fi
 
@@ -173,7 +173,7 @@ process_config() {
   /tmp/sing-box-$SOCKS_PORT run -c "$FINAL_CONFIG" 2>&1 | while read -r LINE; do
     if echo "$LINE" | grep -q "sing-box started"; then
       if [ "$(curl -s -L -I --max-time 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://developer.android.com/")" -eq 200 ]; then
-        echo "✅ Found ($(wc -l <"$CONFIGS")) ${CONFIG}"
+        echo "✅ Found ($(wc -l <"$CONFIGS"))"
         echo "$CONFIG" >>"$CONFIGS"
       fi
       kill -9 $(pgrep -f "/tmp/sing-box-$SOCKS_PORT run -c .*")
@@ -183,43 +183,163 @@ process_config() {
   rm -rf "$RAW_CONFIG" "$PARSED_CONFIG" "$FINAL_CONFIG" "/tmp/sing-box-$SOCKS_PORT"
 }
 
-BACKUP="$(cat "$CONFIGS")"
-echo -n >"$CONFIGS"
-
-echo "⏳ Testing $CONFIGS"
-while IFS= read -r CONFIG; do
-  throttle
-  process_config "$CONFIG" &
-done <<<"$BACKUP"
-
-for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
-  CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
-  if curl -L --max-time 60 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
-    echo "✅ Downloaded $SUBSCRIPTION"
-  elif [ -f "$CACHE_FILE" ]; then
-    echo "⚠️ Using cashed $SUBSCRIPTION"
-  else
-    echo "❌ Failed to download $SUBSCRIPTION"
-    continue
-  fi
+test_subscriptions_local() {
+  BACKUP="$(cat "$CONFIGS")"
+  echo -n >"$CONFIGS"
+  echo "⏳ Testing $CONFIGS"
   while IFS= read -r CONFIG; do
     throttle
     process_config "$CONFIG" &
-  done <"$CACHE_FILE"
-done
+  done <<<"$BACKUP"
+}
 
-for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
-  CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
-  if curl -L --max-time 60 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
-    echo "✅ Downloaded $SUBSCRIPTION"
-  elif [ -f "$CACHE_FILE" ]; then
-    echo "⚠️ Using cashed $SUBSCRIPTION"
-  else
-    echo "❌ Failed to download $SUBSCRIPTION"
-    continue
-  fi
-  base64 --decode "$CACHE_FILE" 2>/dev/null | while IFS= read -r CONFIG; do
-    throttle
-    process_config "$CONFIG" &
+test_subscriptions_raw() {
+  for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
+    if [ "$(wc -l <"$CONFIGS")" -ge $CONFIGS_LIMIT ]; then continue; fi
+    CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
+    if curl -L --max-time 60 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
+      echo "✅ Downloaded $SUBSCRIPTION"
+    elif [ -f "$CACHE_FILE" ]; then
+      echo "⚠️ Using cashed $SUBSCRIPTION"
+    else
+      echo "❌ Failed to download $SUBSCRIPTION"
+      continue
+    fi
+    while IFS= read -r CONFIG; do
+      throttle
+      process_config "$CONFIG" &
+    done <"$CACHE_FILE"
   done
-done
+}
+
+test_subscriptions_base64() {
+  for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
+    if [ "$(wc -l <"$CONFIGS")" -ge $CONFIGS_LIMIT ]; then continue; fi
+    CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
+    if curl -L --max-time 60 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
+      echo "✅ Downloaded $SUBSCRIPTION"
+    elif [ -f "$CACHE_FILE" ]; then
+      echo "⚠️ Using cashed $SUBSCRIPTION"
+    else
+      echo "❌ Failed to download $SUBSCRIPTION"
+      continue
+    fi
+    base64 --decode "$CACHE_FILE" 2>/dev/null | while IFS= read -r CONFIG; do
+      throttle
+      process_config "$CONFIG" &
+    done
+  done
+}
+
+run() {
+  echo "✅ Running sing-box: $(wc -l <"$CONFIGS") Configs Found"
+  PARSED="/tmp/ghost-parsed.json"
+  SUBSCRIPTION="/tmp/ghost-subscription.json"
+
+  /usr/bin/hiddify-cli parse "$CONFIGS" -o "$PARSED" >/dev/null 2>&1|| exit 1
+
+  jq '{
+    "log": {
+      "level": "warning"
+    },
+    "dns": {
+      "servers": [
+        {
+          "tag": "remote",
+          "type": "tls",
+          "server": "208.67.222.2"
+        },
+        {
+          "tag": "local",
+          "type": "udp",
+          "server": "78.157.42.100"
+        },
+        {
+          "tag": "fortivpn",
+          "type": "udp",
+          "server": "192.168.88.20"
+        }
+      ],
+      "strategy": "ipv4_only"
+    },
+    "inbounds": [
+      {
+        "type": "mixed",
+        "tag": "mixed-in",
+        "listen": "0.0.0.0",
+        "listen_port": 9802,
+        "set_system_proxy": true
+      }
+    ],
+    "outbounds": (
+      [
+        {
+          "type": "urltest",
+          "tag": "Auto",
+          "outbounds": [.outbounds[] | select(.type | IN("selector","urltest","direct") | not) | .tag],
+          "url": "https://1.1.1.1/cdn-cgi/trace/",
+          "interval": "1m",
+          "tolerance": 50,
+          "interrupt_exist_connections": false
+        },
+        {
+          "type": "direct",
+          "tag": "direct"
+        }
+      ] + [.outbounds[] | select(.type | IN("selector","urltest","direct") | not)]
+    ),
+    "route": {
+      "rules": [
+        {
+          "action": "sniff"
+        },
+        {
+          "protocol": "dns",
+          "action": "hijack-dns"
+        },
+        {
+          "ip_is_private": true,
+          "outbound": "direct"
+        },
+        {
+          "rule_set": "geosite-ir",
+          "outbound": "direct"
+        },
+        {
+          "rule_set": "geoip-ir",
+          "outbound": "direct"
+        }
+      ],
+      "rule_set": [
+        {
+          "type": "remote",
+          "tag": "geosite-ir",
+          "format": "binary",
+          "url": "https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-ir.srs"
+        },
+        {
+          "type": "remote",
+          "tag": "geoip-ir",
+          "format": "binary",
+          "url": "https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geoip-ir.srs"
+        }
+      ],
+      "final": "Auto",
+      "default_domain_resolver": "local",
+      "auto_detect_interface": true
+    }
+  }' "$PARSED" >"$SUBSCRIPTION" || exit 0
+
+  /usr/bin/sing-box run -c "$SUBSCRIPTION"
+}
+
+main() {
+  test_subscriptions_local
+  test_subscriptions_raw
+  test_subscriptions_base64
+  if [ -n "${1-}" ]; then
+    "$1"
+  fi
+}
+
+main "$@"
