@@ -10,7 +10,7 @@
 CONFIGS="$HOME/ghost/configs.conf"
 PREV_COUNT=$(wc -l <"$CONFIGS")
 CACHE_DIR="$HOME/.cache/subscriptions"
-CONFIGS_LIMIT=100
+CONFIGS_LIMIT=40
 
 mkdir -p "$CACHE_DIR" "$HOME/ghost"
 
