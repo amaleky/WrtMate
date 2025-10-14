@@ -173,7 +173,7 @@ process_config() {
   /tmp/sing-box-$SOCKS_PORT run -c "$FINAL_CONFIG" 2>&1 | while read -r LINE; do
     if echo "$LINE" | grep -q "sing-box started"; then
       if [ "$(curl -s -L -I --max-time 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://developer.android.com/")" -eq 200 ]; then
-        echo "✅ Successfully ($(wc -l <"$CONFIGS")) ${CONFIG}"
+        echo "✅ Found ($(wc -l <"$CONFIGS")) ${CONFIG}"
         echo "$CONFIG" >>"$CONFIGS"
       fi
       kill -9 $(pgrep -f "/tmp/sing-box-$SOCKS_PORT run -c .*")
@@ -195,7 +195,7 @@ done <<<"$BACKUP"
 for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
   CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
   if curl -L --max-time 60 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
-    echo "✅ Downloaded subscription $SUBSCRIPTION"
+    echo "✅ Downloaded $SUBSCRIPTION"
   elif [ -f "$CACHE_FILE" ]; then
     echo "⚠️ Using cashed $SUBSCRIPTION"
   else
@@ -211,7 +211,7 @@ done
 for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
   CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
   if curl -L --max-time 60 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
-    echo "✅ Downloaded subscription $SUBSCRIPTION"
+    echo "✅ Downloaded $SUBSCRIPTION"
   elif [ -f "$CACHE_FILE" ]; then
     echo "⚠️ Using cashed $SUBSCRIPTION"
   else
