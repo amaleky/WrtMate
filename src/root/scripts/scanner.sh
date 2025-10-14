@@ -223,5 +223,3 @@ for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
     process_config "$CONFIG" &
   done
 done
-
-rm -rf /tmp/test* /tmp/sing-box*
