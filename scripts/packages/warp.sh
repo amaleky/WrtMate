@@ -58,7 +58,7 @@ main() {
   unzip -o /tmp/warp.zip -d /tmp
   mv /tmp/warp-plus /usr/bin/warp-plus
   chmod +x /usr/bin/warp-plus
-  rm -rfv /tmp/warp.zip /tmp/warp-plus
+  rm -rfv /tmp/warp.zip /tmp/README.md /tmp/LICENSE
 }
 
 main "$@"

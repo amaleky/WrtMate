@@ -71,7 +71,7 @@ main() {
   tar -xvzf /tmp/hiddify.tar.gz -C /tmp
   mv /tmp/HiddifyCli /usr/bin/hiddify-cli
   chmod +x /usr/bin/hiddify-cli
-  rm -rfv /tmp/hiddify.tar.gz /tmp/HiddifyCli
+  rm -rfv /tmp/hiddify.tar.gz /tmp/webui
 }
 
 main "$@"
