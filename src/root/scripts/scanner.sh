@@ -90,13 +90,6 @@ throttle() {
     if [ "$CPU_USAGE" -gt 90 ] || [ "$MEM_AVAILABLE" -lt 100000 ]; then
       wait
     fi
-    if [ "$(wc -l <"$CONFIGS")" -ge $CONFIGS_LIMIT ]; then
-      echo "🎉 $(wc -l <"$CONFIGS") Configs Found (previous: $PREV_COUNT) in $CONFIGS"
-      if [ -f "/etc/init.d/ghost" ]; then
-        /etc/init.d/ghost start
-      fi
-      exit 0
-    fi
   fi
 }
 
