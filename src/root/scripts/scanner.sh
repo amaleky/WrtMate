@@ -125,7 +125,7 @@ process_config() {
     return
   fi
 
-  /usr/bin/jq --argjson port "$SOCKS_PORT" '{
+  jq --argjson port "$SOCKS_PORT" '{
     "inbounds": [
       {
         "type": "mixed",
@@ -159,21 +159,17 @@ process_config() {
     "outbounds": .outbounds
   }' "$PARSED_CONFIG" >"$FINAL_CONFIG"
 
-  if [[ ! -f "/tmp/sing-box-$SOCKS_PORT" ]]; then
-    ln -s "/usr/bin/sing-box" "/tmp/sing-box-$SOCKS_PORT"
-  fi
-
-  /tmp/sing-box-$SOCKS_PORT run -c "$FINAL_CONFIG" 2>&1 | while read -r LINE; do
+  /usr/bin/sing-box run -c "$FINAL_CONFIG" 2>&1 | while read -r LINE; do
     if echo "$LINE" | grep -q "sing-box started"; then
       if [ "$(curl -s -L -I --max-time 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://developer.android.com/")" -eq 200 ]; then
         echo "✅ Found ($(wc -l <"$CONFIGS"))"
         echo "$CONFIG" >>"$CONFIGS"
       fi
-      kill -9 $(pgrep -f "/tmp/sing-box-$SOCKS_PORT run -c .*")
+      kill -9 $(pgrep -f "/usr/bin/sing-box run -c $FINAL_CONFIG")
     fi
   done
 
-  rm -rf "$RAW_CONFIG" "$PARSED_CONFIG" "$FINAL_CONFIG" "/tmp/sing-box-$SOCKS_PORT"
+  rm -rf "$RAW_CONFIG" "$PARSED_CONFIG" "$FINAL_CONFIG"
 }
 
 test_subscriptions_local() {
