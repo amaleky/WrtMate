@@ -1,7 +1,7 @@
 #!/bin/bash
 # V2ray/Xray Subscription Scanner
 #
-# Usage:    sudo bash -c "$(wget -qO- https://github.com/amaleky/WrtMate/raw/main/src/root/scripts/scanner.sh) run"
+# Usage:    wget -O "$HOME/scanner.sh" "https://github.com/amaleky/WrtMate/raw/main/src/root/scripts/scanner.sh"; sudo bash "$HOME/scanner.sh" run
 #
 
 [ -z "$HOME" ] || [ "$HOME" = "/" ] && HOME="/root"
@@ -231,38 +231,28 @@ run() {
 
   /usr/bin/hiddify-cli parse "$CONFIGS" -o "$PARSED" >/dev/null 2>&1|| exit 1
 
+  if [[ ! -f "/usr/share/singbox/rule-set/geosite-private.srs" ]]; then
+    source <(wget -qO- "https://github.com/amaleky/WrtMate/raw/main/src/root/scripts/geo-update.sh")
+  fi
+
   jq '{
     "log": {
       "level": "warning"
     },
     "dns": {
       "servers": [
-        {
-          "tag": "remote",
-          "type": "tls",
-          "server": "208.67.222.2"
-        },
-        {
-          "tag": "local",
-          "type": "udp",
-          "server": "78.157.42.100"
-        },
-        {
-          "tag": "fortivpn",
-          "type": "udp",
-          "server": "192.168.88.20"
-        }
+        { "tag": "remote", "type": "tls", "server": "208.67.222.2" },
+        { "tag": "local", "type": "local" }
       ],
-      "strategy": "ipv4_only"
+      "rules": [
+        { "rule_set": "geosite-ir", "server": "local" },
+        { "rule_set": "geosite-private", "server": "local" }
+      ],
+      "strategy": "ipv4_only",
+      "independent_cache": true
     },
     "inbounds": [
-      {
-        "type": "mixed",
-        "tag": "mixed-in",
-        "listen": "0.0.0.0",
-        "listen_port": 9802,
-        "set_system_proxy": true
-      }
+      { "type": "mixed", "tag": "mixed-in", "listen": "0.0.0.0", "listen_port": 9802, "set_system_proxy": true }
     ],
     "outbounds": (
       [
@@ -275,47 +265,39 @@ run() {
           "tolerance": 50,
           "interrupt_exist_connections": false
         },
-        {
-          "type": "direct",
-          "tag": "direct"
-        }
+        { "type": "direct", "tag": "direct" },
+        { "type": "block", "tag": "block" }
       ] + [.outbounds[] | select(.type | IN("selector","urltest","direct") | not)]
     ),
     "route": {
       "rules": [
-        {
-          "action": "sniff"
-        },
-        {
-          "protocol": "dns",
-          "action": "hijack-dns"
-        },
-        {
-          "ip_is_private": true,
-          "outbound": "direct"
-        },
-        {
-          "rule_set": "geosite-ir",
-          "outbound": "direct"
-        },
-        {
-          "rule_set": "geoip-ir",
-          "outbound": "direct"
-        }
+        { "action": "sniff" },
+        { "protocol": "dns", "action": "hijack-dns" },
+        { "ip_is_private": true, "outbound": "direct" },
+        { "rule_set": "geoip-ir", "outbound": "direct" },
+        { "rule_set": "geoip-malware", "outbound": "block" },
+        { "rule_set": "geoip-phishing", "outbound": "block" },
+        { "rule_set": "geoip-private", "outbound": "direct" },
+        { "rule_set": "geosite-category-ads-all", "outbound": "block" },
+        { "rule_set": "geosite-category-public-tracker", "outbound": "block" },
+        { "rule_set": "geosite-cryptominers", "outbound": "block" },
+        { "rule_set": "geosite-ir", "outbound": "direct" },
+        { "rule_set": "geosite-malware", "outbound": "block" },
+        { "rule_set": "geosite-phishing", "outbound": "block" },
+        { "rule_set": "geosite-private", "outbound": "direct" }
       ],
       "rule_set": [
-        {
-          "type": "remote",
-          "tag": "geosite-ir",
-          "format": "binary",
-          "url": "https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-ir.srs"
-        },
-        {
-          "type": "remote",
-          "tag": "geoip-ir",
-          "format": "binary",
-          "url": "https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geoip-ir.srs"
-        }
+        { "type": "local", "tag": "geoip-ir", "format": "binary", "path": "/usr/share/singbox/rule-set/geoip-ir.srs" },
+        { "type": "local", "tag": "geoip-malware", "format": "binary", "path": "/usr/share/singbox/rule-set/geoip-malware.srs" },
+        { "type": "local", "tag": "geoip-phishing", "format": "binary", "path": "/usr/share/singbox/rule-set/geoip-phishing.srs" },
+        { "type": "local", "tag": "geoip-private", "format": "binary", "path": "/usr/share/singbox/rule-set/geoip-private.srs" },
+        { "type": "local", "tag": "geosite-category-ads-all", "format": "binary", "path": "/usr/share/singbox/rule-set/geosite-category-ads-all.srs" },
+        { "type": "local", "tag": "geosite-category-public-tracker", "format": "binary", "path": "/usr/share/singbox/rule-set/geosite-category-public-tracker.srs" },
+        { "type": "local", "tag": "geosite-cryptominers", "format": "binary", "path": "/usr/share/singbox/rule-set/geosite-cryptominers.srs" },
+        { "type": "local", "tag": "geosite-ir", "format": "binary", "path": "/usr/share/singbox/rule-set/geosite-ir.srs" },
+        { "type": "local", "tag": "geosite-malware", "format": "binary", "path": "/usr/share/singbox/rule-set/geosite-malware.srs" },
+        { "type": "local", "tag": "geosite-phishing", "format": "binary", "path": "/usr/share/singbox/rule-set/geosite-phishing.srs" },
+        { "type": "local", "tag": "geosite-private", "format": "binary", "path": "/usr/share/singbox/rule-set/geosite-private.srs" }
       ],
       "final": "Auto",
       "default_domain_resolver": "local",

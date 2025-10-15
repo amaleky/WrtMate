@@ -21,6 +21,7 @@ download() {
       mv "$TEMP_FILE" "$FILE"
     else
       rm -rf "$TEMP_FILE"
+      exit
     fi
   fi
 }
