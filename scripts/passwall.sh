@@ -72,7 +72,7 @@ balancer() {
     SUBSCRIPTION_URL=$(grep -E "^SUBSCRIPTION_URL=" "/root/balancer/run.sh" | cut -d'=' -f2-)
   fi
 
-  if [[ -f "/etc/init.d/balancer" ]]; then
+  if [[ -f "/etc/init.d/balancer" ]] && /etc/init.d/balancer running; then
     /etc/init.d/balancer stop
   fi
 
@@ -100,7 +100,7 @@ ghost() {
   curl -s -L -o "/root/scripts/scanner.sh" "${REPO_URL}/src/root/scripts/scanner.sh" || error "Failed to download scanner.sh."
   chmod +x /root/scripts/scanner.sh
 
-  if [[ -f "/etc/init.d/scanner" ]]; then
+  if [[ -f "/etc/init.d/scanner" ]] && /etc/init.d/scanner running; then
     /etc/init.d/scanner stop
   fi
 
@@ -121,7 +121,7 @@ ghost() {
     curl -s -L -o "/root/ghost/configs.conf" "${REPO_URL}/src/root/ghost/configs.conf" || error "Failed to download ghost configs."
   fi
 
-  if [[ -f "/etc/init.d/ghost" ]]; then
+  if [[ -f "/etc/init.d/ghost" ]] && /etc/init.d/ghost running; then
     /etc/init.d/ghost stop
   fi
 
@@ -141,7 +141,7 @@ warp() {
   REMOTE_VERSION="$(curl -s "https://api.github.com/repos/bepass-org/warp-plus/releases/latest" | jq -r '.tag_name')"
   LOCAL_VERSION="$(cat "/root/.warp_version" 2>/dev/null || echo 'none')"
 
-  if [[ -f "/etc/init.d/warp-plus" ]]; then
+  if [[ -f "/etc/init.d/warp-plus" ]] && /etc/init.d/warp-plus running; then
     /etc/init.d/warp-plus stop
   fi
 
@@ -166,7 +166,7 @@ psiphon() {
   REMOTE_VERSION="$(curl -s "https://api.github.com/amaleky/WrtMate/releases/latest" | jq -r '.tag_name')"
   LOCAL_VERSION="$(cat "/root/.psiphon_version" 2>/dev/null || echo 'none')"
 
-  if [[ -f "/etc/init.d/psiphon" ]]; then
+  if [[ -f "/etc/init.d/psiphon" ]] && /etc/init.d/psiphon running; then
     /etc/init.d/psiphon stop
   fi
 
@@ -223,7 +223,7 @@ ssh_proxy() {
     read -r -p "Enter SSH port: " SSH_PORT
   fi
 
-  if [[ -f "/etc/init.d/ssh-proxy" ]]; then
+  if [[ -f "/etc/init.d/ssh-proxy" ]] && /etc/init.d/ssh-proxy running; then
     /etc/init.d/ssh-proxy stop
   fi
 
@@ -251,7 +251,7 @@ server_less() {
   info "server_less"
   if [ ! -d /root/xray/ ]; then mkdir /root/xray/; fi
 
-  if [[ -f "/etc/init.d/serverless" ]]; then
+  if [[ -f "/etc/init.d/serverless" ]] && /etc/init.d/serverless running; then
     /etc/init.d/ssh-proxy stop
   fi
 
