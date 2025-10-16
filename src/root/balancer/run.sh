@@ -1,14 +1,14 @@
 #!/bin/sh
 
 SUBSCRIPTION_URL=""
-CONFIGS="/root/balancer/subscription.json"
-TEMP_FILE="/tmp/balancer-tmp.json"
-SUBSCRIPTION="/tmp/balancer-subscription.json"
+RAW_CONFIG="/root/balancer/subscription.json"
+TEMP_CONFIG="/tmp/balancer.tmp"
+FINAL_CONFIG="/tmp/balancer.final"
 
-kill -9 $(pgrep -f "/usr/bin/sing-box run -c $SUBSCRIPTION")
+kill -9 $(pgrep -f "/usr/bin/sing-box run -c $FINAL_CONFIG")
 
-if curl -L -o "$TEMP_FILE" "$SUBSCRIPTION_URL"; then
-  mv "$TEMP_FILE" "$CONFIGS"
+if curl -L -o "$TEMP_CONFIG" "$SUBSCRIPTION_URL"; then
+  mv "$TEMP_CONFIG" "$RAW_CONFIG"
 fi
 
 jq '{
@@ -59,6 +59,6 @@ jq '{
     "default_domain_resolver": "remote",
     "final": "Auto"
   }
-}' "$CONFIGS" >"$SUBSCRIPTION" || exit 0
+}' "$RAW_CONFIG" >"$FINAL_CONFIG" || exit 0
 
-/usr/bin/sing-box run -c "$SUBSCRIPTION"
+/usr/bin/sing-box run -c "$FINAL_CONFIG"

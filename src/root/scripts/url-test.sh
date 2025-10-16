@@ -26,24 +26,6 @@ test_passwall() {
   fi
 }
 
-test_ghost() {
-  PORT="9802"
-  while [ "$(logread | grep "run.sh\[$(pgrep -f '/root/ghost/run.sh')\]" | grep -c "ERROR")" -gt 50 ] || \
-    [ "$(curl -s -L -I --max-time 2 --retry 2 --socks5-hostname "127.0.0.1:$PORT" -o "/dev/null" -w "%{http_code}" "https://telegram.org/")" -ne 200 ] || \
-    [ "$(curl -s -L -I --max-time 2 --retry 2 --socks5-hostname "127.0.0.1:$PORT" -o "/dev/null" -w "%{http_code}" "https://www.youtube.com/")" -ne 200 ] || \
-    [ "$(curl -s -L -I --max-time 2 --retry 2 --socks5-hostname "127.0.0.1:$PORT" -o "/dev/null" -w "%{http_code}" "https://firebase.google.com/")" -ne 200 ] || \
-    [ "$(curl -s -L -I --max-time 2 --retry 2 --socks5-hostname "127.0.0.1:$PORT" -o "/dev/null" -w "%{http_code}" "https://developer.android.com/")" -ne 200 ]; do
-    echo "❌ ghost connectivity test failed"
-    if [ "$(wc -l < "/root/ghost/configs.conf")" -gt 1 ]; then
-      sed -i '1d' "/root/ghost/configs.conf"
-    fi
-    /etc/init.d/ghost restart
-    /etc/init.d/scanner start
-    sleep 5
-  done
-  echo "✅ ghost connectivity test passed"
-}
-
 test_service() {
   SERVICE="$1"
   PORT="$2"
@@ -51,6 +33,7 @@ test_service() {
     if ! curl -s -L -I --max-time 2 --retry 2 --socks5-hostname "127.0.0.1:$PORT" -o "/dev/null" "http://www.gstatic.com/generate_204"; then
       echo "❌ $SERVICE connectivity test failed"
       case "$SERVICE" in
+        ghost) /etc/init.d/scanner start ;;
         warp-plus) rm -rfv /.cache/warp-plus/ ;;
         ssh-proxy) rm -fv /root/.ssh/known_hosts ;;
       esac
@@ -60,8 +43,10 @@ test_service() {
       echo "✅ $SERVICE connectivity test passed"
     fi
   else
-    if /etc/init.d/"$SERVICE" running; then
-      /etc/init.d/"$SERVICE" stop
+    if [ "$SERVICE" != "ghost" ]; then
+      if /etc/init.d/"$SERVICE" running; then
+        /etc/init.d/"$SERVICE" stop
+      fi
     fi
   fi
 }
@@ -69,8 +54,8 @@ test_service() {
 main() {
   test_connection
   test_passwall
-  test_ghost
   test_service "balancer" 9801
+  test_service "ghost" 9802
   test_service "warp-plus" 9803
   test_service "psiphon" 9804
   test_service "tor" 9805

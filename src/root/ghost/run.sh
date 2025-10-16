@@ -1,15 +1,12 @@
 #!/bin/sh
 
-SUBSCRIPTION_PATH="/root/ghost/configs.conf"
-FIRST_CONFIG="/tmp/ghost-first.conf"
-CONFIGS="/tmp/ghost-parsed.json"
-SUBSCRIPTION="/tmp/ghost-subscription.json"
+RAW_CONFIG="/root/ghost/configs.conf"
+PARSED_CONFIG="/tmp/ghost.parsed"
+FINAL_CONFIG="/tmp/ghost.final"
 
-kill -9 $(pgrep -f "/usr/bin/sing-box run -c $SUBSCRIPTION")
+kill -9 $(pgrep -f "/usr/bin/sing-box run -c $FINAL_CONFIG")
 
-sed -n '1p' "$SUBSCRIPTION_PATH" > "$FIRST_CONFIG"
-
-/usr/bin/hiddify-cli parse "$FIRST_CONFIG" -o "$CONFIGS" || exit 1
+/usr/bin/hiddify-cli parse "$RAW_CONFIG" -o "$PARSED_CONFIG" || exit 1
 
 jq '{
   "log": {
@@ -23,7 +20,19 @@ jq '{
       "listen_port": 9802
     }
   ],
-  "outbounds": .outbounds,
+  "outbounds": (
+    [
+      {
+        "type": "urltest",
+        "tag": "Auto",
+        "outbounds": [.outbounds[] | select(.type | IN("selector","urltest","direct") | not) | .tag],
+        "url": "https://1.1.1.1/cdn-cgi/trace/",
+        "interval": "1m",
+        "tolerance": 50,
+        "interrupt_exist_connections": false
+      }
+    ] + [.outbounds[] | select(.type | IN("selector","urltest","direct") | not)]
+  ),
   "dns": {
     "servers": [
       {
@@ -44,8 +53,9 @@ jq '{
         "action": "hijack-dns"
       }
     ],
-    "default_domain_resolver": "remote"
+    "default_domain_resolver": "remote",
+    "final": "Auto"
   }
-}' "$CONFIGS" >"$SUBSCRIPTION" || exit 0
+}' "$PARSED_CONFIG" >"$FINAL_CONFIG" || exit 0
 
-/usr/bin/sing-box run -c "$SUBSCRIPTION"
+/usr/bin/sing-box run -c "$FINAL_CONFIG"
