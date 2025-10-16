@@ -13,12 +13,7 @@ jq '{
     "level": "warning"
   },
   "inbounds": [
-    {
-      "type": "mixed",
-      "tag": "mixed-in",
-      "listen": "0.0.0.0",
-      "listen_port": 9802
-    }
+    { "type": "mixed", "tag": "mixed-in", "listen": "0.0.0.0", "listen_port": 9802 }
   ],
   "outbounds": (
     [
@@ -35,23 +30,14 @@ jq '{
   ),
   "dns": {
     "servers": [
-      {
-        "tag": "remote",
-        "type": "tls",
-        "server": "208.67.222.2"
-      }
+      { "tag": "remote", "type": "tls", "server": "208.67.222.2" }
     ],
     "strategy": "ipv4_only"
   },
   "route": {
     "rules": [
-      {
-        "action": "sniff"
-      },
-      {
-        "protocol": "dns",
-        "action": "hijack-dns"
-      }
+      { "action": "sniff" },
+      { "protocol": "dns", "action": "hijack-dns" }
     ],
     "default_domain_resolver": "remote",
     "final": "Auto"

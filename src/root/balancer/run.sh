@@ -38,23 +38,14 @@ jq '{
   ),
   "dns": {
     "servers": [
-      {
-        "tag": "remote",
-        "type": "tls",
-        "server": "208.67.222.2"
-      }
+      { "tag": "remote", "type": "tls", "server": "208.67.222.2" }
     ],
     "strategy": "ipv4_only"
   },
   "route": {
     "rules": [
-      {
-        "action": "sniff"
-      },
-      {
-        "protocol": "dns",
-        "action": "hijack-dns"
-      }
+      { "action": "sniff" },
+      { "protocol": "dns", "action": "hijack-dns" }
     ],
     "default_domain_resolver": "remote",
     "final": "Auto"
