@@ -1,6 +1,9 @@
 #!/bin/bash
 # Passwall configuration for OpenWRT
 
+MIN_RAM_MB=400
+TOTAL_RAM=$(($(grep MemTotal /proc/meminfo | awk '{print $2}') / 1024))
+
 passwall() {
   info "passwall"
   REMOTE_VERSION="$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | jq -r '.tag_name')"
@@ -87,10 +90,9 @@ balancer() {
   fi
   if [ -n "$SUBSCRIPTION_URL" ]; then
     sed -i "s|^SUBSCRIPTION_URL=.*|SUBSCRIPTION_URL=${SUBSCRIPTION_URL}|" "/root/balancer/run.sh"
+    /etc/init.d/balancer enable
+    /etc/init.d/balancer start
   fi
-
-  /etc/init.d/balancer enable
-  /etc/init.d/balancer start
 }
 
 ghost() {
@@ -109,8 +111,10 @@ ghost() {
 
   /etc/init.d/scanner disable
 
-  if [ ! -f "/root/ghost/configs.conf" ] || [ "$(wc -l <"/root/ghost/configs.conf")" -eq 0 ]; then
-    /etc/init.d/scanner start
+  if [ "$TOTAL_RAM" -ge "$MIN_RAM_MB" ]; then
+    if [ ! -f "/root/ghost/configs.conf" ] || [ "$(wc -l <"/root/ghost/configs.conf")" -eq 0 ]; then
+      /etc/init.d/scanner start
+    fi
   fi
 
   add_cron_job "0 * * * * /etc/init.d/scanner start"
@@ -155,8 +159,10 @@ warp() {
   curl -s -L -o "/etc/init.d/warp-plus" "${REPO_URL}/src/etc/init.d/warp-plus" || error "Failed to download warp-plus init script."
   chmod +x /etc/init.d/warp-plus
 
-  /etc/init.d/warp-plus enable
-  /etc/init.d/warp-plus start
+  if [ "$TOTAL_RAM" -ge "$MIN_RAM_MB" ]; then
+    /etc/init.d/warp-plus enable
+    /etc/init.d/warp-plus start
+  fi
 }
 
 psiphon() {
@@ -182,8 +188,10 @@ psiphon() {
 
   curl -s -L -o "/root/psiphon/client.config" "https://github.com/amaleky/WrtMate/raw/main/src/root/psiphon/client.config" || error "Failed to download psiphon configs."
 
-  /etc/init.d/psiphon enable
-  /etc/init.d/psiphon start
+  if [ "$TOTAL_RAM" -ge "$MIN_RAM_MB" ]; then
+    /etc/init.d/psiphon enable
+    /etc/init.d/psiphon start
+  fi
 }
 
 tor() {
@@ -202,8 +210,10 @@ tor() {
     } >>/etc/tor/torrc
   fi
 
-  /etc/init.d/tor enable
-  /etc/init.d/tor start
+  if [ "$TOTAL_RAM" -ge "$MIN_RAM_MB" ]; then
+    /etc/init.d/tor enable
+    /etc/init.d/tor start
+  fi
 }
 
 ssh_proxy() {
@@ -230,21 +240,22 @@ ssh_proxy() {
   curl -s -L -o "/etc/init.d/ssh-proxy" "${REPO_URL}/src/etc/init.d/ssh-proxy" || error "Failed to download ssh-proxy init script."
   chmod +x "/etc/init.d/ssh-proxy"
 
-  if [ -n "$SSH_HOST" ]; then
-    sed -i "s|^SSH_HOST=.*|SSH_HOST=${SSH_HOST}|" "/etc/init.d/ssh-proxy"
-  fi
-  if [ -n "$SSH_PORT" ]; then
-    sed -i "s|^SSH_PORT=.*|SSH_PORT=${SSH_PORT}|" "/etc/init.d/ssh-proxy"
-  fi
-
   if [[ ! -f "/root/.ssh/id_rsa" ]]; then
     info "Please paste your SSH private key (press Ctrl+D when done):"
     cat >"/root/.ssh/id_rsa"
     chmod 600 "/root/.ssh/id_rsa"
   fi
 
-  /etc/init.d/ssh-proxy enable
-  /etc/init.d/ssh-proxy start
+  if [ -n "$SSH_HOST" ]; then
+    sed -i "s|^SSH_HOST=.*|SSH_HOST=${SSH_HOST}|" "/etc/init.d/ssh-proxy"
+    if [ -n "$SSH_PORT" ]; then
+      sed -i "s|^SSH_PORT=.*|SSH_PORT=${SSH_PORT}|" "/etc/init.d/ssh-proxy"
+      if [[ -f "/root/.ssh/id_rsa" ]]; then
+        /etc/init.d/ssh-proxy enable
+        /etc/init.d/ssh-proxy start
+      fi
+    fi
+  fi
 }
 
 server_less() {
@@ -260,8 +271,10 @@ server_less() {
 
   curl -s -L -o "/root/xray/serverless.json" "${REPO_URL}/src/root/xray/serverless.json" || error "Failed to download ServerLess configs."
 
-  /etc/init.d/serverless enable
-  /etc/init.d/serverless start
+  if [ "$TOTAL_RAM" -ge "$MIN_RAM_MB" ]; then
+    /etc/init.d/serverless enable
+    /etc/init.d/serverless start
+  fi
 }
 
 main() {
