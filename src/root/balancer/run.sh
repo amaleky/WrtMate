@@ -38,7 +38,7 @@ jq '{
   ),
   "dns": {
     "servers": [
-      { "tag": "remote", "type": "tls", "server": "208.67.222.2" }
+      { "tag": "remote", "type": "tls", "server": "1.1.1.1" }
     ],
     "strategy": "ipv4_only"
   },

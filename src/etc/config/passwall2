@@ -84,7 +84,7 @@ config global
 	option dns_redirect '0'
 	option node 'Splitter'
 	option node_socks_bind_local '0'
-	option remote_dns '208.67.222.2'
+	option remote_dns '1.1.1.1'
 
 config global_haproxy
 	option balancing_enable '0'
