@@ -47,7 +47,7 @@ confirm() {
 
   read -r -p "$prompt $options: " response
   response="${response:-$default}"
-  [[ "$response" =~ ^[Yy] ]]
+  [[ $response =~ ^[Yy] ]]
 }
 
 update_package_lists() {
@@ -61,7 +61,7 @@ update_package_lists() {
     local time_diff=$((current_time - last_update))
 
     if [ $time_diff -lt $update_interval ]; then
-      info "Package lists are up to date (last update was $(($time_diff / 60)) minutes ago)"
+      info "Package lists are up to date (last update was $((time_diff / 60)) minutes ago)"
       return 0
     fi
   fi

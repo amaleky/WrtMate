@@ -4,55 +4,6 @@
 MIN_RAM_MB=400
 TOTAL_RAM=$(($(grep MemTotal /proc/meminfo | awk '{print $2}') / 1024))
 
-passwall() {
-  info "passwall"
-  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | jq -r '.tag_name')"
-  LOCAL_VERSION="$(cat "/root/.passwall2_version" 2>/dev/null || echo 'none')"
-
-  if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
-    opkg remove dnsmasq
-    ensure_packages "dnsmasq-full kmod-nft-socket kmod-nft-tproxy binutils"
-
-    curl -s -L -o "/tmp/packages.zip" "https://github.com/xiaorouji/openwrt-passwall2/releases/latest/download/passwall_packages_ipk_$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2).zip" || error "Failed to download Passwall packages."
-    unzip -o /tmp/packages.zip -d /tmp/passwall >/dev/null 2>&1
-    for pkg in /tmp/passwall/*.ipk; do opkg install "$pkg"; done
-
-    TAG=$(curl -s -L "https://github.com/xiaorouji/openwrt-passwall2/releases/latest" | grep -oE '/xiaorouji/openwrt-passwall2/releases/tag/[^"]+' | head -n1 | awk -F'/tag/' '{print $2}') || error "Failed to find passwall2 tab."
-    URL=$(curl -s -L "https://github.com/xiaorouji/openwrt-passwall2/releases/expanded_assets/$TAG" | grep -o 'href="[^"]*luci-[^"]*luci-app-passwall2_'"$TAG"'_all\.ipk"' | sed 's/href="//;s/"$//' | sed 's|^/|https://github.com/|' | head -n1) || error "Failed to find passwall2 url."
-    curl -s -L -o "/tmp/passwall2.ipk" "$URL" || error "Failed to download Passwall2 package."
-    opkg install /tmp/passwall2.ipk || error "Failed to install Passwall2."
-
-    if [ -n "$REMOTE_VERSION" ]; then
-      echo "$REMOTE_VERSION" >"/root/.passwall2_version"
-    fi
-  fi
-
-  curl -s -L -o "/etc/config/passwall2" "${REPO_URL}/src/etc/config/passwall2" || error "Failed to download passwall2 config."
-
-  uci commit passwall2
-  /etc/init.d/passwall2 restart
-}
-
-geo_update() {
-  info "geo_update"
-  if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
-  curl -s -L -o "/root/scripts/geo-update.sh" "${REPO_URL}/src/root/scripts/geo-update.sh" || error "Failed to download geo-update.sh."
-  chmod +x /root/scripts/geo-update.sh
-  add_cron_job "0 6 * * 0 /root/scripts/geo-update.sh"
-  /root/scripts/geo-update.sh
-}
-
-url_test() {
-  info "url_test"
-  if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
-  curl -s -L -o "/root/scripts/url-test.sh" "${REPO_URL}/src/root/scripts/url-test.sh" || error "Failed to download url-test.sh."
-  chmod +x /root/scripts/url-test.sh
-  add_cron_job "*/5 * * * * /root/scripts/url-test.sh"
-
-  curl -s -L -o "/etc/hotplug.d/iface/99-url-test" "${REPO_URL}/src/etc/hotplug.d/iface/99-url-test" || error "Failed to download 99-url-test hotplug script."
-  chmod +x /etc/hotplug.d/iface/99-url-test
-}
-
 hiddify() {
   info "hiddify"
 
@@ -275,6 +226,55 @@ server_less() {
     /etc/init.d/serverless enable
     /etc/init.d/serverless start
   fi
+}
+
+url_test() {
+  info "url_test"
+  if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
+  curl -s -L -o "/root/scripts/url-test.sh" "${REPO_URL}/src/root/scripts/url-test.sh" || error "Failed to download url-test.sh."
+  chmod +x /root/scripts/url-test.sh
+  add_cron_job "*/5 * * * * /root/scripts/url-test.sh"
+
+  curl -s -L -o "/etc/hotplug.d/iface/99-url-test" "${REPO_URL}/src/etc/hotplug.d/iface/99-url-test" || error "Failed to download 99-url-test hotplug script."
+  chmod +x /etc/hotplug.d/iface/99-url-test
+}
+
+geo_update() {
+  info "geo_update"
+  if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
+  curl -s -L -o "/root/scripts/geo-update.sh" "${REPO_URL}/src/root/scripts/geo-update.sh" || error "Failed to download geo-update.sh."
+  chmod +x /root/scripts/geo-update.sh
+  add_cron_job "0 6 * * 0 /root/scripts/geo-update.sh"
+  /root/scripts/geo-update.sh
+}
+
+passwall() {
+  info "passwall"
+  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | jq -r '.tag_name')"
+  LOCAL_VERSION="$(cat "/root/.passwall2_version" 2>/dev/null || echo 'none')"
+
+  if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
+    opkg remove dnsmasq
+    ensure_packages "dnsmasq-full kmod-nft-socket kmod-nft-tproxy binutils"
+
+    curl -s -L -o "/tmp/packages.zip" "https://github.com/xiaorouji/openwrt-passwall2/releases/latest/download/passwall_packages_ipk_$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2).zip" || error "Failed to download Passwall packages."
+    unzip -o /tmp/packages.zip -d /tmp/passwall >/dev/null 2>&1
+    for pkg in /tmp/passwall/*.ipk; do opkg install "$pkg"; done
+
+    TAG=$(curl -s -L "https://github.com/xiaorouji/openwrt-passwall2/releases/latest" | grep -oE '/xiaorouji/openwrt-passwall2/releases/tag/[^"]+' | head -n1 | awk -F'/tag/' '{print $2}') || error "Failed to find passwall2 tab."
+    URL=$(curl -s -L "https://github.com/xiaorouji/openwrt-passwall2/releases/expanded_assets/$TAG" | grep -o 'href="[^"]*luci-[^"]*luci-app-passwall2_'"$TAG"'_all\.ipk"' | sed 's/href="//;s/"$//' | sed 's|^/|https://github.com/|' | head -n1) || error "Failed to find passwall2 url."
+    curl -s -L -o "/tmp/passwall2.ipk" "$URL" || error "Failed to download Passwall2 package."
+    opkg install /tmp/passwall2.ipk || error "Failed to install Passwall2."
+
+    if [ -n "$REMOTE_VERSION" ]; then
+      echo "$REMOTE_VERSION" >"/root/.passwall2_version"
+    fi
+  fi
+
+  curl -s -L -o "/etc/config/passwall2" "${REPO_URL}/src/etc/config/passwall2" || error "Failed to download passwall2 config."
+
+  uci commit passwall2
+  /etc/init.d/passwall2 restart
 }
 
 main() {

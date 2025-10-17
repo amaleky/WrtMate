@@ -19,16 +19,16 @@ menu() {
 
   select opt in "${options[@]}"; do
     case "$REPLY" in
-    1) source <(wget -qO- "${REPO_URL}/scripts/setup.sh") ;;
-    2) source <(wget -qO- "${REPO_URL}/scripts/mwan.sh") ;;
-    3) source <(wget -qO- "${REPO_URL}/scripts/passwall.sh") ;;
-    4) source <(wget -qO- "${REPO_URL}/scripts/usb.sh") ;;
-    5) source <(wget -qO- "${REPO_URL}/scripts/setup.sh") upgrade_firmware ;;
-    6)
-      success "Exiting WrtMate installer. Thank you for using WrtMate!"
-      exit 0
-      ;;
-    *) warning "Invalid option $REPLY" ;;
+      1) source <(wget -qO- "${REPO_URL}/scripts/setup.sh") ;;
+      2) source <(wget -qO- "${REPO_URL}/scripts/mwan.sh") ;;
+      3) source <(wget -qO- "${REPO_URL}/scripts/passwall.sh") ;;
+      4) source <(wget -qO- "${REPO_URL}/scripts/usb.sh") ;;
+      5) source <(wget -qO- "${REPO_URL}/scripts/setup.sh") upgrade_firmware ;;
+      6)
+        success "Exiting WrtMate installer. Thank you for using WrtMate!"
+        exit 0
+        ;;
+      *) warning "Invalid option $REPLY" ;;
     esac
     echo # Add a blank line for readability
     menu

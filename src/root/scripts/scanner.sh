@@ -114,7 +114,7 @@ process_config() {
   PARSED_CONFIG="/tmp/scanner.parsed.${SOCKS_PORT}"
   FINAL_CONFIG="/tmp/scanner.final.${SOCKS_PORT}"
 
-  if [[ -z "$CONFIG" ]] || [[ "$CONFIG" == \#* ]] || [ "$(wc -l <"$CONFIGS")" -ge "$CONFIGS_LIMIT" ]; then
+  if [[ -z $CONFIG ]] || [[ $CONFIG == \#* ]] || [ "$(wc -l <"$CONFIGS")" -ge "$CONFIGS_LIMIT" ]; then
     return
   fi
 
@@ -211,7 +211,7 @@ run() {
   PARSED="/tmp/ghost-parsed.json"
   SUBSCRIPTION="/tmp/ghost-subscription.json"
 
-  /usr/bin/hiddify-cli parse "$CONFIGS" -o "$PARSED" >/dev/null 2>&1|| exit 1
+  /usr/bin/hiddify-cli parse "$CONFIGS" -o "$PARSED" >/dev/null 2>&1 || exit 1
 
   if [[ ! -f "/usr/share/singbox/rule-set/geosite-private.srs" ]]; then
     source <(wget -qO- "https://github.com/amaleky/WrtMate/raw/main/src/root/scripts/geo-update.sh")

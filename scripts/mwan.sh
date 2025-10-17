@@ -70,7 +70,7 @@ validate_input() {
   local port="$2"
 
   # Validate interface name format
-  if ! [[ "$interface" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+  if ! [[ $interface =~ ^[a-zA-Z0-9_-]+$ ]]; then
     echo error "Invalid interface name format. Use only letters, numbers, underscore, and hyphen"
   fi
 

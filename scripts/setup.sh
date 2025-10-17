@@ -31,7 +31,7 @@ upgrade() {
   LATEST_VERSION=$(check_firmware_version)
   DIST_RELEASE=$(grep DISTRIB_RELEASE /etc/openwrt_release | cut -d"'" -f2)
 
-  if [[ "$LATEST_VERSION" != "$DIST_RELEASE" ]]; then
+  if [[ $LATEST_VERSION != "$DIST_RELEASE" ]]; then
     upgrade_firmware
   fi
 
@@ -104,7 +104,7 @@ remove_ipv6_interfaces() {
 configure_lan_ip() {
   echo "Enter Your Router IP [default: $LAN_IPADDR]: "
   read -r -e -i "$LAN_IPADDR" CUSTOM_LAN_IPADDR
-  if [[ "$CUSTOM_LAN_IPADDR" != "$LAN_IPADDR" ]]; then
+  if [[ $CUSTOM_LAN_IPADDR != "$LAN_IPADDR" ]]; then
     uci set network.lan.ipaddr="$CUSTOM_LAN_IPADDR"
     uci set network.lan.netmask='255.255.255.0'
     uci commit network

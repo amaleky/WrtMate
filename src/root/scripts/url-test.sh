@@ -7,7 +7,7 @@ get_retry_count() {
 
 set_retry_count() {
   FILE="/tmp/$1.count"
-  echo "$(($(get_retry_count "$1") + 1))" > "$FILE"
+  echo "$(($(get_retry_count "$1") + 1))" >"$FILE"
 }
 
 test_connection() {
