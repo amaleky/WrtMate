@@ -30,7 +30,7 @@ jq '{
         "tag": "Auto",
         "outbounds": [.outbounds[] | select(.type | IN("selector","urltest","direct") | not) | .tag],
         "url": "https://1.1.1.1/cdn-cgi/trace/",
-        "interval": "1m",
+        "interval": "10m",
         "tolerance": 50,
         "interrupt_exist_connections": false
       }
