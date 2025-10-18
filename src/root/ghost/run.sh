@@ -21,7 +21,7 @@ jq '{
         "type": "urltest",
         "tag": "Auto",
         "outbounds": [.outbounds[] | select(.type | IN("selector","urltest","direct") | not) | .tag],
-        "url": "https://1.1.1.1/cdn-cgi/trace/",
+        "url": "https://developer.android.com/favicon.ico",
         "interval": "10m",
         "tolerance": 50,
         "interrupt_exist_connections": false
