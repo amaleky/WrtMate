@@ -1,7 +1,7 @@
 #!/bin/bash
 # V2ray/Xray Subscription Scanner
 #
-# Usage:    wget -O "$HOME/scanner.sh" "https://github.com/amaleky/WrtMate/raw/main/src/root/scripts/scanner.sh"; sudo bash "$HOME/scanner.sh" run
+# Usage:    wget -O "$HOME/scanner.sh" "https://github.com/amaleky/WrtMate/raw/main/src/root/scripts/scanner.sh"; sudo bash "$HOME/scanner.sh"
 #
 
 [ -z "$HOME" ] || [ "$HOME" = "/" ] && HOME="/root"
@@ -11,6 +11,7 @@ CONFIGS="$HOME/ghost/configs.conf"
 PREV_COUNT=$(wc -l <"$CONFIGS")
 CACHE_DIR="$HOME/.cache/subscriptions"
 CONFIGS_LIMIT=40
+PARALLEL_LIMIT=20
 
 mkdir -p "$CACHE_DIR" "$HOME/ghost"
 
@@ -91,6 +92,18 @@ throttle() {
       wait
     fi
   fi
+  if [ "$(pgrep -f "/usr/bin/sing-box run -c *" | wc -l)" -ge "$PARALLEL_LIMIT" ]; then
+    wait
+  fi
+  if [ "$(wc -l <"$CONFIGS")" -ge "$CONFIGS_LIMIT" ]; then
+    if [ -f "/etc/init.d/ghost" ]; then
+      if ! test_socks_port "9802"; then
+        /etc/init.d/ghost restart
+      fi
+    fi
+    wait
+    exit
+  fi
 }
 
 get_random_port() {
@@ -104,6 +117,19 @@ get_random_port() {
   done
   echo "❌ Could not find free port after 100 tries" >&2
   return 1
+}
+
+test_socks_port() {
+  local SOCKS_PORT=$1
+  if [ "$(curl -s -L -I --max-time 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://telegram.org/")" -eq 200 ] && \
+    [ "$(curl -s -L -I --max-time 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://www.oracle.com/")" -eq 200 ] && \
+    [ "$(curl -s -L -I --max-time 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://aws.amazon.com/")" -eq 200 ] && \
+    [ "$(curl -s -L -I --max-time 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://gemini.google.com/")" -eq 200 ] && \
+    [ "$(curl -s -L -I --max-time 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://cloud.nx.app/favicon.ico")" -eq 200 ]; then
+    return 0
+  else
+    return 1
+  fi
 }
 
 process_config() {
@@ -147,7 +173,7 @@ process_config() {
 
   /usr/bin/sing-box run -c "$FINAL_CONFIG" 2>&1 | while read -r LINE; do
     if echo "$LINE" | grep -q "sing-box started"; then
-      if [ "$(curl -s -L -I --max-time 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://developer.android.com/favicon.ico")" -eq 200 ]; then
+      if test_socks_port "$SOCKS_PORT"; then
         echo "✅ Found ($(wc -l <"$CONFIGS"))"
         echo "$CONFIG" >>"$CONFIGS"
       fi
@@ -170,7 +196,6 @@ test_subscriptions_local() {
 
 test_subscriptions_raw() {
   for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
-    if [ "$(wc -l <"$CONFIGS")" -ge $CONFIGS_LIMIT ]; then continue; fi
     CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
     if curl -L --max-time 60 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
       echo "✅ Downloaded $SUBSCRIPTION"
@@ -189,7 +214,6 @@ test_subscriptions_raw() {
 
 test_subscriptions_base64() {
   for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
-    if [ "$(wc -l <"$CONFIGS")" -ge $CONFIGS_LIMIT ]; then continue; fi
     CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
     if curl -L --max-time 60 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
       echo "✅ Downloaded $SUBSCRIPTION"
@@ -206,97 +230,10 @@ test_subscriptions_base64() {
   done
 }
 
-run() {
-  echo "✅ Running sing-box: $(wc -l <"$CONFIGS") Configs Found"
-  PARSED="/tmp/ghost-parsed.json"
-  SUBSCRIPTION="/tmp/ghost-subscription.json"
-
-  /usr/bin/hiddify-cli parse "$CONFIGS" -o "$PARSED" >/dev/null 2>&1 || exit 1
-
-  if [[ ! -f "/usr/share/singbox/rule-set/geosite-private.srs" ]]; then
-    source <(wget -qO- "https://github.com/amaleky/WrtMate/raw/main/src/root/scripts/geo-update.sh")
-  fi
-
-  jq '{
-    "log": {
-      "level": "warning"
-    },
-    "dns": {
-      "servers": [
-        { "tag": "remote", "type": "tls", "server": "1.1.1.1" },
-        { "tag": "local", "type": "local" }
-      ],
-      "rules": [
-        { "rule_set": "geosite-ir", "server": "local" },
-        { "rule_set": "geosite-private", "server": "local" }
-      ],
-      "strategy": "ipv4_only",
-      "independent_cache": true
-    },
-    "inbounds": [
-      { "type": "mixed", "tag": "mixed-in", "listen": "0.0.0.0", "listen_port": 9802, "set_system_proxy": true }
-    ],
-    "outbounds": (
-      [
-        {
-          "type": "urltest",
-          "tag": "Auto",
-          "outbounds": [.outbounds[] | select(.type | IN("selector","urltest","direct") | not) | .tag],
-          "url": "https://1.1.1.1/cdn-cgi/trace/",
-          "interval": "10m",
-          "tolerance": 50,
-          "interrupt_exist_connections": false
-        },
-        { "type": "direct", "tag": "direct" },
-        { "type": "block", "tag": "block" }
-      ] + [.outbounds[] | select(.type | IN("selector","urltest","direct") | not)]
-    ),
-    "route": {
-      "rules": [
-        { "action": "sniff" },
-        { "protocol": "dns", "action": "hijack-dns" },
-        { "ip_is_private": true, "outbound": "direct" },
-        { "rule_set": "geoip-ir", "outbound": "direct" },
-        { "rule_set": "geoip-malware", "outbound": "block" },
-        { "rule_set": "geoip-phishing", "outbound": "block" },
-        { "rule_set": "geoip-private", "outbound": "direct" },
-        { "rule_set": "geosite-category-ads-all", "outbound": "block" },
-        { "rule_set": "geosite-category-public-tracker", "outbound": "block" },
-        { "rule_set": "geosite-cryptominers", "outbound": "block" },
-        { "rule_set": "geosite-ir", "outbound": "direct" },
-        { "rule_set": "geosite-malware", "outbound": "block" },
-        { "rule_set": "geosite-phishing", "outbound": "block" },
-        { "rule_set": "geosite-private", "outbound": "direct" }
-      ],
-      "rule_set": [
-        { "type": "local", "tag": "geoip-ir", "format": "binary", "path": "/usr/share/singbox/rule-set/geoip-ir.srs" },
-        { "type": "local", "tag": "geoip-malware", "format": "binary", "path": "/usr/share/singbox/rule-set/geoip-malware.srs" },
-        { "type": "local", "tag": "geoip-phishing", "format": "binary", "path": "/usr/share/singbox/rule-set/geoip-phishing.srs" },
-        { "type": "local", "tag": "geoip-private", "format": "binary", "path": "/usr/share/singbox/rule-set/geoip-private.srs" },
-        { "type": "local", "tag": "geosite-category-ads-all", "format": "binary", "path": "/usr/share/singbox/rule-set/geosite-category-ads-all.srs" },
-        { "type": "local", "tag": "geosite-category-public-tracker", "format": "binary", "path": "/usr/share/singbox/rule-set/geosite-category-public-tracker.srs" },
-        { "type": "local", "tag": "geosite-cryptominers", "format": "binary", "path": "/usr/share/singbox/rule-set/geosite-cryptominers.srs" },
-        { "type": "local", "tag": "geosite-ir", "format": "binary", "path": "/usr/share/singbox/rule-set/geosite-ir.srs" },
-        { "type": "local", "tag": "geosite-malware", "format": "binary", "path": "/usr/share/singbox/rule-set/geosite-malware.srs" },
-        { "type": "local", "tag": "geosite-phishing", "format": "binary", "path": "/usr/share/singbox/rule-set/geosite-phishing.srs" },
-        { "type": "local", "tag": "geosite-private", "format": "binary", "path": "/usr/share/singbox/rule-set/geosite-private.srs" }
-      ],
-      "final": "Auto",
-      "default_domain_resolver": "local",
-      "auto_detect_interface": true
-    }
-  }' "$PARSED" >"$SUBSCRIPTION" || exit 0
-
-  /usr/bin/sing-box run -c "$SUBSCRIPTION"
-}
-
 main() {
   test_subscriptions_local
   test_subscriptions_raw
   test_subscriptions_base64
-  if [ -n "${1-}" ]; then
-    "$1"
-  fi
 }
 
 main "$@"
