@@ -78,8 +78,8 @@ configure_dns() {
   if [ -n "$INTERFACES" ]; then
     for INTERFACE_V4 in $INTERFACES; do
       uci set network.${INTERFACE_V4}.peerdns='0'
-      uci del network.${INTERFACE_V4}.peerdns
       uci del network.${INTERFACE_V4}.dns
+      uci add_list network.${INTERFACE_V4}.dns='2.189.44.44'
     done
     uci commit network
   fi

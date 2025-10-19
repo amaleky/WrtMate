@@ -11,7 +11,7 @@ set_retry_count() {
 }
 
 test_connection() {
-  if ! ping -c 1 -W 2 "217.218.155.155" >/dev/null 2>&1; then
+  if ! ping -c 1 -W 2 "2.189.44.44" >/dev/null 2>&1; then
     echo "❌ Connectivity test failed."
     exit 0
   fi
