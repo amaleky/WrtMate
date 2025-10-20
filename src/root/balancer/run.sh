@@ -36,18 +36,7 @@ jq '{
       }
     ] + [.outbounds[] | select(.type | IN("selector","urltest","direct") | not)]
   ),
-  "dns": {
-    "servers": [
-      { "tag": "remote", "type": "tls", "server": "1.1.1.1" }
-    ],
-    "strategy": "ipv4_only"
-  },
   "route": {
-    "rules": [
-      { "action": "sniff" },
-      { "protocol": "dns", "action": "hijack-dns" }
-    ],
-    "default_domain_resolver": "remote",
     "final": "Auto"
   }
 }' "$RAW_CONFIG" >"$FINAL_CONFIG" || exit 0

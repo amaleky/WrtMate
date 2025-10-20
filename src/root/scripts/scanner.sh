@@ -155,19 +155,6 @@ process_config() {
     "inbounds": [
       { "type": "mixed", "tag": "mixed-in", "listen": "127.0.0.1", "listen_port": $port }
     ],
-    "dns": {
-      "servers": [
-        { "tag": "remote", "type": "tls", "server": "1.1.1.1" }
-      ],
-      "strategy": "ipv4_only"
-    },
-    "route": {
-      "rules": [
-        { "action": "sniff" },
-        { "protocol": "dns", "action": "hijack-dns" }
-      ],
-      "default_domain_resolver": "remote",
-    },
     "outbounds": .outbounds
   }' "$PARSED_CONFIG" >"$FINAL_CONFIG"
 
