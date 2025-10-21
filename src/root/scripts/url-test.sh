@@ -37,7 +37,9 @@ test_service() {
         warp-plus) rm -rfv /.cache/warp-plus/ ;;
         ssh-proxy) rm -fv /root/.ssh/known_hosts ;;
       esac
-      set_retry_count "$SERVICE"
+      if [ "$SERVICE" != "ghost" ]; then
+        set_retry_count "$SERVICE"
+      fi
       /etc/init.d/"$SERVICE" restart
     else
       echo "✅ $SERVICE connectivity test passed"
