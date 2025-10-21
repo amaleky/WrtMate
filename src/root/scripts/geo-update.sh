@@ -39,10 +39,12 @@ download "/usr/share/singbox/rule-set/geoip-ir.srs" "https://github.com/Chocolat
 download "/usr/share/singbox/rule-set/geoip-malware.srs" "https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geoip-malware.srs"
 download "/usr/share/singbox/rule-set/geoip-phishing.srs" "https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geoip-phishing.srs"
 download "/usr/share/singbox/rule-set/geoip-private.srs" "https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geoip-private.srs"
-download "/usr/share/singbox/rule-set/geosite-category-ads-all.srs" "https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-category-ads-all.srs"
-download "/usr/share/singbox/rule-set/geosite-category-public-tracker.srs" "https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-category-public-tracker.srs"
 download "/usr/share/singbox/rule-set/geosite-cryptominers.srs" "https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-cryptominers.srs"
 download "/usr/share/singbox/rule-set/geosite-ir.srs" "https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-ir.srs"
 download "/usr/share/singbox/rule-set/geosite-malware.srs" "https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-malware.srs"
 download "/usr/share/singbox/rule-set/geosite-phishing.srs" "https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-phishing.srs"
 download "/usr/share/singbox/rule-set/geosite-private.srs" "https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-private.srs"
+
+# adguard
+download "/usr/share/singbox/rule-set/geosite-adguard-ultimate.txt" "https://github.com/hagezi/dns-blocklists/raw/main/adblock/ultimate.txt"
+sing-box rule-set convert --type adguard --output "/usr/share/singbox/rule-set/geosite-adguard-ultimate.srs" "/usr/share/singbox/rule-set/geosite-adguard-ultimate.txt"

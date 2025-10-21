@@ -150,17 +150,8 @@ config shunt_rules 'Block'
 	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-malware.srs
 rule-set:local:/usr/share/singbox/rule-set/geosite-phishing.srs
 rule-set:local:/usr/share/singbox/rule-set/geosite-cryptominers.srs
-rule-set:local:/usr/share/singbox/rule-set/geosite-category-ads-all.srs
-rule-set:local:/usr/share/singbox/rule-set/geosite-category-public-tracker.srs
-domain:udc.yahoo.com
+rule-set:local:/usr/share/singbox/rule-set/geosite-adguard-ultimate.srs
 domain:widgets.pinterest.com
-domain:business.samsungusa.com
-regexp:^ads\..*$
-regexp:.*adservice.*$
-regexp:.*advertising.*$
-regexp:.*analytics.*$
-regexp:.*metrics.*$
-regexp:.*tracking.*$
 regexp:.*bugsnag.*$
 regexp:.*clarity.*$
 regexp:.*doubleclick.*$
