@@ -133,6 +133,7 @@ config global_subscribe
 	option vmess_type 'sing-box'
 	option vless_type 'sing-box'
 	option hysteria2_type 'sing-box'
+	option domain_strategy 'prefer_ipv4'
 
 config global_singbox
 	option sniff_override_destination '0'
@@ -158,16 +159,16 @@ regexp:^ads\..*$
 regexp:.*adservice.*$
 regexp:.*advertising.*$
 regexp:.*analytics.*$
+regexp:.*metrics.*$
+regexp:.*tracking.*$
 regexp:.*bugsnag.*$
 regexp:.*clarity.*$
 regexp:.*doubleclick.*$
 regexp:.*fastclick.*$
 regexp:.*googletagmanager.*$
 regexp:.*hotjar.*$
-regexp:.*metrics.*$
 regexp:.*mouseflow.*$
 regexp:.*sentry.*$
-regexp:.*tracking.*$
 regexp:.*webengage.*$
 regexp:.*yandex.*$'
 	option ip_list 'rule-set:local:/usr/share/singbox/rule-set/geoip-malware.srs
