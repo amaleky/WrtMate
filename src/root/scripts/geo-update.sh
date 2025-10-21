@@ -19,11 +19,12 @@ download() {
     TEMP_FILE="$(mktemp)"
     if curl -L -o "$TEMP_FILE" "$URL"; then
       mv "$TEMP_FILE" "$FILE"
+      return 0
     else
       rm -rf "$TEMP_FILE"
-      exit
     fi
   fi
+  return 1
 }
 
 # ip
@@ -46,5 +47,6 @@ download "/usr/share/singbox/rule-set/geosite-phishing.srs" "https://github.com/
 download "/usr/share/singbox/rule-set/geosite-private.srs" "https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-private.srs"
 
 # adguard
-download "/usr/share/singbox/rule-set/geosite-adguard-ultimate.txt" "https://github.com/hagezi/dns-blocklists/raw/main/adblock/ultimate.txt"
-sing-box rule-set convert --type adguard --output "/usr/share/singbox/rule-set/geosite-adguard-ultimate.srs" "/usr/share/singbox/rule-set/geosite-adguard-ultimate.txt"
+if download "/usr/share/singbox/rule-set/geosite-adguard-ultimate.txt" "https://github.com/hagezi/dns-blocklists/raw/main/adblock/ultimate.txt"; then
+  sing-box rule-set convert --type adguard --output "/usr/share/singbox/rule-set/geosite-adguard-ultimate.srs" "/usr/share/singbox/rule-set/geosite-adguard-ultimate.txt"
+fi
