@@ -1,8 +1,10 @@
 #!/bin/sh
 
+# Create necessary directories
 if [ ! -d "/usr/share/v2ray" ]; then mkdir -p "/usr/share/v2ray"; fi
 if [ ! -d "/usr/share/singbox/rule-set" ]; then mkdir -p "/usr/share/singbox/rule-set"; fi
 
+# Download a file if it's outdated
 download() {
   FILE="$1"
   URL="$2"
@@ -27,15 +29,22 @@ download() {
   return 1
 }
 
-# ip
+# Download and convert AdGuard blocklist
+download_adguard() {
+  local list_name="$1"
+  local url="$2"
+  local txt_file="/usr/share/singbox/rule-set/${list_name}.txt"
+  local srs_file="/usr/share/singbox/rule-set/${list_name}.srs"
+
+  if download "$txt_file" "$url"; then
+    sing-box rule-set convert --type adguard --output "$srs_file" "$txt_file"
+  fi
+}
+
 download "/usr/share/v2ray/geoip.dat" "https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geoip-lite.dat"
 download "/usr/share/singbox/geoip.db" "https://github.com/Chocolate4U/Iran-sing-box-rules/releases/latest/download/geoip-lite.db"
-
-# domain
 download "/usr/share/v2ray/geosite.dat" "https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geosite-lite.dat"
 download "/usr/share/singbox/geosite.db" "https://github.com/Chocolate4U/Iran-sing-box-rules/releases/latest/download/geosite-lite.db"
-
-# rule-set
 download "/usr/share/singbox/rule-set/geoip-ir.srs" "https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geoip-ir.srs"
 download "/usr/share/singbox/rule-set/geoip-malware.srs" "https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geoip-malware.srs"
 download "/usr/share/singbox/rule-set/geoip-phishing.srs" "https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geoip-phishing.srs"
@@ -45,8 +54,4 @@ download "/usr/share/singbox/rule-set/geosite-ir.srs" "https://github.com/Chocol
 download "/usr/share/singbox/rule-set/geosite-malware.srs" "https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-malware.srs"
 download "/usr/share/singbox/rule-set/geosite-phishing.srs" "https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-phishing.srs"
 download "/usr/share/singbox/rule-set/geosite-private.srs" "https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-private.srs"
-
-# adguard
-if download "/usr/share/singbox/rule-set/geosite-adguard-ultimate.txt" "https://github.com/hagezi/dns-blocklists/raw/main/adblock/ultimate.txt"; then
-  sing-box rule-set convert --type adguard --output "/usr/share/singbox/rule-set/geosite-adguard-ultimate.srs" "/usr/share/singbox/rule-set/geosite-adguard-ultimate.txt"
-fi
+download_adguard "geosite-adguard-ultimate" "https://github.com/hagezi/dns-blocklists/raw/main/adblock/ultimate.txt"
