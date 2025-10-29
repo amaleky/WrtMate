@@ -1,25 +1,18 @@
 {
   "dns": {
-    "hosts": {
-      "dns.google": [
-        "8.8.8.8",
-        "8.8.4.4"
-      ],
-      "domain:youtube.com": [
-        "google.com"
-      ]
-    },
+    "queryStrategy": "UseIPv4",
     "servers": [
-      "https://dns.google/dns-query"
+      "https://1.1.1.1/dns-query"
     ],
-    "tag": "dns"
+    "tag": "dns",
+    "unexpectedIPs": [
+      "10.10.34.34",
+      "10.10.34.35",
+      "10.10.34.36"
+    ]
   },
   "inbounds": [
     {
-      "domainOverride": [
-        "http",
-        "tls"
-      ],
       "listen": "0.0.0.0",
       "port": 9807,
       "protocol": "socks",
@@ -39,33 +32,24 @@
     }
   ],
   "log": {
-    "access": "",
+    "access": "none",
     "dnsLog": false,
-    "error": "",
-    "loglevel": "none"
+    "loglevel": "warning"
   },
   "outbounds": [
     {
-      "domainStrategy": "UseIP",
       "protocol": "freedom",
       "settings": {
+        "domainStrategy": "UseIPv4",
         "fragment": {
-          "interval": "10-20",
-          "length": "10-20",
+          "interval": "10-40",
+          "length": "10-80",
           "packets": "tlshello"
         }
-      },
-      "sniffing": {
-        "destOverride": [
-          "http",
-          "tls"
-        ],
-        "enabled": true
       },
       "streamSettings": {
         "sockopt": {
           "domainStrategy": "UseIP",
-          "mark": 255,
           "tcpKeepAliveIdle": 100,
           "tcpNoDelay": true
         }
@@ -75,55 +59,6 @@
     {
       "protocol": "dns",
       "tag": "dns-out"
-    },
-    {
-      "domainStrategy": "",
-      "mux": {
-        "concurrency": 8,
-        "enabled": false
-      },
-      "protocol": "vless",
-      "settings": {
-        "vnext": [
-          {
-            "address": "google.com",
-            "port": 443,
-            "users": [
-              {
-                "encryption": "none",
-                "flow": "",
-                "id": "UUID",
-                "level": 8,
-                "security": "auto"
-              }
-            ]
-          }
-        ]
-      },
-      "streamSettings": {
-        "network": "ws",
-        "security": "tls",
-        "tlsSettings": {
-          "allowInsecure": false,
-          "alpn": [
-            "h2",
-            "http/1.1"
-          ],
-          "fingerprint": "randomized",
-          "publicKey": "",
-          "serverName": "google.com",
-          "shortId": "",
-          "show": false,
-          "spiderX": ""
-        },
-        "wsSettings": {
-          "headers": {
-            "Host": "google.com"
-          },
-          "path": "/"
-        }
-      },
-      "tag": "fakeproxy-out"
     }
   ],
   "policy": {
@@ -145,16 +80,14 @@
     "domainStrategy": "IPIfNonMatch",
     "rules": [
       {
-        "enabled": true,
         "inboundTag": [
           "socks-in"
         ],
         "outboundTag": "dns-out",
-        "port": "53",
+        "port": 53,
         "type": "field"
       },
       {
-        "enabled": true,
         "inboundTag": [
           "socks-in"
         ],
