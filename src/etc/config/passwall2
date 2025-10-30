@@ -4,6 +4,7 @@ config nodes 'Splitter'
 	option protocol '_shunt'
 	option Block '_blackhole'
 	option Direct '_direct'
+	option Censorship 'ServerLess'
 	option default_node 'Ghost'
 	option domainStrategy 'IPOnDemand'
 	option domainMatcher 'hybrid'
@@ -208,3 +209,12 @@ domain:akamaized.net
 domain:riotgames.com'
 	option ip_list 'rule-set:local:/usr/share/singbox/rule-set/geoip-ir.srs
 rule-set:local:/usr/share/singbox/rule-set/geoip-private.srs'
+
+config shunt_rules 'Censorship'
+	option remarks 'Censorship'
+	option network 'tcp,udp'
+	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-category-anticensorship.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-category-communication.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-category-entertainment.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-category-media.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-category-porn.srs'
