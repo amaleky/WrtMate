@@ -54,4 +54,4 @@ download "/usr/share/singbox/rule-set/geosite-ir.srs" "https://github.com/Chocol
 download "/usr/share/singbox/rule-set/geosite-malware.srs" "https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-malware.srs"
 download "/usr/share/singbox/rule-set/geosite-phishing.srs" "https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-phishing.srs"
 download "/usr/share/singbox/rule-set/geosite-private.srs" "https://github.com/Chocolate4U/Iran-sing-box-rules/raw/rule-set/geosite-private.srs"
-download_adguard "geosite-adguard-ultimate" "https://github.com/hagezi/dns-blocklists/raw/main/adblock/ultimate.txt"
+download_adguard "geosite-adguard-ultimate" "https://github.com/hagezi/dns-blocklists/raw/main/adblock/ultimate.mini.txt"
