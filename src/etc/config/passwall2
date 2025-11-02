@@ -74,7 +74,7 @@ config global
 	option acl_enable '0'
 	option direct_dns_protocol 'auto'
 	option direct_dns_query_strategy 'UseIPv4'
-	option remote_dns_protocol 'tcp'
+	option remote_dns_protocol 'udp'
 	option remote_dns_query_strategy 'UseIPv4'
 	option log_node '1'
 	option loglevel 'error'
