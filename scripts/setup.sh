@@ -74,16 +74,19 @@ configure_wifi() {
 }
 
 configure_dns() {
-  INTERFACES=$(uci show network | grep "proto='dhcp'" | cut -d. -f2 | cut -d= -f1)
-  if [ -n "$INTERFACES" ]; then
-    for INTERFACE_V4 in $INTERFACES; do
-      uci set network.${INTERFACE_V4}.peerdns='0'
-      uci del network.${INTERFACE_V4}.dns
-      uci add_list network.${INTERFACE_V4}.dns='217.218.127.127'
-      uci add_list network.${INTERFACE_V4}.dns='217.218.155.155'
-    done
-    uci commit network
-  fi
+  for INTERFACE_V4 in $(uci show network | grep "proto='dhcp'" | cut -d. -f2 | cut -d= -f1); do
+    uci set network.${INTERFACE_V4}.peerdns='0'
+    uci del network.${INTERFACE_V4}.dns
+    uci add_list network.${INTERFACE_V4}.dns='8.8.8.8'
+    uci add_list network.${INTERFACE_V4}.dns='8.8.4.4'
+  done
+  for INTERFACE_V6 in $(uci show network | grep "proto='dhcpv6'" | cut -d. -f2 | cut -d= -f1); do
+    uci set network.${INTERFACE_V6}.peerdns='0'
+    uci del network.${INTERFACE_V6}.dns
+    uci add_list network.${INTERFACE_V6}.dns="2001:4860:4860::8888"
+    uci add_list network.${INTERFACE_V6}.dns="2001:4860:4860::8844"
+  done
+  uci commit network
 }
 
 install_recommended_packages() {
@@ -91,16 +94,6 @@ install_recommended_packages() {
   uci set irqbalance.irqbalance.enabled='1'
   uci commit irqbalance
   /etc/init.d/irqbalance restart
-}
-
-remove_ipv6_interfaces() {
-  INTERFACES=$(uci show network | grep "proto='dhcpv6'" | cut -d. -f2 | cut -d= -f1)
-  if [ -n "$INTERFACES" ]; then
-    for INTERFACE_V6 in $INTERFACES; do
-      uci del "network.${INTERFACE_V6}"
-    done
-    uci commit network
-  fi
 }
 
 configure_lan_ip() {
@@ -123,7 +116,6 @@ main() {
     configure_wifi
     configure_dns
     install_recommended_packages
-    remove_ipv6_interfaces
     configure_lan_ip
 
     /etc/init.d/network reload
