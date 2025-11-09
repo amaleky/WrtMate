@@ -29,6 +29,7 @@ test_passwall() {
 test_service() {
   SERVICE="$1"
   PORT="$2"
+  AUTO_STOP="$3"
   if [ "$(get_retry_count "$SERVICE")" -le 5 ] || [ "$(uci get passwall2.Splitter.default_node)" = "$SERVICE" ]; then
     if ! curl -s -L -I --max-time 2 --retry 2 --socks5-hostname "127.0.0.1:$PORT" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
       echo "❌ $SERVICE connectivity test failed"
@@ -45,7 +46,7 @@ test_service() {
       echo "✅ $SERVICE connectivity test passed"
     fi
   else
-    if [ "$SERVICE" != "ghost" ]; then
+    if [ "$AUTO_STOP" != "false" ]; then
       if /etc/init.d/"$SERVICE" running; then
         /etc/init.d/"$SERVICE" stop
       fi
@@ -56,13 +57,13 @@ test_service() {
 main() {
   test_connection
   test_passwall
-  test_service "balancer" 9801
-  test_service "ghost" 9802
-  test_service "warp-plus" 9803
-  test_service "psiphon" 9804
-  test_service "tor" 9805
-  test_service "ssh-proxy" 9806
-  test_service "serverless" 9807
+  test_service "balancer" 9801 "true"
+  test_service "ghost" 9802 "false"
+  test_service "warp-plus" 9803 "true"
+  test_service "psiphon" 9804 "true"
+  test_service "tor" 9805 "true"
+  test_service "ssh-proxy" 9806 "true"
+  test_service "serverless" 9807 "true"
 }
 
 main "$@"
