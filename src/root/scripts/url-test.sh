@@ -30,7 +30,7 @@ test_service() {
   SERVICE="$1"
   PORT="$2"
   AUTO_STOP="$3"
-  if [ "$(get_retry_count "$SERVICE")" -le 5 ] || [ "$(uci get passwall2.Splitter.default_node)" = "$SERVICE" ]; then
+  if [ "$(get_retry_count "$SERVICE")" -le 5 ] || [ "$(uci get passwall2.Splitter.default_node)" = "$SERVICE" ] || [ "$(uci get passwall2.Splitter.Proxy)" = "$SERVICE" ]; then
     if ! curl -s -L -I --max-time 2 --retry 2 --socks5-hostname "127.0.0.1:$PORT" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
       echo "❌ $SERVICE connectivity test failed"
       case "$SERVICE" in

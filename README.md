@@ -46,7 +46,7 @@ To install WrtMate on your OpenWrt device, follow these steps:
 3. **Run the installation script:**
 
    ```bash
-   bash -c "$(wget -qO- https://github.com/amaleky/WrtMate/raw/main/install.sh)"
+   bash -c "$(wget -qO- https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh)"
    ```
 
 ## Usage

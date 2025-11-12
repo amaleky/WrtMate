@@ -137,7 +137,7 @@ psiphon() {
   curl -s -L -o "/etc/init.d/psiphon" "${REPO_URL}/src/etc/init.d/psiphon" || error "Failed to download psiphon init script."
   chmod +x /etc/init.d/psiphon
 
-  curl -s -L -o "/root/psiphon/client.config" "https://github.com/amaleky/WrtMate/raw/main/src/root/psiphon/client.config" || error "Failed to download psiphon configs."
+  curl -s -L -o "/root/psiphon/client.config" "https://raw.githubusercontent.com/amaleky/WrtMate/main/src/root/psiphon/client.config" || error "Failed to download psiphon configs."
 
   if [ "$TOTAL_RAM" -ge "$MIN_RAM_MB" ]; then
     /etc/init.d/psiphon enable
