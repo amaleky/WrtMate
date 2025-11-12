@@ -45,10 +45,10 @@ download "$V2RAY_DIR/geosite.dat" "https://github.com/Chocolate4U/Iran-v2ray-rul
 download "$SINGBOX_DIR/geosite.db" "https://github.com/Chocolate4U/Iran-sing-box-rules/releases/latest/download/geosite-lite.db" "false"
 
 # Direct
-#download "$RULESET_DIR/geoip-ir.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geoip-ir.srs"
-#download "$RULESET_DIR/geoip-private.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geoip-private.srs"
-#download "$RULESET_DIR/geosite-ir.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-ir.srs"
-#download "$RULESET_DIR/geosite-private.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-private.srs"
+download "$RULESET_DIR/geoip-ir.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geoip-ir.srs"
+download "$RULESET_DIR/geoip-private.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geoip-private.srs"
+download "$RULESET_DIR/geosite-ir.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-category-ir.srs"
+download "$RULESET_DIR/geosite-private.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-private.srs"
 
 # Block
 download "$RULESET_DIR/geoip-malware.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geoip-malware.srs"
@@ -57,42 +57,3 @@ download "$RULESET_DIR/geosite-cryptominers.srs" "https://raw.githubusercontent.
 if download "$RULESET_DIR/geosite-adguard-ultimate.txt" "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/ultimate.mini.txt"; then
   sing-box rule-set convert --type adguard --output "$RULESET_DIR/geosite-adguard-ultimate.srs" "$RULESET_DIR/geosite-adguard-ultimate.txt"
 fi
-
-# Proxy
-download "$RULESET_DIR/geoip-telegram.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geoip-telegram.srs"
-download "$RULESET_DIR/geosite-category-ai.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-category-ai-!cn.srs"
-download "$RULESET_DIR/geosite-category-anticensorship.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-category-anticensorship.srs"
-download "$RULESET_DIR/geosite-category-communication.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-category-communication.srs"
-download "$RULESET_DIR/geosite-category-dev.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-category-dev.srs"
-download "$RULESET_DIR/geosite-category-entertainment.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-category-entertainment.srs"
-download "$RULESET_DIR/geosite-category-media.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-category-media.srs"
-download "$RULESET_DIR/geosite-category-porn.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-category-porn.srs"
-download "$RULESET_DIR/geosite-category-social-media.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-category-social-media-!cn.srs"
-download "$RULESET_DIR/DynX-AntiBan-list.txt" "https://raw.githubusercontent.com/MrDevAnony/DynX-AntiBan-Domains/refs/heads/main/DynX-AntiBan-list.lst"
-download "$RULESET_DIR/fod.txt" "https://raw.githubusercontent.com/freedomofdevelopers/fod/master/domains"
-download "$RULESET_DIR/ir-blocked-domain.txt" "https://raw.githubusercontent.com/filteryab/ir-blocked-domain/main/data/ir-blocked-domain"
-download "$RULESET_DIR/ir-sanctioned-domain.txt" "https://raw.githubusercontent.com/filteryab/ir-sanctioned-domain/main/data/ir-sanctioned-domain"
-
-rm -rfv $RULESET_DIR/*.json $RULESET_DIR/proxy.txt
-for RULESET in \
-  "$RULESET_DIR/geosite-category-ai.srs" \
-  "$RULESET_DIR/geosite-category-anticensorship.srs" \
-  "$RULESET_DIR/geosite-category-communication.srs" \
-  "$RULESET_DIR/geosite-category-dev.srs" \
-  "$RULESET_DIR/geosite-category-entertainment.srs" \
-  "$RULESET_DIR/geosite-category-media.srs" \
-  "$RULESET_DIR/geosite-category-porn.srs" \
-  "$RULESET_DIR/geosite-category-social-media.srs"; do
-    sing-box rule-set decompile "$RULESET" -o "$RULESET.json"
-    jq -r ".rules[] | (.domain[]?, .domain_suffix[]?)" "$RULESET.json" >> "$RULESET_DIR/proxy.txt"
-done
-
-cat "$RULESET_DIR/DynX-AntiBan-list.txt" \
-    "$RULESET_DIR/fod.txt" \
-    "$RULESET_DIR/ir-blocked-domain.txt" \
-    "$RULESET_DIR/ir-sanctioned-domain.txt" \
-    "$RULESET_DIR/proxy.txt" \
-| sed -E '/^[[:space:]]*$/d; s/[^[:alnum:]\.-]//g; s/^\.*//; s/^www\.//; s/^/||/; s/$/^/' \
-| sort -u > "$RULESET_DIR/geosite-proxy.txt"
-
-sing-box rule-set convert --type adguard --output "$RULESET_DIR/geosite-proxy.srs" "$RULESET_DIR/geosite-proxy.txt"

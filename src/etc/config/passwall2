@@ -3,8 +3,8 @@ config nodes 'Splitter'
 	option type 'sing-box'
 	option protocol '_shunt'
 	option Block '_blackhole'
-	option Proxy 'Ghost'
-	option default_node '_direct'
+	option Direct '_direct'
+	option default_node 'Ghost'
 	option domainStrategy 'IPOnDemand'
 	option domainMatcher 'hybrid'
 	option preproxy_enabled '0'
@@ -176,9 +176,33 @@ regexp:.*yandex.*$'
 	option ip_list 'rule-set:local:/usr/share/singbox/rule-set/geoip-malware.srs
 rule-set:local:/usr/share/singbox/rule-set/geoip-phishing.srs'
 
-config shunt_rules 'Proxy'
-	option remarks 'Proxy'
+config shunt_rules 'Direct'
+	option remarks 'Direct'
 	option network 'tcp,udp'
-	option domain_list 'domain:nx.app
-rule-set:local:/usr/share/singbox/rule-set/geosite-proxy.srs'
-	option ip_list 'rule-set:local:/usr/share/singbox/rule-set/geoip-telegram.srs'
+	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-ir.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-private.srs
+domain:ir
+domain:pinsvc.net
+domain:snapp.cab
+domain:local
+domain:ptp
+# slack
+domain:slackb.com
+domain:slack.com
+domain:slack-edge.com
+# whatsapp
+domain:whatsapp.com
+domain:whatsapp.net
+# linkedin
+domain:linkedin.com
+domain:licdn.com
+# meet
+domain:meet.google.com
+# riot
+domain:qq.com
+domain:pvp.net
+domain:myqcloud.com
+domain:akamaized.net
+domain:riotgames.com'
+	option ip_list 'rule-set:local:/usr/share/singbox/rule-set/geoip-ir.srs
+rule-set:local:/usr/share/singbox/rule-set/geoip-private.srs'
