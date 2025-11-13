@@ -147,32 +147,7 @@ config global_singbox
 config shunt_rules 'Block'
 	option remarks 'Block'
 	option network 'tcp,udp'
-	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-cryptominers.srs
-rule-set:local:/usr/share/singbox/rule-set/geosite-adguard-ultimate.srs
-domain:amazon-adsystem.com
-domain:info.lgsmartad.com
-domain:inmobi.com
-domain:ngfts.lge.com
-domain:trace.googleapis.com
-domain:widgets.pinterest.com
-regexp:.*airbrake.*$
-regexp:.*clarity.*$
-regexp:.*datadoghq.*$
-regexp:.*doubleclick.*$
-regexp:.*errorreporting.*$
-regexp:.*fastclick.*$
-regexp:.*googletagmanager.*$
-regexp:.*honeybadger.*$
-regexp:.*hotjar.*$
-regexp:.*logrocket.*$
-regexp:.*mouseflow.*$
-regexp:.*newrelic.*$
-regexp:.*raygun.*$
-regexp:.*rollbar.*$
-regexp:.*sentry.*$
-regexp:.*siftscience.*$
-regexp:.*webengage.*$
-regexp:.*yandex.*$'
+	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-adguard.srs'
 	option ip_list 'rule-set:local:/usr/share/singbox/rule-set/geoip-malware.srs
 rule-set:local:/usr/share/singbox/rule-set/geoip-phishing.srs'
 

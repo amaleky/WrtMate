@@ -53,7 +53,24 @@ download "$RULESET_DIR/geosite-private.srs" "https://raw.githubusercontent.com/C
 # Block
 download "$RULESET_DIR/geoip-malware.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geoip-malware.srs"
 download "$RULESET_DIR/geoip-phishing.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geoip-phishing.srs"
-download "$RULESET_DIR/geosite-cryptominers.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-cryptominers.srs"
-if download "$RULESET_DIR/geosite-adguard-ultimate.txt" "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/ultimate.mini.txt"; then
-  sing-box rule-set convert --type adguard --output "$RULESET_DIR/geosite-adguard-ultimate.srs" "$RULESET_DIR/geosite-adguard-ultimate.txt"
-fi
+
+download "$RULESET_DIR/blocklistproject.txt" "https://raw.githubusercontent.com/blocklistproject/Lists/master/adguard/tracking-ags.txt"
+download "$RULESET_DIR/d3host.txt" "https://raw.githubusercontent.com/Turtlecute33/toolz/master/src/d3host.adblock"
+download "$RULESET_DIR/goodbyeads.txt" "https://raw.githubusercontent.com/8680/GOODBYEADS/master/data/mod/adblock.txt"
+download "$RULESET_DIR/hagezi.txt" "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/ultimate.mini.txt"
+download "$RULESET_DIR/hoshsadiq.txt" "https://raw.githubusercontent.com/hoshsadiq/adblock-nocoin-list/master/nocoin.txt"
+
+rm -rfv "$RULESET_DIR/geosite-adguard.srs" "$RULESET_DIR/geosite-adguard.txt"
+
+cat "$RULESET_DIR/blocklistproject.txt" \
+    "$RULESET_DIR/d3host.txt" \
+    "$RULESET_DIR/goodbyeads.txt" \
+    "$RULESET_DIR/hagezi.txt" \
+    "$RULESET_DIR/hoshsadiq.txt" \
+| sed -E 's/^www\.//; s/\$websocket$//; s/\$third-party$//; s/\^!.*$/\^/' \
+| grep -vE '(##|/|airbrake|bugsnag|clarity|datadoghq|doubleclick|errorreporting|fastclick|freshmarketer|tagmanager|honeybadger|hotjar|logrocket|luckyorange|mouseflow|newrelic|openreplay|raygun|rollbar|sentry|siftscience|webengage|yandex|analytics|metrics|^[[:space:]#!])' \
+| sort -u > "$RULESET_DIR/geosite-adguard.txt"
+
+echo "/(airbrake|bugsnag|clarity|datadoghq|doubleclick|errorreporting|fastclick|freshmarketer|tagmanager|honeybadger|hotjar|logrocket|luckyorange|mouseflow|newrelic|openreplay|raygun|rollbar|sentry|siftscience|webengage|yandex|analytics|metrics)/" >> "$RULESET_DIR/geosite-adguard.txt"
+
+sing-box rule-set convert --type adguard --output "$RULESET_DIR/geosite-adguard.srs" "$RULESET_DIR/geosite-adguard.txt"
