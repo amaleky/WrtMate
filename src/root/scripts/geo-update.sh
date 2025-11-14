@@ -3,6 +3,7 @@
 V2RAY_DIR="/usr/share/v2ray"
 SINGBOX_DIR="/usr/share/singbox"
 RULESET_DIR="$SINGBOX_DIR/rule-set"
+BASE_URL="https://raw.githubusercontent.com/v2ray/domain-list-community/master/data"
 
 if [ ! -d "$V2RAY_DIR" ]; then mkdir -p "$V2RAY_DIR"; fi
 if [ ! -d "$SINGBOX_DIR" ]; then mkdir -p "$SINGBOX_DIR"; fi
@@ -12,6 +13,7 @@ download() {
   FILE="$1"
   URL="$2"
   UPDATE="$3"
+  AMEND="$4"
 
   if [ "$UPDATE" = "false" ] && [ -f "$FILE" ]; then
     return 0
@@ -29,11 +31,17 @@ download() {
     echo "Downloading $URL REMOTE_SIZE: $REMOTE_SIZE LOCAL_SIZE: $LOCAL_SIZE"
     TEMP_FILE="$(mktemp)"
     if curl -L -o "$TEMP_FILE" "$URL"; then
-      mv -f "$TEMP_FILE" "$FILE"
+      if [ "$AMEND" = "true" ]; then
+        cat "$TEMP_FILE" >> "$FILE"
+      else
+        cp -f "$TEMP_FILE" "$FILE"
+      fi
+      grep '^include:' "$TEMP_FILE" | while IFS= read -r line; do
+        download "$FILE" "$BASE_URL/${line#include:}" "true" "true"
+      done
       return 0
-    else
-      rm -rf "$TEMP_FILE"
     fi
+    rm -rf "$TEMP_FILE"
   fi
   return 1
 }
@@ -48,10 +56,10 @@ download "$SINGBOX_DIR/geosite.db" "https://github.com/Chocolate4U/Iran-sing-box
 download "$RULESET_DIR/geoip-ir.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geoip-ir.srs"
 download "$RULESET_DIR/geoip-private.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geoip-private.srs"
 download "$RULESET_DIR/domains-ir.txt" "https://github.com/bootmortis/iran-hosted-domains/releases/latest/download/domains.txt"
-download "$RULESET_DIR/linkedin.txt" "https://raw.githubusercontent.com/v2ray/domain-list-community/master/data/linkedin"
-download "$RULESET_DIR/riot.txt" "https://raw.githubusercontent.com/v2ray/domain-list-community/master/data/riot"
-download "$RULESET_DIR/slack.txt" "https://raw.githubusercontent.com/v2ray/domain-list-community/master/data/slack"
-download "$RULESET_DIR/whatsapp.txt" "https://raw.githubusercontent.com/v2ray/domain-list-community/master/data/whatsapp"
+download "$RULESET_DIR/linkedin.txt" "$BASE_URL/linkedin"
+download "$RULESET_DIR/riot.txt" "$BASE_URL/riot"
+download "$RULESET_DIR/slack.txt" "$BASE_URL/slack"
+download "$RULESET_DIR/whatsapp.txt" "$BASE_URL/whatsapp"
 
 rm -rfv "$RULESET_DIR/geosite-direct.srs" "$RULESET_DIR/geosite-direct.txt"
 
@@ -60,7 +68,9 @@ cat "$RULESET_DIR/domains-ir.txt" \
   "$RULESET_DIR/riot.txt" \
   "$RULESET_DIR/slack.txt" \
   "$RULESET_DIR/whatsapp.txt" \
-| grep -vE "(.+\.ir$)|(##|/|^[[:space:]#!])|(include:)|( @ads)" | sed '/^||/! s/^/||/; /[^ ^]$/ s/$/^/; s/full://g; s/ @cn//g' | sort -u > "$RULESET_DIR/geosite-direct.txt"
+| grep -vE "(##|/|^[[:space:]!?]|include:|.+\.ir$| @ads)" \
+| sed 's/^www\./\^/; s/$websocket.*//; s/$third-party.*//; s/$script.*//; s/$xmlhttprequest.*//; s/$redirect-rule.*//; s/$csp.*//; s/\^.*$/\^/; s/#.*//g; /^||/! s/^/||/; /[^ ^]$/ s/$/^/; s/full://g; s/domain://g; s/geoip://g; s/geosite://g; s/ @cn//g' \
+| sort -u > "$RULESET_DIR/geosite-direct.txt"
 
 for DOMAIN in "ir" "pinsvc.net" "snapp.cab" "local" "ptp" "meet.google.com"; do
   echo "||$DOMAIN^" >> "$RULESET_DIR/geosite-direct.txt"
@@ -84,8 +94,8 @@ cat "$RULESET_DIR/blocklistproject.txt" \
     "$RULESET_DIR/goodbyeads.txt" \
     "$RULESET_DIR/hagezi.txt" \
     "$RULESET_DIR/hoshsadiq.txt" \
-| sed -E 's/^www\.//; s/\$websocket$//; s/\$third-party$//; s/\^!.*$/\^/' \
-| grep -vE '(##|/|airbrake|bugsnag|clarity|datadoghq|doubleclick|errorreporting|fastclick|freshmarketer|tagmanager|honeybadger|hotjar|logrocket|luckyorange|mouseflow|newrelic|openreplay|raygun|rollbar|sentry|siftscience|webengage|yandex|analytics|metrics|^[[:space:]#!])' \
+| grep -vE "(##|/|^[[:space:]!?]|include:|airbrake|bugsnag|clarity|datadoghq|doubleclick|errorreporting|fastclick|freshmarketer|tagmanager|honeybadger|hotjar|logrocket|luckyorange|mouseflow|newrelic|openreplay|raygun|rollbar|sentry|siftscience|webengage|yandex|analytics|metrics)" \
+| sed 's/^www\./\^/; s/$websocket.*//; s/$third-party.*//; s/$script.*//; s/$xmlhttprequest.*//; s/$redirect-rule.*//; s/$csp.*//; s/\^.*$/\^/; s/#.*//g' \
 | sort -u > "$RULESET_DIR/geosite-adguard.txt"
 
 echo "/(airbrake|bugsnag|clarity|datadoghq|doubleclick|errorreporting|fastclick|freshmarketer|tagmanager|honeybadger|hotjar|logrocket|luckyorange|mouseflow|newrelic|openreplay|raygun|rollbar|sentry|siftscience|webengage|yandex|analytics|metrics)/" >> "$RULESET_DIR/geosite-adguard.txt"
