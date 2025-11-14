@@ -250,7 +250,8 @@ geo_update() {
 
 passwall() {
   info "passwall"
-  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest" | jq -r '.tag_name')"
+  LATEST_TAG="$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest")"
+  REMOTE_VERSION="$(echo "$LATEST_TAG" | jq -r '.tag_name')"
   LOCAL_VERSION="$(cat "/root/.passwall2_version" 2>/dev/null || echo 'none')"
 
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
@@ -261,9 +262,7 @@ passwall() {
     unzip -o /tmp/packages.zip -d /tmp/passwall >/dev/null 2>&1
     for pkg in /tmp/passwall/*.ipk; do opkg install "$pkg"; done
 
-    TAG=$(curl -s -L "https://github.com/xiaorouji/openwrt-passwall2/releases/latest" | grep -oE '/xiaorouji/openwrt-passwall2/releases/tag/[^"]+' | head -n1 | awk -F'/tag/' '{print $2}') || error "Failed to find passwall2 tab."
-    URL=$(curl -s -L "https://github.com/xiaorouji/openwrt-passwall2/releases/expanded_assets/$TAG" | grep -o 'href="[^"]*luci-[^"]*luci-app-passwall2_'"$TAG"'_all\.ipk"' | sed 's/href="//;s/"$//' | sed 's|^/|https://github.com/|' | head -n1) || error "Failed to find passwall2 url."
-    curl -s -L -o "/tmp/passwall2.ipk" "$URL" || error "Failed to download Passwall2 package."
+    curl -s -L -o "/tmp/passwall2.ipk" "$(echo "$LATEST_TAG" | jq -r '.assets[].browser_download_url | select(contains("luci-app-passwall2_") and endswith("_all.ipk"))')" || error "Failed to download Passwall2 package."
     opkg install /tmp/passwall2.ipk || error "Failed to install Passwall2."
 
     if [ -n "$REMOTE_VERSION" ]; then
