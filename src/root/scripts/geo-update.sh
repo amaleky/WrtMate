@@ -47,13 +47,30 @@ download "$SINGBOX_DIR/geosite.db" "https://github.com/Chocolate4U/Iran-sing-box
 # Direct
 download "$RULESET_DIR/geoip-ir.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geoip-ir.srs"
 download "$RULESET_DIR/geoip-private.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geoip-private.srs"
-download "$RULESET_DIR/geosite-ir.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-category-ir.srs"
-download "$RULESET_DIR/geosite-private.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-private.srs"
+download "$RULESET_DIR/domains-ir.txt" "https://github.com/bootmortis/iran-hosted-domains/releases/latest/download/domains.txt"
+download "$RULESET_DIR/linkedin.txt" "https://raw.githubusercontent.com/v2ray/domain-list-community/master/data/linkedin"
+download "$RULESET_DIR/riot.txt" "https://raw.githubusercontent.com/v2ray/domain-list-community/master/data/riot"
+download "$RULESET_DIR/slack.txt" "https://raw.githubusercontent.com/v2ray/domain-list-community/master/data/slack"
+download "$RULESET_DIR/whatsapp.txt" "https://raw.githubusercontent.com/v2ray/domain-list-community/master/data/whatsapp"
+
+rm -rfv "$RULESET_DIR/geosite-direct.srs" "$RULESET_DIR/geosite-direct.txt"
+
+cat "$RULESET_DIR/domains-ir.txt" \
+  "$RULESET_DIR/linkedin.txt" \
+  "$RULESET_DIR/riot.txt" \
+  "$RULESET_DIR/slack.txt" \
+  "$RULESET_DIR/whatsapp.txt" \
+| grep -vE "(.+\.ir$)|(##|/|^[[:space:]#!])|(include:)|( @ads)" | sed '/^||/! s/^/||/; /[^ ^]$/ s/$/^/; s/full://g; s/ @cn//g' | sort -u > "$RULESET_DIR/geosite-direct.txt"
+
+for DOMAIN in "ir" "pinsvc.net" "snapp.cab" "local" "ptp" "meet.google.com"; do
+  echo "||$DOMAIN^" >> "$RULESET_DIR/geosite-direct.txt"
+done
+
+sing-box rule-set convert --type adguard --output "$RULESET_DIR/geosite-direct.srs" "$RULESET_DIR/geosite-direct.txt"
 
 # Block
 download "$RULESET_DIR/geoip-malware.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geoip-malware.srs"
 download "$RULESET_DIR/geoip-phishing.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geoip-phishing.srs"
-
 download "$RULESET_DIR/blocklistproject.txt" "https://raw.githubusercontent.com/blocklistproject/Lists/master/adguard/tracking-ags.txt"
 download "$RULESET_DIR/d3host.txt" "https://raw.githubusercontent.com/Turtlecute33/toolz/master/src/d3host.adblock"
 download "$RULESET_DIR/goodbyeads.txt" "https://raw.githubusercontent.com/8680/GOODBYEADS/master/data/mod/adblock.txt"
