@@ -28,11 +28,12 @@ test_passwall() {
 
 test_service() {
   SERVICE="$1"
-  PORT="$2"
-  AUTO_STOP="$3"
-  if [ "$(get_retry_count "$SERVICE")" -le 5 ] || [ "$(uci get passwall2.Splitter.default_node)" = "$SERVICE" ] || [ "$(uci get passwall2.Splitter.Proxy)" = "$SERVICE" ]; then
+  NODE="$2"
+  PORT="$3"
+  AUTO_STOP="$4"
+  if [ "$(get_retry_count "$SERVICE")" -le 5 ] || [ "$(uci get passwall2.Splitter.default_node)" = "$NODE" ]; then
     if ! curl -s -L -I --max-time 2 --retry 2 --socks5-hostname "127.0.0.1:$PORT" -o "/dev/null" "https://1.1.1.1/cdn-cgi/trace/"; then
-      echo "❌ $SERVICE connectivity test failed"
+      echo "❌ $NODE connectivity test failed"
       case "$SERVICE" in
         ghost) /etc/init.d/scanner start ;;
         warp-plus) rm -rfv /.cache/warp-plus/ ;;
@@ -43,7 +44,7 @@ test_service() {
       fi
       /etc/init.d/"$SERVICE" restart
     else
-      echo "✅ $SERVICE connectivity test passed"
+      echo "✅ $NODE connectivity test passed"
     fi
   else
     if [ "$AUTO_STOP" != "false" ]; then
@@ -57,13 +58,13 @@ test_service() {
 main() {
   test_connection
   test_passwall
-  test_service "balancer" 9801 "true"
-  test_service "ghost" 9802 "false"
-  test_service "warp-plus" 9803 "true"
-  test_service "psiphon" 9804 "true"
-  test_service "tor" 9805 "true"
-  test_service "ssh-proxy" 9806 "true"
-  test_service "serverless" 9807 "true"
+  test_service "balancer" "Balancer" 9801 "true"
+  test_service "ghost" "Ghost" 9802 "false"
+  test_service "warp-plus" "WarpPlus" 9803 "true"
+  test_service "psiphon" "Psiphon" 9804 "true"
+  test_service "tor" "Tor" 9805 "true"
+  test_service "ssh-proxy" "SshProxy" 9806 "true"
+  test_service "serverless" "ServerLess" 9807 "true"
 }
 
 main "$@"
