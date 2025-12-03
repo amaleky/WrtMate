@@ -16,6 +16,8 @@ PARALLEL_LIMIT=20
 mkdir -p "$CACHE_DIR" "$HOME/ghost"
 
 CONFIG_URLS=(
+  "https://raw.githubusercontent.com/4n0nymou3/multi-proxy-config-fetcher/main/configs/proxy_configs.txt"
+  "https://raw.githubusercontent.com/Mahdi0024/ProxyCollector/master/sub/proxies.txt"
   "https://raw.githubusercontent.com/Arashtelr/lab/main/FreeVPN-by-ArashZidi"
   "https://raw.githubusercontent.com/ALIILAPRO/v2rayNG-Config/main/server.txt"
   "https://raw.githubusercontent.com/liketolivefree/kobabi/main/sub.txt"
@@ -29,23 +31,28 @@ CONFIG_URLS=(
   "https://raw.githubusercontent.com/mohamadfg-dev/telegram-v2ray-configs-collector/main/category/wireguard.txt"
   "https://raw.githubusercontent.com/miladtahanian/V2RayCFGDumper/main/config.txt"
   "https://raw.githubusercontent.com/Stinsonysm/GO_V2rayCollector/main/mixed_iran.txt"
-  "https://raw.githubusercontent.com/roosterkid/openproxylist/main/V2RAY_RAW.txt"
   "https://raw.githubusercontent.com/ShatakVPN/ConfigForge-V2Ray/main/configs/all.txt"
   "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/main/Config/shadowsocks.txt"
   "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/main/Config/trojan.txt"
   "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/main/Config/vless.txt"
   "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/main/Config/vmess.txt"
   "https://raw.githubusercontent.com/ermaozi/get_subscribe/main/subscribe/v2ray.txt"
+  "https://raw.githubusercontent.com/Barabama/FreeNodes/main/nodes/yudou66.txt"
+  "https://raw.githubusercontent.com/Barabama/FreeNodes/main/nodes/blues.txt"
+  "https://raw.githubusercontent.com/Barabama/FreeNodes/main/nodes/clashmeta.txt"
+  "https://raw.githubusercontent.com/Barabama/FreeNodes/main/nodes/ndnode.txt"
+  "https://raw.githubusercontent.com/Barabama/FreeNodes/main/nodes/nodev2ray.txt"
+  "https://raw.githubusercontent.com/Barabama/FreeNodes/main/nodes/nodefree.txt"
+  "https://raw.githubusercontent.com/Barabama/FreeNodes/main/nodes/v2rayshare.txt"
+  "https://raw.githubusercontent.com/Barabama/FreeNodes/main/nodes/wenode.txt"
   "https://raw.githubusercontent.com/Firmfox/Proxify/main/v2ray_configs/seperated_by_protocol/shadowsocks.txt"
   "https://raw.githubusercontent.com/Firmfox/Proxify/main/v2ray_configs/seperated_by_protocol/warp.txt"
   "https://raw.githubusercontent.com/Firmfox/Proxify/main/v2ray_configs/seperated_by_protocol/trojan.txt"
   "https://raw.githubusercontent.com/Firmfox/Proxify/main/v2ray_configs/seperated_by_protocol/vmess.txt"
   "https://raw.githubusercontent.com/Firmfox/Proxify/main/v2ray_configs/seperated_by_protocol/other.txt"
   "https://raw.githubusercontent.com/Firmfox/Proxify/main/v2ray_configs/seperated_by_protocol/vless.txt"
-  "https://raw.githubusercontent.com/itsyebekhe/PSG/main/subscriptions/xray/normal/mix"
   "https://raw.githubusercontent.com/MatinGhanbari/v2ray-CONFIGs/main/subscriptions/v2ray/all_sub.txt"
   "https://raw.githubusercontent.com/coldwater-10/V2ray-Config-Lite/main/All_Configs_Sub.txt"
-  "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/sub/sub_merge.txt"
   "https://raw.githubusercontent.com/barry-far/V2ray-Config/main/All_Configs_Sub.txt"
   "https://raw.githubusercontent.com/SoliSpirit/v2ray-configs/main/all_configs.txt"
   "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/all_extracted_configs.txt"
@@ -55,6 +62,11 @@ CONFIG_URLS=(
 )
 
 BASE64_URLS=(
+  "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/Eternity"
+  "https://raw.githubusercontent.com/peasoft/NoMoreWalls/master/list.txt"
+  "https://raw.githubusercontent.com/Surfboardv2ray/TGParse/main/splitted/mixed"
+  "https://raw.githubusercontent.com/itsyebekhe/PSG/main/subscriptions/xray/base64/mix"
+  "https://raw.githubusercontent.com/roosterkid/openproxylist/main/V2RAY_BASE64.txt"
   "https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/main/mci/sub_1.txt"
   "https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/main/mtn/sub_1.txt"
   "https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/main/segment/test_sub.txt"
@@ -219,8 +231,8 @@ test_subscriptions_base64() {
 
 main() {
   test_subscriptions_local
-  test_subscriptions_raw
   test_subscriptions_base64
+  test_subscriptions_raw
 }
 
 main "$@"
