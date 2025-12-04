@@ -4,6 +4,8 @@
 MIN_RAM_MB=400
 TOTAL_RAM=$(($(grep MemTotal /proc/meminfo | awk '{print $2}') / 1024))
 
+if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
+
 hiddify() {
   info "hiddify"
 
@@ -48,7 +50,6 @@ balancer() {
 
 ghost() {
   info "ghost"
-  if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
 
   curl -s -L -o "/root/scripts/scanner.sh" "${REPO_URL}/src/root/scripts/scanner.sh" || error "Failed to download scanner.sh."
   chmod +x /root/scripts/scanner.sh
@@ -86,6 +87,13 @@ ghost() {
   curl -s -L -o "/root/ghost/run.sh" "${REPO_URL}/src/root/ghost/run.sh" || error "Failed to download ghost run.sh configs."
   chmod +x /root/ghost/run.sh
 
+  curl -s -L -o "/root/scripts/logwatch.sh" "${REPO_URL}/src/root/scripts/logwatch.sh" || error "Failed to download logwatch.sh."
+  chmod +x /root/scripts/logwatch.sh
+  curl -s -L -o "/etc/init.d/logwatch" "${REPO_URL}/src/etc/init.d/logwatch" || error "Failed to download logwatch init script."
+  chmod +x /etc/init.d/logwatch
+
+  /etc/init.d/logwatch enable
+  /etc/init.d/logwatch start
   /etc/init.d/ghost enable
   /etc/init.d/ghost start
 }
@@ -230,7 +238,6 @@ server_less() {
 
 url_test() {
   info "url_test"
-  if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
   curl -s -L -o "/root/scripts/url-test.sh" "${REPO_URL}/src/root/scripts/url-test.sh" || error "Failed to download url-test.sh."
   chmod +x /root/scripts/url-test.sh
   add_cron_job "*/5 * * * * /root/scripts/url-test.sh"
@@ -241,7 +248,6 @@ url_test() {
 
 geo_update() {
   info "geo_update"
-  if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
   curl -s -L -o "/root/scripts/geo-update.sh" "${REPO_URL}/src/root/scripts/geo-update.sh" || error "Failed to download geo-update.sh."
   chmod +x /root/scripts/geo-update.sh
   add_cron_job "0 6 * * 0 /root/scripts/geo-update.sh"
