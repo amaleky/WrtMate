@@ -231,8 +231,8 @@ test_subscriptions_base64() {
 
 main() {
   test_subscriptions_local
-  test_subscriptions_base64
   test_subscriptions_raw
+  test_subscriptions_base64
 }
 
 main "$@"
