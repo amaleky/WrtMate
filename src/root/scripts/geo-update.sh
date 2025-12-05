@@ -70,7 +70,7 @@ cat "$RULESET_DIR/domains-ir.txt" \
   "$RULESET_DIR/riot.txt" \
   "$RULESET_DIR/slack.txt" \
   "$RULESET_DIR/whatsapp.txt" \
-| grep -vE "(##|/|^[[:space:]!?]|include:|.+\.ir$| @ads)" \
+| grep -vE "(##|/|^[[:space:]\!\?\[\.\*\$\-]|include:|.+\.ir$| @ads)" \
 | sed 's/^www\./\^/; s/$websocket.*//; s/$third-party.*//; s/$script.*//; s/\^.*$/\^/; s/#.*//g; /^||/! s/^/||/; /[^ ^]$/ s/$/^/; s/full://g; s/domain://g; s/geoip://g; s/geosite://g; s/ @cn//g' \
 | sort -u > "$RULESET_DIR/geosite-direct.txt"
 
@@ -96,7 +96,7 @@ cat "$RULESET_DIR/blocklistproject.txt" \
     "$RULESET_DIR/goodbyeads.txt" \
     "$RULESET_DIR/hagezi.txt" \
     "$RULESET_DIR/hoshsadiq.txt" \
-| grep -vE "(##|/|^[[:space:]!?]|include:|airbrake|bugsnag|clarity|datadoghq|doubleclick|errorreporting|fastclick|freshmarketer|tagmanager|honeybadger|hotjar|logrocket|luckyorange|mouseflow|newrelic|openreplay|raygun|rollbar|sentry|siftscience|webengage|yandex|analytics|metrics)" \
+| grep -vE "(##|/|^[[:space:]\!\?\[\.\*\$\-]|include:|airbrake|bugsnag|clarity|datadoghq|doubleclick|errorreporting|fastclick|freshmarketer|tagmanager|honeybadger|hotjar|logrocket|luckyorange|mouseflow|newrelic|openreplay|raygun|rollbar|sentry|siftscience|webengage|yandex|analytics|metrics)" \
 | sed 's/^www\./\^/; s/$websocket.*//; s/$third-party.*//; s/$script.*//; s/\^.*$/\^/; s/#.*//g' \
 | sort -u > "$RULESET_DIR/geosite-adguard.txt"
 
