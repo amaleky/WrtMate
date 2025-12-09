@@ -74,7 +74,7 @@ cat "$RULESET_DIR/domains-ir.txt" \
 | sed 's/^www\./\^/; s/$websocket.*//; s/$third-party.*//; s/$script.*//; s/\^.*$/\^/; s/#.*//g; /^||/! s/^/||/; /[^ ^]$/ s/$/^/; s/full://g; s/domain://g; s/geoip://g; s/geosite://g; s/ @cn//g' \
 | sort -u > "$RULESET_DIR/geosite-direct.txt"
 
-for DOMAIN in "ir" "pinsvc.net" "snapp.cab" "local" "ptp" "meet.google.com" "dl.playstation.net" "dl.playstation.com"; do
+for DOMAIN in "ir" "pinsvc.net" "snapp.cab" "local" "ptp" "meet.google.com" "dl.playstation.net" "update.playstation.net" "indllserver.info"; do
   echo "||$DOMAIN^" >> "$RULESET_DIR/geosite-direct.txt"
 done
 
