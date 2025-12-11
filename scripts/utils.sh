@@ -52,21 +52,14 @@ confirm() {
 
 update_package_lists() {
   local timestamp_file="/tmp/last_opkg_update"
-  local update_interval=3600 # 1 hour in seconds
 
-  # Check if timestamp file exists and is recent enough
   if [ -f "$timestamp_file" ]; then
-    local last_update=$(cat "$timestamp_file")
-    local current_time=$(date +%s)
-    local time_diff=$((current_time - last_update))
-
-    if [ $time_diff -lt $update_interval ]; then
-      info "Package lists are up to date (last update was $((time_diff / 60)) minutes ago)"
-      return 0
-    fi
+    info "Package lists are up to date"
+    return 0
   fi
 
   info "Updating package lists..."
+  touch "$timestamp_file"
   if opkg update; then
     date +%s >"$timestamp_file"
   else
