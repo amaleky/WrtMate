@@ -102,7 +102,7 @@ warp() {
   info "warp"
 
   REMOTE_VERSION="$(curl -s "https://api.github.com/repos/bepass-org/warp-plus/releases/latest" | jq -r '.tag_name')"
-  LOCAL_VERSION="$(cat "/root/.warp_version" 2>/dev/null || echo 'none')"
+  LOCAL_VERSION="$(cat "/root/.vwarp_version" 2>/dev/null || echo 'none')"
 
   if [[ -f "/etc/init.d/warp-plus" ]] && /etc/init.d/warp-plus running; then
     /etc/init.d/warp-plus stop
@@ -111,7 +111,7 @@ warp() {
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
     source <(wget -qO- "${REPO_URL}/scripts/packages/warp.sh")
     if [ -n "$REMOTE_VERSION" ]; then
-      echo "$REMOTE_VERSION" >"/root/.warp_version"
+      echo "$REMOTE_VERSION" >"/root/.vwarp_version"
     fi
   fi
 
