@@ -89,6 +89,10 @@ configure_dns() {
   uci commit network
 }
 
+configure_auto_reboot() {
+  add_cron_job "30 5 * * * sleep 70 && touch /etc/banner && reboot"
+}
+
 install_recommended_packages() {
   ensure_packages "htop nload luci-app-irqbalance zram-swap openssh-sftp-server"
   uci set irqbalance.irqbalance.enabled='1'
@@ -115,6 +119,7 @@ main() {
     configure_timezone
     configure_wifi
     configure_dns
+    configure_auto_reboot
     install_recommended_packages
     configure_lan_ip
 
