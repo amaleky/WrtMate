@@ -1,5 +1,6 @@
 #!/bin/sh
 
+XRAY_DIR="/usr/bin/"
 V2RAY_DIR="/usr/share/v2ray"
 SINGBOX_DIR="/usr/share/singbox"
 RULESET_DIR="$SINGBOX_DIR/rule-set"
@@ -49,6 +50,7 @@ download() {
 # Global
 download "$V2RAY_DIR/geoip.dat" "https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geoip-lite.dat" "false"
 download "$SINGBOX_DIR/geoip.db" "https://github.com/Chocolate4U/Iran-sing-box-rules/releases/latest/download/geoip-lite.db" "false"
+download "$XRAY_DIR/geosite.dat" "https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geosite.dat" "false"
 download "$V2RAY_DIR/geosite.dat" "https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geosite-lite.dat" "false"
 download "$SINGBOX_DIR/geosite.db" "https://github.com/Chocolate4U/Iran-sing-box-rules/releases/latest/download/geosite-lite.db" "false"
 

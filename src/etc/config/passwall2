@@ -62,7 +62,7 @@ config nodes 'ServerLess'
 	option type 'sing-box'
 	option protocol 'socks'
 	option address '127.0.0.1'
-	option port '9807'
+	option port '10808'
 	option transport 'tcp'
 
 config global
