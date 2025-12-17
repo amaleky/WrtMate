@@ -4,6 +4,7 @@ config nodes 'Splitter'
 	option protocol '_shunt'
 	option Block '_blackhole'
 	option Direct '_direct'
+	option Social 'ServerLess'
 	option default_node 'Ghost'
 	option domainStrategy 'IPOnDemand'
 	option domainMatcher 'hybrid'
@@ -157,3 +158,11 @@ config shunt_rules 'Direct'
 	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-direct.srs'
 	option ip_list 'rule-set:local:/usr/share/singbox/rule-set/geoip-ir.srs
 rule-set:local:/usr/share/singbox/rule-set/geoip-private.srs'
+
+config shunt_rules 'Social'
+	option remarks 'Social'
+	option network 'tcp,udp'
+	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-category-porn.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-category-social.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-category-entertainment.srs'
+	option port '443'

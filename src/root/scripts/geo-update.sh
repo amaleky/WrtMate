@@ -107,3 +107,8 @@ cat "$RULESET_DIR/blocklistproject.txt" \
 echo "/(airbrake|bugsnag|clarity|datadoghq|doubleclick|errorreporting|fastclick|freshmarketer|tagmanager|honeybadger|hotjar|logrocket|luckyorange|mouseflow|newrelic|openreplay|raygun|rollbar|sentry|siftscience|webengage|yandex|analytics|metrics)/" >> "$RULESET_DIR/geosite-adguard.txt"
 
 sing-box rule-set convert --type adguard --output "$RULESET_DIR/geosite-adguard.srs" "$RULESET_DIR/geosite-adguard.txt"
+
+# Social
+download "$RULESET_DIR/geosite-category-porn.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-category-porn.srs"
+download "$RULESET_DIR/geosite-category-social.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-category-social-media-!cn.srs"
+download "$RULESET_DIR/geosite-category-entertainment.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-category-entertainment.srs"
