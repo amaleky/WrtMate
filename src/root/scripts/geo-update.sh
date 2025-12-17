@@ -59,19 +59,13 @@ download "$RULESET_DIR/geoip-ir.srs" "https://raw.githubusercontent.com/Chocolat
 download "$RULESET_DIR/geoip-private.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geoip-private.srs"
 download "$RULESET_DIR/domains-ir.txt" "https://github.com/bootmortis/iran-hosted-domains/releases/latest/download/domains.txt"
 download "$RULESET_DIR/iran_domains_direct.txt" "https://raw.githubusercontent.com/liketolivefree/iran_domain-ip/main/iran_domains_direct.txt"
-download "$RULESET_DIR/linkedin.txt" "$BASE_URL/linkedin"
 download "$RULESET_DIR/riot.txt" "$BASE_URL/riot"
-download "$RULESET_DIR/slack.txt" "$BASE_URL/slack"
-download "$RULESET_DIR/whatsapp.txt" "$BASE_URL/whatsapp"
 
 rm -rfv "$RULESET_DIR/geosite-direct.srs" "$RULESET_DIR/geosite-direct.txt"
 
 cat "$RULESET_DIR/domains-ir.txt" \
   "$RULESET_DIR/iran_domains_direct.txt" \
-  "$RULESET_DIR/linkedin.txt" \
   "$RULESET_DIR/riot.txt" \
-  "$RULESET_DIR/slack.txt" \
-  "$RULESET_DIR/whatsapp.txt" \
 | grep -vE "(##|/|^[[:space:]\!\?\[\.\*\$\-]|include:|.+\.ir$| @ads)" \
 | sed 's/^www\./\^/; s/$websocket.*//; s/$third-party.*//; s/$script.*//; s/\^.*$/\^/; s/#.*//g; /^||/! s/^/||/; /[^ ^]$/ s/$/^/; s/full://g; s/domain://g; s/geoip://g; s/geosite://g; s/ @cn//g' \
 | sort -u > "$RULESET_DIR/geosite-direct.txt"
@@ -109,6 +103,9 @@ echo "/(airbrake|bugsnag|clarity|datadoghq|doubleclick|errorreporting|fastclick|
 sing-box rule-set convert --type adguard --output "$RULESET_DIR/geosite-adguard.srs" "$RULESET_DIR/geosite-adguard.txt"
 
 # Social
+download "$RULESET_DIR/geosite-category-anticensorship.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-category-anticensorship.srs"
+download "$RULESET_DIR/geosite-category-communication.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-category-communication.srs"
+download "$RULESET_DIR/geosite-category-entertainment.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-category-entertainment.srs"
+download "$RULESET_DIR/geosite-category-media.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-category-media.srs"
 download "$RULESET_DIR/geosite-category-porn.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-category-porn.srs"
 download "$RULESET_DIR/geosite-category-social.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-category-social-media-!cn.srs"
-download "$RULESET_DIR/geosite-category-entertainment.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-category-entertainment.srs"
