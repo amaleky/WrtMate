@@ -17,15 +17,6 @@ test_connection() {
   fi
 }
 
-test_passwall() {
-  if [ "$(uci get passwall2.@global[0].enabled 2>/dev/null)" = "1" ]; then
-    if ! top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default' | grep 'global' >/dev/null; then
-      echo "❌ passwall2 is not running."
-      /etc/init.d/passwall2 restart
-    fi
-  fi
-}
-
 test_socks_port() {
   SOCKS_PORT=$1
   URL=$2
@@ -94,7 +85,6 @@ test_service() {
 
 main() {
   test_connection
-  test_passwall
   test_service "balancer" "Balancer" 9801 "true"
   test_service "ghost" "Ghost" 9802 "false"
   test_service "warp-plus" "WarpPlus" 9803 "true"

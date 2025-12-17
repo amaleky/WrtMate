@@ -280,6 +280,11 @@ passwall() {
 
   uci commit passwall2
   /etc/init.d/passwall2 restart
+
+  if ! top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default' | grep 'global' >/dev/null; then
+    info "Restarting passwall2 service..."
+    /etc/init.d/passwall2 restart
+  fi
 }
 
 main() {
