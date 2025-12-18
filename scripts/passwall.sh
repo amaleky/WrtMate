@@ -256,19 +256,19 @@ geo_update() {
 
 passwall() {
   info "passwall"
-  LATEST_TAG="$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases/latest")"
-  REMOTE_VERSION="$(echo "$LATEST_TAG" | jq -r '.tag_name')"
+  RELEASES="$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases")"
+  REMOTE_VERSION="$(echo "$RELEASES" | jq -r '.[0].tag_name')"
   LOCAL_VERSION="$(cat "/root/.passwall2_version" 2>/dev/null || echo 'none')"
 
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
-    opkg remove dnsmasq
+    opkg remove dnsmasq luci-app-passwall
     ensure_packages "dnsmasq-full kmod-nft-socket kmod-nft-tproxy binutils"
 
-    curl -s -L -o "/tmp/packages.zip" "https://github.com/xiaorouji/openwrt-passwall2/releases/latest/download/passwall_packages_ipk_$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2).zip" || error "Failed to download Passwall packages."
+    curl -L -o "/tmp/packages.zip" "$(echo "$RELEASES" | jq -r ".[] | .assets[].browser_download_url | select(endswith(\"passwall_packages_ipk_$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2).zip\"))" | head -n1)" || error "Failed to download Passwall packages."
     unzip -o /tmp/packages.zip -d /tmp/passwall >/dev/null 2>&1
     for pkg in /tmp/passwall/*.ipk; do opkg install "$pkg"; done
 
-    curl -s -L -o "/tmp/passwall2.ipk" "$(echo "$LATEST_TAG" | jq -r '.assets[].browser_download_url | select(contains("luci-app-passwall2_") and endswith("_all.ipk"))')" || error "Failed to download Passwall2 package."
+    curl -L -o "/tmp/passwall2.ipk" "$(echo "$RELEASES" | jq -r '.[] | .assets[].browser_download_url | select(contains("luci-app-passwall2_") and endswith("_all.ipk"))' | head -n1)" || error "Failed to download Passwall2 package."
     opkg install /tmp/passwall2.ipk || error "Failed to install Passwall2."
 
     if [ -n "$REMOTE_VERSION" ]; then
