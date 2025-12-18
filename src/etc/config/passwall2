@@ -167,5 +167,6 @@ rule-set:local:/usr/share/singbox/rule-set/geosite-category-communication.srs
 rule-set:local:/usr/share/singbox/rule-set/geosite-category-entertainment.srs
 rule-set:local:/usr/share/singbox/rule-set/geosite-category-media.srs
 rule-set:local:/usr/share/singbox/rule-set/geosite-category-porn.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-category-forums.srs
 rule-set:local:/usr/share/singbox/rule-set/geosite-category-social.srs'
 	option port '443'

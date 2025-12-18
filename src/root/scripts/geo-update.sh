@@ -107,3 +107,4 @@ download "$RULESET_DIR/geosite-category-entertainment.srs" "https://raw.githubus
 download "$RULESET_DIR/geosite-category-media.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-category-media.srs"
 download "$RULESET_DIR/geosite-category-porn.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-category-porn.srs"
 download "$RULESET_DIR/geosite-category-social.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-category-social-media-!cn.srs"
+download "$RULESET_DIR/geosite-category-forums.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geosite-category-forums.srs"
