@@ -84,7 +84,6 @@ download "$RULESET_DIR/d3host.txt" "https://raw.githubusercontent.com/Turtlecute
 download "$RULESET_DIR/goodbyeads.txt" "https://raw.githubusercontent.com/8680/GOODBYEADS/master/data/mod/adblock.txt"
 download "$RULESET_DIR/hagezi.txt" "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/ultimate.mini.txt"
 download "$RULESET_DIR/hoshsadiq.txt" "https://raw.githubusercontent.com/hoshsadiq/adblock-nocoin-list/master/nocoin.txt"
-download "$RULESET_DIR/Spotify-AdsList.txt" "https://raw.githubusercontent.com/Isaaker/Spotify-AdsList/main/Lists/adguard.txt"
 
 rm -rfv "$RULESET_DIR/geosite-adguard.srs" "$RULESET_DIR/geosite-adguard.txt"
 
@@ -93,7 +92,6 @@ cat "$RULESET_DIR/blocklistproject.txt" \
     "$RULESET_DIR/goodbyeads.txt" \
     "$RULESET_DIR/hagezi.txt" \
     "$RULESET_DIR/hoshsadiq.txt" \
-    "$RULESET_DIR/Spotify-AdsList.txt" \
 | grep -vE "(##|/|^[[:space:]\!\?\[\.\*\$\-]|include:|airbrake|bugsnag|clarity|datadoghq|doubleclick|errorreporting|fastclick|freshmarketer|tagmanager|honeybadger|hotjar|logrocket|luckyorange|mouseflow|newrelic|openreplay|raygun|rollbar|sentry|siftscience|webengage|yandex|analytics|metrics)" \
 | sed 's/^www\./\^/; s/$websocket.*//; s/$third-party.*//; s/$script.*//; s/\^.*$/\^/; s/#.*//g' \
 | sort -u > "$RULESET_DIR/geosite-adguard.txt"
