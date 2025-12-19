@@ -64,7 +64,7 @@ test_service() {
       echo "❌ $NODE connectivity test failed"
       case "$SERVICE" in
         ghost) /etc/init.d/scanner start ;;
-        warp-plus) rm -rfv /.cache/warp-plus/ ;;
+        warp-plus) rm -rfv /.cache/vwarp/ ;;
         ssh-proxy) rm -fv /root/.ssh/known_hosts ;;
       esac
       if [ "$SERVICE" != "ghost" ]; then
