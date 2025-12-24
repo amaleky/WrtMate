@@ -54,7 +54,7 @@ main() {
         ;;
     esac
   fi
-  curl -s -L -o "/tmp/warp.zip" "https://github.com/voidr3aper-anon/Vwarp/releases/latest/download/vwarp_linux-${DETECTED_ARCH}.zip" || error "Failed to download WARP zip."
+  curl -L -o "/tmp/warp.zip" "https://github.com/voidr3aper-anon/Vwarp/releases/latest/download/vwarp_linux-${DETECTED_ARCH}.zip" || error "Failed to download WARP zip."
   unzip -o /tmp/warp.zip -d /tmp
   mv /tmp/vwarp /usr/bin/warp-plus
   chmod +x /usr/bin/warp-plus
