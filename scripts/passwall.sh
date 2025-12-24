@@ -9,7 +9,7 @@ if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
 hiddify() {
   info "hiddify"
 
-  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/hiddify/hiddify-core/releases/latest" | jq -r '.tag_name')"
+  REMOTE_VERSION="$(curl -s -L "https://api.github.com/repos/hiddify/hiddify-core/releases/latest" | jq -r '.tag_name')"
   LOCAL_VERSION="$(cat "/root/.hiddify_version" 2>/dev/null || echo 'none')"
 
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
@@ -101,7 +101,7 @@ ghost() {
 warp() {
   info "warp"
 
-  REMOTE_VERSION="$(curl -s "https://api.github.com/repos/bepass-org/warp-plus/releases/latest" | jq -r '.tag_name')"
+  REMOTE_VERSION="$(curl -s -L "https://api.github.com/repos/bepass-org/warp-plus/releases/latest" | jq -r '.tag_name')"
   LOCAL_VERSION="$(cat "/root/.vwarp_version" 2>/dev/null || echo 'none')"
 
   if [[ -f "/etc/init.d/warp-plus" ]] && /etc/init.d/warp-plus running; then
@@ -128,7 +128,7 @@ psiphon() {
   info "psiphon"
   if [ ! -d /root/psiphon/ ]; then mkdir /root/psiphon/; fi
 
-  REMOTE_VERSION="$(curl -s "https://api.github.com/amaleky/WrtMate/releases/latest" | jq -r '.tag_name')"
+  REMOTE_VERSION="$(curl -s -L "https://api.github.com/amaleky/WrtMate/releases/latest" | jq -r '.tag_name')"
   LOCAL_VERSION="$(cat "/root/.psiphon_version" 2>/dev/null || echo 'none')"
 
   if [[ -f "/etc/init.d/psiphon" ]] && /etc/init.d/psiphon running; then
@@ -256,7 +256,7 @@ geo_update() {
 
 passwall() {
   info "passwall"
-  RELEASES="$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases")"
+  RELEASES="$(curl -s -L "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases")"
   REMOTE_VERSION="$(echo "$RELEASES" | jq -r '.[0].tag_name')"
   LOCAL_VERSION="$(cat "/root/.passwall_version" 2>/dev/null || echo 'none')"
 

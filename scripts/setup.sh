@@ -4,14 +4,14 @@
 LAN_IPADDR="$(uci get network.lan.ipaddr 2>/dev/null || echo '192.168.1.1')"
 
 check_firmware_version() {
-  LATEST_VERSION=$(curl -s "https://downloads.openwrt.org/.versions.json" | jq -r ".stable_version") || error "Failed to fetch latest OpenWrt version."
+  LATEST_VERSION=$(curl -s -L "https://downloads.openwrt.org/.versions.json" | jq -r ".stable_version") || error "Failed to fetch latest OpenWrt version."
   echo "$LATEST_VERSION"
 }
 
 upgrade_firmware() {
   read -r -p "Enter your router firmware upgrade file (sysupgrade.bin): " FIRMWARE_URL
   if [ -n "$FIRMWARE_URL" ]; then
-    curl -s -L -o "/tmp/firmware.bin" "${FIRMWARE_URL}" || error "Failed to download firmware."
+    curl -L -o "/tmp/firmware.bin" "${FIRMWARE_URL}" || error "Failed to download firmware."
     sysupgrade -n -v /tmp/firmware.bin
   fi
 }
