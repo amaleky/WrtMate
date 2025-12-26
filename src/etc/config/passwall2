@@ -176,7 +176,7 @@ rule-set:local:/usr/share/singbox/rule-set/geoip-private.srs'
 config shunt_rules 'Social'
 	option remarks 'Social'
 	option network 'tcp,udp'
-	option port '443'
+	option port '53,443'
 	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-category-anticensorship.srs
 rule-set:local:/usr/share/singbox/rule-set/geosite-category-communication.srs
 rule-set:local:/usr/share/singbox/rule-set/geosite-category-entertainment.srs
