@@ -161,6 +161,34 @@ psiphon() {
   fi
 }
 
+lantern() {
+  info "lantern"
+
+  REMOTE_VERSION="$(curl -s -L "https://api.github.com/amaleky/WrtMate/releases/latest" | jq -r '.tag_name')"
+  LOCAL_VERSION="$(cat "/root/.lantern_version" 2>/dev/null || echo 'none')"
+
+  if [[ -f "/etc/init.d/lantern" ]] && /etc/init.d/lantern running; then
+    /etc/init.d/lantern stop
+  fi
+
+  if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
+    source <(wget -qO- "${REPO_URL}/scripts/packages/lantern.sh")
+    if [ -n "$REMOTE_VERSION" ]; then
+      echo "$REMOTE_VERSION" >"/root/.lantern_version"
+    fi
+  fi
+
+  curl -s -L -o "/etc/init.d/lantern" "${REPO_URL}/src/etc/init.d/lantern" || error "Failed to download lantern init script."
+  chmod +x /etc/init.d/lantern
+
+  /usr/bin/lantern auth
+
+  if [ "$TOTAL_RAM" -ge "$MIN_RAM_MB" ]; then
+    /etc/init.d/lantern enable
+    /etc/init.d/lantern start
+  fi
+}
+
 tor() {
   info "tor"
 
@@ -307,6 +335,7 @@ main() {
     ghost
     warp
     psiphon
+    lantern
     ssh_proxy
     server_less
     url_test
