@@ -54,8 +54,8 @@ main() {
         ;;
     esac
   fi
-  curl -L -o "/usr/bin/psiphon" "https://github.com/amaleky/WrtMate/releases/latest/download/psiphon_linux-${DETECTED_ARCH}" || error "Failed to download psiphon."
-  chmod +x "/usr/bin/psiphon"
+  curl -fL -o "/usr/bin/lantern" "https://github.com/amaleky/WrtMate/releases/latest/download/lantern_linux-${DETECTED_ARCH}" || error "Failed to download lantern."
+  chmod +x "/usr/bin/lantern"
 }
 
 main "$@"

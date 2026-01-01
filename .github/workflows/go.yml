@@ -24,14 +24,6 @@ jobs:
             goarch: riscv64
           - goos: linux
             goarch: mips64
-          - goos: linux
-            goarch: mips64le
-          - goos: linux
-            goarch: mips
-          - goos: linux
-            goarch: mipsle
-          - goos: linux
-            goarch: mips64
             gomips: softfloat
           - goos: linux
             goarch: mips64le
@@ -73,5 +65,137 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: psiphon_${{ env.ASSET_NAME }}
+          tag: ${{ github.ref }}
+          overwrite: true
+
+      - name: Install Lantern toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xz-utils
+
+          case "${{ matrix.goarch }}" in
+            mips64)
+              sudo apt-get install -y gcc-mips64-linux-gnuabi64 g++-mips64-linux-gnuabi64
+              echo "CC=mips64-linux-gnuabi64-gcc" >> "$GITHUB_ENV"
+              echo "CXX=mips64-linux-gnuabi64-g++" >> "$GITHUB_ENV"
+              echo "AR=mips64-linux-gnuabi64-ar" >> "$GITHUB_ENV"
+              exit 0
+              ;;
+            mips64le)
+              sudo apt-get install -y gcc-mips64el-linux-gnuabi64 g++-mips64el-linux-gnuabi64
+              echo "CC=mips64el-linux-gnuabi64-gcc" >> "$GITHUB_ENV"
+              echo "CXX=mips64el-linux-gnuabi64-g++" >> "$GITHUB_ENV"
+              echo "AR=mips64el-linux-gnuabi64-ar" >> "$GITHUB_ENV"
+              exit 0
+              ;;
+          esac
+
+          ZIG_VERSION="0.14.1"
+          ZIG_TARBALL_URL="https://ziglang.org/download/${ZIG_VERSION}/zig-x86_64-linux-${ZIG_VERSION}.tar.xz"
+          curl -sSL "${ZIG_TARBALL_URL}" -o /tmp/zig.tar.xz
+          sudo mkdir -p /opt/zig
+          sudo tar -xJf /tmp/zig.tar.xz -C /opt/zig
+          echo "/opt/zig/zig-x86_64-linux-${ZIG_VERSION}" >> "$GITHUB_PATH"
+
+          ZIG_FLOAT_FLAGS=""
+          case "${{ matrix.goarch }}" in
+            amd64)
+              ZIG_TARGET="x86_64-linux-musl"
+              ;;
+            arm64)
+              ZIG_TARGET="aarch64-linux-musl"
+              ;;
+            arm)
+              ZIG_TARGET="arm-linux-musleabihf"
+              ;;
+            riscv64)
+              ZIG_TARGET="riscv64-linux-musl"
+              ;;
+            mips)
+              ZIG_TARGET="mips-linux-musleabi"
+              ;;
+            mipsle)
+              ZIG_TARGET="mipsel-linux-musleabi"
+              ;;
+            mips64)
+              ZIG_TARGET="mips64-linux-muslabi64"
+              ZIG_FLOAT_FLAGS="-msoft-float"
+              ;;
+            mips64le)
+              ZIG_TARGET="mips64el-linux-muslabi64"
+              ZIG_FLOAT_FLAGS="-msoft-float"
+              ;;
+          esac
+
+          if [[ "${{ matrix.gomips }}" == "softfloat" ]]; then
+            ZIG_FLOAT_FLAGS="-msoft-float"
+            echo "CGO_CFLAGS=-msoft-float" >> "$GITHUB_ENV"
+            echo "CGO_LDFLAGS=-msoft-float" >> "$GITHUB_ENV"
+          elif [[ "${{ matrix.goarch }}" == "mips64" || "${{ matrix.goarch }}" == "mips64le" ]]; then
+            echo "CGO_CFLAGS=-msoft-float" >> "$GITHUB_ENV"
+            echo "CGO_LDFLAGS=-msoft-float" >> "$GITHUB_ENV"
+            echo "GOMIPS=softfloat" >> "$GITHUB_ENV"
+          fi
+
+          echo "ZIG_TARGET=${ZIG_TARGET}" >> "$GITHUB_ENV"
+          echo "ZIG_FLOAT_FLAGS=${ZIG_FLOAT_FLAGS}" >> "$GITHUB_ENV"
+
+          cat > /tmp/zig-cc <<'EOF'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          args=()
+          for arg in "$@"; do
+            case "$arg" in
+              *hard-float*)
+                ;;
+              *)
+                args+=("$arg")
+                ;;
+            esac
+          done
+          exec zig cc -target "${ZIG_TARGET}" ${ZIG_FLOAT_FLAGS} "${args[@]}"
+          EOF
+          chmod +x /tmp/zig-cc
+
+          cat > /tmp/zig-cxx <<'EOF'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          args=()
+          for arg in "$@"; do
+            case "$arg" in
+              *hard-float*)
+                ;;
+              *)
+                args+=("$arg")
+                ;;
+            esac
+          done
+          exec zig c++ -target "${ZIG_TARGET}" ${ZIG_FLOAT_FLAGS} "${args[@]}"
+          EOF
+          chmod +x /tmp/zig-cxx
+
+          echo "CC=/tmp/zig-cc" >> "$GITHUB_ENV"
+          echo "CXX=/tmp/zig-cxx" >> "$GITHUB_ENV"
+          echo "AR=zig ar" >> "$GITHUB_ENV"
+
+      - name: Build Lantern
+        env:
+          CGO_ENABLED: 1
+        run: |
+          git clone --depth 1 https://github.com/getlantern/lantern-headless-client.git
+          pushd ./lantern-headless-client || exit 1
+          echo "CC=${CC}"
+          echo "CXX=${CXX}"
+          command -v "${CC}" || true
+          "${CC}" --version || true
+          go get github.com/getlantern/flashlight/v7@$(curl -s -L "https://api.github.com/repos/getlantern/flashlight/releases/latest" | jq -r '.tag_name')
+          go build -o ../lantern_${{ env.ASSET_NAME }} -trimpath -ldflags "-s -w -buildid= -checklinkname=0 -linkmode external -extldflags=-static" .
+          popd
+
+      - name: Upload Lantern
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: lantern_${{ env.ASSET_NAME }}
           tag: ${{ github.ref }}
           overwrite: true
