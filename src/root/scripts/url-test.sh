@@ -91,6 +91,7 @@ main() {
   test_service "psiphon" "Psiphon" 9804 "true"
   test_service "tor" "Tor" 9805 "true"
   test_service "ssh-proxy" "SshProxy" 9806 "true"
+  test_service "lantern" "Lantern" 9807 "true"
   test_serverless
 }
 
