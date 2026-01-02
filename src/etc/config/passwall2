@@ -99,8 +99,34 @@ config global
 	option remote_dns_protocol 'tcp'
 	option remote_dns '1.1.1.1'
 	option remote_dns_query_strategy 'UseIPv4'
-	option dns_hosts 'cloudflare-dns.com 1.1.1.1
-dns.google.com 8.8.8.8'
+	option dns_hosts 'dns.adguard.com 94.140.14.14
+adguard-dns.com 94.140.14.14
+dns.adguard-dns.com 94.140.14.14
+family.adguard-dns.com 94.140.14.15
+unfiltered.adguard-dns.com 94.140.14.140
+dns.alidns.com 223.5.5.5
+doh.opendns.com 208.67.222.222
+doh.familyshield.opendns.com 208.67.222.123
+doh.sandbox.opendns.com 208.67.222.2
+dns.cloudflare.com 1.1.1.1
+cloudflare-dns.com 1.1.1.1
+security.cloudflare-dns.com 1.1.1.2
+family.cloudflare-dns.com 1.1.1.3
+doh.cleanbrowsing.org 185.228.168.168
+freedns.controld.com 76.76.2.0
+doh.dns.sb 185.222.222.222
+dns.google 8.8.8.8
+dns.google.com 8.8.8.8
+ordns.he.net 74.82.42.42
+dns.pub 119.29.29.29
+sm2.doh.pub 119.29.29.29
+dns.quad9.net 9.9.9.9
+dns10.quad9.net 9.9.9.10
+dns11.quad9.net 9.9.9.11
+doh.360.cn 101.226.4.6
+dns.surfsharkdns.com 194.169.169.169
+wikimedia-dns.org 185.71.138.138
+doh.libredns.gr 88.198.92.222'
 	option log_node '1'
 	option loglevel 'error'
 	option write_ipset_direct '0'
