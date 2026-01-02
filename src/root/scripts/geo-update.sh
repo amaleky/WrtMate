@@ -62,14 +62,14 @@ download "$RULESET_DIR/iran_domains_direct.txt" "https://raw.githubusercontent.c
 download "$RULESET_DIR/linkedin.txt" "$BASE_URL/linkedin"
 download "$RULESET_DIR/riot.txt" "$BASE_URL/riot"
 
-rm -rfv "$RULESET_DIR/geosite-direct.srs" "$RULESET_DIR/geosite-direct.txt"
-
 cat "$RULESET_DIR/domains-ir.txt" \
   "$RULESET_DIR/iran_domains_direct.txt" \
   "$RULESET_DIR/linkedin.txt" \
   "$RULESET_DIR/riot.txt" \
 | grep -vE "(##|/|^[[:space:]\!\?\[\.\*\$\-]|include:|.+\.ir$| @ads)" \
 | sed 's/^www\./\^/; s/$websocket.*//; s/$third-party.*//; s/$script.*//; s/\^.*$/\^/; s/#.*//g; /^||/! s/^/||/; /[^ ^]$/ s/$/^/; s/full://g; s/domain://g; s/geoip://g; s/geosite://g; s/ @cn//g' \
+| grep -vF '||^' \
+| grep -vE '([0-9]{1,3}\.){3}[0-9]{1,3}' \
 | sort -u > "$RULESET_DIR/geosite-direct.txt"
 
 for DOMAIN in "ir" "pinsvc.net" "snapp.cab" "local" "ptp" "meet.google.com" "dl.playstation.net" "update.playstation.net" "indllserver.info"; do
@@ -87,8 +87,6 @@ download "$RULESET_DIR/goodbyeads.txt" "https://raw.githubusercontent.com/8680/G
 download "$RULESET_DIR/hagezi.txt" "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/ultimate.mini.txt"
 download "$RULESET_DIR/hoshsadiq.txt" "https://raw.githubusercontent.com/hoshsadiq/adblock-nocoin-list/master/nocoin.txt"
 
-rm -rfv "$RULESET_DIR/geosite-adguard.srs" "$RULESET_DIR/geosite-adguard.txt"
-
 cat "$RULESET_DIR/blocklistproject.txt" \
     "$RULESET_DIR/d3host.txt" \
     "$RULESET_DIR/goodbyeads.txt" \
@@ -96,6 +94,9 @@ cat "$RULESET_DIR/blocklistproject.txt" \
     "$RULESET_DIR/hoshsadiq.txt" \
 | grep -vE "(##|/|^[[:space:]\!\?\[\.\*\$\-]|include:|airbrake|bugsnag|clarity|datadoghq|doubleclick|errorreporting|fastclick|freshmarketer|tagmanager|honeybadger|hotjar|logrocket|luckyorange|mouseflow|newrelic|openreplay|raygun|rollbar|sentry|siftscience|webengage|yandex|analytics|metrics)" \
 | sed 's/^www\./\^/; s/$websocket.*//; s/$third-party.*//; s/$script.*//; s/\^.*$/\^/; s/#.*//g' \
+| grep -vF '||^' \
+| grep -vF 'redirect-rule' \
+| grep -vE '([0-9]{1,3}\.){3}[0-9]{1,3}' \
 | sort -u > "$RULESET_DIR/geosite-adguard.txt"
 
 echo "/(airbrake|bugsnag|clarity|datadoghq|doubleclick|errorreporting|fastclick|freshmarketer|tagmanager|honeybadger|hotjar|logrocket|luckyorange|mouseflow|newrelic|openreplay|raygun|rollbar|sentry|siftscience|webengage|yandex|analytics|metrics)/" >> "$RULESET_DIR/geosite-adguard.txt"
