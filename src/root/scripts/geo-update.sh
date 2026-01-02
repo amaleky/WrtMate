@@ -55,6 +55,7 @@ download "$V2RAY_DIR/geosite.dat" "https://github.com/Chocolate4U/Iran-v2ray-rul
 download "$SINGBOX_DIR/geosite.db" "https://github.com/Chocolate4U/Iran-sing-box-rules/releases/latest/download/geosite-lite.db" "false"
 
 # Direct
+CURRENT_SIZE=$(wc -c <"$RULESET_DIR/geosite-direct.txt" | tr -d ' ')
 download "$RULESET_DIR/geoip-ir.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geoip-ir.srs"
 download "$RULESET_DIR/geoip-private.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geoip-private.srs"
 download "$RULESET_DIR/domains-ir.txt" "https://github.com/bootmortis/iran-hosted-domains/releases/latest/download/domains.txt"
@@ -76,9 +77,12 @@ for DOMAIN in "ir" "pinsvc.net" "snapp.cab" "local" "ptp" "meet.google.com" "dl.
   echo "||$DOMAIN^" >> "$RULESET_DIR/geosite-direct.txt"
 done
 
-sing-box rule-set convert --type adguard --output "$RULESET_DIR/geosite-direct.srs" "$RULESET_DIR/geosite-direct.txt"
+if [ "$(wc -c <"$RULESET_DIR/geosite-direct.txt" | tr -d ' ')" != "$CURRENT_SIZE" ]; then
+  sing-box rule-set convert --type adguard --output "$RULESET_DIR/geosite-direct.srs" "$RULESET_DIR/geosite-direct.txt"
+fi
 
 # Block
+CURRENT_SIZE=$(wc -c <"$RULESET_DIR/geosite-adguard.txt" | tr -d ' ')
 download "$RULESET_DIR/geoip-malware.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geoip-malware.srs"
 download "$RULESET_DIR/geoip-phishing.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geoip-phishing.srs"
 download "$RULESET_DIR/blocklistproject.txt" "https://raw.githubusercontent.com/blocklistproject/Lists/master/adguard/tracking-ags.txt"
@@ -101,4 +105,6 @@ cat "$RULESET_DIR/blocklistproject.txt" \
 
 echo "/(airbrake|bugsnag|clarity|datadoghq|doubleclick|errorreporting|fastclick|freshmarketer|tagmanager|honeybadger|hotjar|logrocket|luckyorange|mouseflow|newrelic|openreplay|raygun|rollbar|sentry|siftscience|webengage|yandex|analytics|metrics)/" >> "$RULESET_DIR/geosite-adguard.txt"
 
-sing-box rule-set convert --type adguard --output "$RULESET_DIR/geosite-adguard.srs" "$RULESET_DIR/geosite-adguard.txt"
+if [ "$(wc -c <"$RULESET_DIR/geosite-adguard.txt" | tr -d ' ')" != "$CURRENT_SIZE" ]; then
+  sing-box rule-set convert --type adguard --output "$RULESET_DIR/geosite-adguard.srs" "$RULESET_DIR/geosite-adguard.txt"
+fi
