@@ -25,15 +25,15 @@ TESTED_COUNT=0
 mkdir -p "$CACHE_DIR" "$HOME/ghost"
 
 CONFIG_URLS=(
+  "https://raw.githubusercontent.com/sinavm/SVM/main/subscriptions/xray/normal/mix"
+  "https://raw.githubusercontent.com/Rayan-Config/C-Sub/main/configs/proxy.txt"
   "https://raw.githubusercontent.com/4n0nymou3/multi-proxy-config-fetcher/main/configs/proxy_configs.txt"
   "https://raw.githubusercontent.com/Mahdi0024/ProxyCollector/master/sub/proxies.txt"
   "https://raw.githubusercontent.com/Arashtelr/lab/main/FreeVPN-by-ArashZidi"
   "https://raw.githubusercontent.com/ALIILAPRO/v2rayNG-Config/main/server.txt"
   "https://raw.githubusercontent.com/liketolivefree/kobabi/main/sub.txt"
   "https://raw.githubusercontent.com/hans-thomas/v2ray-subscription/master/servers.txt"
-  "https://raw.githubusercontent.com/Rayan-Config/C-Sub/main/configs/proxy.txt"
   "https://raw.githubusercontent.com/darkvpnapp/CloudflarePlus/main/proxy"
-  "https://raw.githubusercontent.com/sinavm/SVM/main/subscriptions/xray/normal/mix"
   "https://raw.githubusercontent.com/VPNforWindowsSub/configs/master/full.txt"
   "https://raw.githubusercontent.com/mohamadfg-dev/telegram-v2ray-configs-collector/main/category/vless.txt"
   "https://raw.githubusercontent.com/mohamadfg-dev/telegram-v2ray-configs-collector/main/category/ss.txt"
