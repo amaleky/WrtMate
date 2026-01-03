@@ -20,6 +20,7 @@ PREV_COUNT=$(wc -l <"$CONFIGS")
 CACHE_DIR="$HOME/.cache/subscriptions"
 CONFIGS_LIMIT=40
 PARALLEL_LIMIT=20
+TESTED_COUNT=0
 
 mkdir -p "$CACHE_DIR" "$HOME/ghost"
 
@@ -94,6 +95,7 @@ while ! ping -c 1 -W 2 "217.218.127.127" >/dev/null 2>&1; do
 done
 
 throttle() {
+  TESTED_COUNT=$((TESTED_COUNT + 1))
   if [ -f "/etc/openwrt_release" ]; then
     local CPU_USAGE MEM_AVAILABLE
     CPU_USAGE=$(top -n 1 | awk '
@@ -134,11 +136,11 @@ get_random_port() {
 
 test_socks_port() {
   local SOCKS_PORT=$1
-  if [ "$(curl -s -L -I --max-time 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://telegram.org/")" -eq 200 ] && \
-    [ "$(curl -s -L -I --max-time 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://www.oracle.com/")" -eq 200 ] && \
-    [ "$(curl -s -L -I --max-time 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://aws.amazon.com/")" -eq 200 ] && \
-    [ "$(curl -s -L -I --max-time 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://gemini.google.com/")" -eq 200 ] && \
-    [ "$(curl -s -L -I --max-time 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://cloud.nx.app/favicon.ico")" -eq 200 ]; then
+  if [ "$(curl -s -L -I --max-time 3 --retry 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://telegram.org/")" -eq 200 ] && \
+    [ "$(curl -s -L -I --max-time 3 --retry 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://www.oracle.com/")" -eq 200 ] && \
+    [ "$(curl -s -L -I --max-time 3 --retry 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://aws.amazon.com/")" -eq 200 ] && \
+    [ "$(curl -s -L -I --max-time 3 --retry 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://gemini.google.com/")" -eq 200 ] && \
+    [ "$(curl -s -L -I --max-time 3 --retry 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://cloud.nx.app/favicon.ico")" -eq 200 ]; then
     return 0
   else
     return 1
@@ -174,7 +176,7 @@ process_config() {
   /usr/bin/sing-box run -c "$FINAL_CONFIG" 2>&1 | while read -r LINE; do
     if echo "$LINE" | grep -q "sing-box started"; then
       if test_socks_port "$SOCKS_PORT"; then
-        echo "✅ Found ($(wc -l <"$CONFIGS"))"
+        echo "✅ Found ($(wc -l <"$CONFIGS") / $TESTED_COUNT)"
         echo "$CONFIG" >>"$CONFIGS"
       fi
       kill -9 $(pgrep -f "/usr/bin/sing-box run -c $FINAL_CONFIG")
@@ -208,10 +210,10 @@ test_subscriptions() {
     return
   fi
   if [ "$IS_BASE64" = "true" ]; then
-    base64 --decode "$CACHE_FILE" 2>/dev/null | while IFS= read -r CONFIG; do
+    while IFS= read -r CONFIG; do
       throttle
       process_config "$CONFIG" &
-    done
+    done < <(base64 --decode "$CACHE_FILE" 2>/dev/null)
   else
     while IFS= read -r CONFIG; do
       throttle
