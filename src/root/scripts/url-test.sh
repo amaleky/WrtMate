@@ -11,10 +11,10 @@ set_retry_count() {
 }
 
 test_connection() {
-  if ! ping -c 1 -W 2 "217.218.127.127" >/dev/null 2>&1; then
+  while ! ping -c 1 -W 2 "217.218.127.127" >/dev/null 2>&1; do
     echo "❌ Connectivity test failed."
-    exit 0
-  fi
+    sleep 2
+  done
 }
 
 test_socks_port() {

@@ -65,6 +65,7 @@ ghost() {
 
   if [ "$TOTAL_RAM" -ge "$MIN_RAM_MB" ]; then
     if [ ! -f "/root/ghost/configs.conf" ] || [ "$(wc -l <"/root/ghost/configs.conf")" -eq 0 ]; then
+      touch /root/ghost/configs.conf
       /etc/init.d/scanner start
     fi
   fi
@@ -72,10 +73,6 @@ ghost() {
   add_cron_job "0 * * * * /etc/init.d/scanner start"
 
   if [ ! -d /root/ghost/ ]; then mkdir /root/ghost/; fi
-
-  if [[ ! -f "/root/ghost/configs.conf" ]]; then
-    curl -s -L -o "/root/ghost/configs.conf" "${REPO_URL}/src/root/ghost/configs.conf" || error "Failed to download ghost configs."
-  fi
 
   if [[ -f "/etc/init.d/ghost" ]] && /etc/init.d/ghost running; then
     /etc/init.d/ghost stop

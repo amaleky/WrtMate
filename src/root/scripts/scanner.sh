@@ -7,7 +7,15 @@
 [ -z "$HOME" ] || [ "$HOME" = "/" ] && HOME="/root"
 [ "$(id -u)" -eq 0 ] || error "This script must be run as root (use sudo)"
 
+if [[ ! -f "/usr/bin/hiddify-cli" ]]; then
+  source <(wget -qO- "https://raw.githubusercontent.com/amaleky/WrtMate/main/scripts/packages/hiddify.sh")
+fi
+if [[ ! -f "/usr/bin/sing-box" ]]; then
+  source <(wget -qO- "https://raw.githubusercontent.com/amaleky/WrtMate/main/scripts/packages/sing-box.sh")
+fi
+
 CONFIGS="$HOME/ghost/configs.conf"
+TMP_CONFIGS="$HOME/ghost/configs.backup"
 PREV_COUNT=$(wc -l <"$CONFIGS")
 CACHE_DIR="$HOME/.cache/subscriptions"
 CONFIGS_LIMIT=40
@@ -77,20 +85,13 @@ BASE64_URLS=(
   "https://raw.githubusercontent.com/ripaojiedian/freenode/main/sub"
 )
 
-if [[ ! -f "/usr/bin/hiddify-cli" ]]; then
-  source <(wget -qO- "https://raw.githubusercontent.com/amaleky/WrtMate/main/scripts/packages/hiddify.sh")
-fi
-if [[ ! -f "/usr/bin/sing-box" ]]; then
-  source <(wget -qO- "https://raw.githubusercontent.com/amaleky/WrtMate/main/scripts/packages/sing-box.sh")
-fi
-
 cd "/tmp" || true
 echo "ℹ️ $PREV_COUNT Previous Configs Found"
 
-if ! ping -c 1 -W 2 "217.218.127.127" >/dev/null 2>&1; then
+while ! ping -c 1 -W 2 "217.218.127.127" >/dev/null 2>&1; do
   echo "ERROR: Connectivity test failed."
-  exit 0
-fi
+  sleep 2
+done
 
 throttle() {
   if [ -f "/etc/openwrt_release" ]; then
@@ -184,55 +185,49 @@ process_config() {
 }
 
 test_subscriptions_local() {
-  BACKUP="$(cat "$CONFIGS")"
+  cat "$CONFIGS" >>"$TMP_CONFIGS"
   echo -n >"$CONFIGS"
-  echo "⏳ Testing $CONFIGS"
+  echo "⏳ Testing $TMP_CONFIGS"
   while IFS= read -r CONFIG; do
     throttle
     process_config "$CONFIG" &
-  done <<<"$BACKUP"
+  done <"$TMP_CONFIGS"
+  echo -n >"$TMP_CONFIGS"
 }
 
-test_subscriptions_raw() {
-  for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
-    CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
-    if curl -L --max-time 60 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
-      echo "✅ Downloaded $SUBSCRIPTION"
-    elif [ -f "$CACHE_FILE" ]; then
-      echo "⚠️ Using cashed $SUBSCRIPTION"
-    else
-      echo "❌ Failed to download $SUBSCRIPTION"
-      continue
-    fi
-    while IFS= read -r CONFIG; do
-      throttle
-      process_config "$CONFIG" &
-    done <"$CACHE_FILE"
-  done
-}
-
-test_subscriptions_base64() {
-  for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
-    CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
-    if curl -L --max-time 60 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
-      echo "✅ Downloaded $SUBSCRIPTION"
-    elif [ -f "$CACHE_FILE" ]; then
-      echo "⚠️ Using cashed $SUBSCRIPTION"
-    else
-      echo "❌ Failed to download $SUBSCRIPTION"
-      continue
-    fi
+test_subscriptions() {
+  SUBSCRIPTION="$1"
+  IS_BASE64="$2"
+  CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
+  if curl -L --max-time 60 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
+    echo "✅ Downloaded $SUBSCRIPTION"
+  elif [ -f "$CACHE_FILE" ]; then
+    echo "⚠️ Using cashed $SUBSCRIPTION"
+  else
+    echo "❌ Failed to download $SUBSCRIPTION"
+    return
+  fi
+  if [ "$IS_BASE64" = "true" ]; then
     base64 --decode "$CACHE_FILE" 2>/dev/null | while IFS= read -r CONFIG; do
       throttle
       process_config "$CONFIG" &
     done
-  done
+  else
+    while IFS= read -r CONFIG; do
+      throttle
+      process_config "$CONFIG" &
+    done <"$CACHE_FILE"
+  fi
 }
 
 main() {
   test_subscriptions_local
-  test_subscriptions_raw
-  test_subscriptions_base64
+  for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
+    test_subscriptions "$SUBSCRIPTION" "false"
+  done
+  for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
+    test_subscriptions "$SUBSCRIPTION" "true"
+  done
 }
 
 main "$@"
