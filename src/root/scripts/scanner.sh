@@ -5,7 +5,10 @@
 #
 
 [ -z "$HOME" ] || [ "$HOME" = "/" ] && HOME="/root"
-[ "$(id -u)" -eq 0 ] || error "This script must be run as root (use sudo)"
+if [ "$(id -u)" -ne 0 ]; then
+  echo "❌ This script must be run as root (use sudo)"
+  exit
+fi
 
 if [[ ! -f "/usr/bin/hiddify-cli" ]]; then
   source <(wget -qO- "https://raw.githubusercontent.com/amaleky/WrtMate/main/scripts/packages/hiddify.sh")
@@ -17,7 +20,6 @@ fi
 CONFIGS="$HOME/ghost/configs.conf"
 TMP_CONFIGS="$HOME/ghost/configs.backup"
 SCAN_HISTORY="/tmp/scanner.history"
-PREV_COUNT=$(wc -l <"$CONFIGS")
 CACHE_DIR="$HOME/.cache/subscriptions"
 CONFIGS_LIMIT=40
 PARALLEL_LIMIT=10
@@ -88,10 +90,10 @@ BASE64_URLS=(
 )
 
 cd "/tmp" || true
-echo "ℹ️ $PREV_COUNT Previous Configs Found"
+echo "🔍 $(wc -l <"$CONFIGS") Previous Configs"
 
 while ! ping -c 1 -W 2 "217.218.127.127" >/dev/null 2>&1; do
-  echo "ERROR: Connectivity test failed."
+  echo "❌ Connectivity test failed."
   sleep 2
 done
 
@@ -184,7 +186,7 @@ process_config() {
   /usr/bin/sing-box run -c "$FINAL_CONFIG" 2>&1 | while read -r LINE; do
     if echo "$LINE" | grep -q "sing-box started"; then
       if test_socks_port "$SOCKS_PORT"; then
-        echo "✅ Found ($(wc -l <"$CONFIGS") / $(wc -l <"$SCAN_HISTORY"))"
+        echo "🚀 Found ($(wc -l <"$CONFIGS") / $(wc -l <"$SCAN_HISTORY"))"
         echo "$CONFIG" >>"$CONFIGS"
       fi
       kill -9 $(pgrep -f "/usr/bin/sing-box run -c $FINAL_CONFIG")
@@ -197,7 +199,7 @@ process_config() {
 test_subscriptions_local() {
   cat "$CONFIGS" >>"$TMP_CONFIGS"
   echo -n >"$CONFIGS"
-  echo "⏳ Testing $TMP_CONFIGS"
+  echo "⏳ Testing $CONFIGS"
   while IFS= read -r CONFIG; do
     throttle
     process_config "$CONFIG" &
@@ -210,6 +212,7 @@ test_subscriptions() {
   SUBSCRIPTION="$1"
   IS_BASE64="$2"
   CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
+  echo "⏳ Testing $SUBSCRIPTION"
   if curl -L --max-time 60 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
     echo "✅ Downloaded $SUBSCRIPTION"
   elif [ -f "$CACHE_FILE" ]; then
