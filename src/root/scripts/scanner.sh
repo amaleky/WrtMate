@@ -171,8 +171,10 @@ process_config() {
     return
   fi
 
-  TAG=$(jq -r '(.outbounds[0]? // empty) | "\(.type)-\(.server)-\(.server_port)"' "$PARSED_CONFIG")
-  if grep -q "$TAG" "$SCAN_HISTORY"; then
+  TAG=$(jq -r '.outbounds[0] | "\(.type)-\(.server)-\(.server_port)"' "$PARSED_CONFIG")
+  TYPE=$(jq -r '.outbounds[0].type' "$PARSED_CONFIG")
+  if [[ "$TYPE" == "xray" ]] || grep -q "$TAG" "$SCAN_HISTORY"; then
+    rm -rf "$RAW_CONFIG" "$PARSED_CONFIG"
     return
   fi
   echo "$TAG" >>"$SCAN_HISTORY"
