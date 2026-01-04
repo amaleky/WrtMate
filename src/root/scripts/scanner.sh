@@ -166,7 +166,7 @@ process_config() {
 
   echo "$CONFIG" >"$RAW_CONFIG"
 
-  if grep -qxF "$CONFIG" "$CONFIGS" || /usr/bin/hiddify-cli parse "$RAW_CONFIG" -o "$PARSED_CONFIG" | grep -qiE "error|fatal"; then
+  if grep -qxF "$CONFIG" "$CONFIGS" || /usr/bin/hiddify-cli parse "$RAW_CONFIG" -o "$PARSED_CONFIG" | grep -qiE "error|fatal" || [[ ! -f "$PARSED_CONFIG" ]]; then
     rm -rf "$RAW_CONFIG" "$PARSED_CONFIG"
     return
   fi
