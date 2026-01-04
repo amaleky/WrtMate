@@ -20,7 +20,7 @@ SCAN_HISTORY="/tmp/scanner.history"
 PREV_COUNT=$(wc -l <"$CONFIGS")
 CACHE_DIR="$HOME/.cache/subscriptions"
 CONFIGS_LIMIT=40
-PARALLEL_LIMIT=20
+PARALLEL_LIMIT=10
 
 echo -n >"$SCAN_HISTORY"
 mkdir -p "$CACHE_DIR" "$HOME/ghost"
@@ -98,17 +98,20 @@ done
 throttle() {
   if [ -f "/etc/openwrt_release" ]; then
     local CPU_USAGE MEM_AVAILABLE
-    CPU_USAGE=$(top -n 1 | awk '
-    /CPU:/ {cpu = 100 - $8; gsub(/%/, "", cpu); print int(cpu); exit}
-    /Cpu\(s\):/ {gsub(/%.*/, "", $2); print int($2); exit}
-    ')
+    CPU_USAGE=$(
+      top -b -n 1 | awk '
+        $1=="PID" {in_table=1; next}
+        in_table && $1 ~ /^[0-9]+$/ {sum += $7}
+        END {printf "%d\n", int(sum+0.5)}
+      '
+    )
     MEM_AVAILABLE=$(free -m | awk '/^Mem:/ {print $7}')
     if [ "$CPU_USAGE" -gt 90 ] || [ "$MEM_AVAILABLE" -lt 100000 ]; then
       wait
     fi
   fi
   if [ "$(pgrep -f "/usr/bin/sing-box run -c *" | wc -l)" -ge "$PARALLEL_LIMIT" ]; then
-    wait
+    sleep 1
   fi
   if [ "$(wc -l <"$CONFIGS")" -ge "$CONFIGS_LIMIT" ]; then
     if [ -f "/etc/init.d/ghost" ]; then
@@ -136,11 +139,10 @@ get_random_port() {
 
 test_socks_port() {
   local SOCKS_PORT=$1
-  if [ "$(curl -s -L -I --max-time 3 --retry 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://telegram.org/")" -eq 200 ] && \
+  if [ "$(curl -s -L -I --max-time 3 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://telegram.org/")" -eq 200 ] && \
     [ "$(curl -s -L -I --max-time 3 --retry 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://www.oracle.com/")" -eq 200 ] && \
     [ "$(curl -s -L -I --max-time 3 --retry 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://aws.amazon.com/")" -eq 200 ] && \
-    [ "$(curl -s -L -I --max-time 3 --retry 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://gemini.google.com/")" -eq 200 ] && \
-    [ "$(curl -s -L -I --max-time 3 --retry 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://cloud.nx.app/favicon.ico")" -eq 200 ]; then
+    [ "$(curl -s -L -I --max-time 3 --retry 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://gemini.google.com/")" -eq 200 ]; then
     return 0
   else
     return 1
@@ -161,7 +163,7 @@ process_config() {
 
   echo "$CONFIG" >"$RAW_CONFIG"
 
-  if grep -qxF "$CONFIG" "$CONFIGS" || /usr/bin/hiddify-cli parse "$RAW_CONFIG" -o "$PARSED_CONFIG" 2>&1 | grep -qiE "error|fatal"; then
+  if grep -qxF "$CONFIG" "$CONFIGS" || /usr/bin/hiddify-cli parse "$RAW_CONFIG" -o "$PARSED_CONFIG" | grep -qiE "error|fatal"; then
     rm -rf "$RAW_CONFIG" "$PARSED_CONFIG"
     return
   fi
@@ -200,6 +202,7 @@ test_subscriptions_local() {
     throttle
     process_config "$CONFIG" &
   done <"$TMP_CONFIGS"
+  wait
   echo -n >"$TMP_CONFIGS"
 }
 
