@@ -16,12 +16,13 @@ fi
 
 CONFIGS="$HOME/ghost/configs.conf"
 TMP_CONFIGS="$HOME/ghost/configs.backup"
+SCAN_HISTORY="/tmp/scanner.history"
 PREV_COUNT=$(wc -l <"$CONFIGS")
 CACHE_DIR="$HOME/.cache/subscriptions"
 CONFIGS_LIMIT=40
 PARALLEL_LIMIT=20
-TESTED_COUNT=0
 
+echo -n >"$SCAN_HISTORY"
 mkdir -p "$CACHE_DIR" "$HOME/ghost"
 
 CONFIG_URLS=(
@@ -95,7 +96,6 @@ while ! ping -c 1 -W 2 "217.218.127.127" >/dev/null 2>&1; do
 done
 
 throttle() {
-  TESTED_COUNT=$((TESTED_COUNT + 1))
   if [ -f "/etc/openwrt_release" ]; then
     local CPU_USAGE MEM_AVAILABLE
     CPU_USAGE=$(top -n 1 | awk '
@@ -166,6 +166,12 @@ process_config() {
     return
   fi
 
+  TAG=$(jq -r '(.outbounds[0]? // empty) | "\(.type)-\(.server)-\(.server_port)"' "$PARSED_CONFIG")
+  if grep -q "$TAG" "$SCAN_HISTORY"; then
+    return
+  fi
+  echo "$TAG" >>"$SCAN_HISTORY"
+
   jq --argjson port "$SOCKS_PORT" '{
     "inbounds": [
       { "type": "mixed", "tag": "mixed-in", "listen": "127.0.0.1", "listen_port": $port }
@@ -176,7 +182,7 @@ process_config() {
   /usr/bin/sing-box run -c "$FINAL_CONFIG" 2>&1 | while read -r LINE; do
     if echo "$LINE" | grep -q "sing-box started"; then
       if test_socks_port "$SOCKS_PORT"; then
-        echo "✅ Found ($(wc -l <"$CONFIGS") / $TESTED_COUNT)"
+        echo "✅ Found ($(wc -l <"$CONFIGS") / $(wc -l <"$SCAN_HISTORY"))"
         echo "$CONFIG" >>"$CONFIGS"
       fi
       kill -9 $(pgrep -f "/usr/bin/sing-box run -c $FINAL_CONFIG")
