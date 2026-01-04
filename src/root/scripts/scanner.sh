@@ -82,22 +82,13 @@ done
 
 throttle() {
   if [ -f "/etc/openwrt_release" ]; then
-    local CPU_USAGE MEM_AVAILABLE
-    CPU_USAGE=$(
-      top -b -n 1 | awk '
-        $1=="PID" {in_table=1; next}
-        in_table && $1 ~ /^[0-9]+$/ {sum += $7}
-        END {printf "%d\n", int(sum+0.5)}
-      '
-    )
-    MEM_AVAILABLE=$(free -m | awk '/^Mem:/ {print $7}')
-    if [ "$CPU_USAGE" -gt 90 ] || [ "$MEM_AVAILABLE" -lt 100000 ]; then
-      wait
-    fi
+    while [ "$(top -bn1 | awk '/^CPU:/ {print $8}' | cut -d'%' -f1)" -lt 10 ] || [ "$(free -m | awk '/^Mem:/ {print $7}')" -lt 100000 ]; do
+      sleep 1
+    done
   fi
-  if [ "$(pgrep -f "/usr/bin/sing-box run -c *" | wc -l)" -ge "$PARALLEL_LIMIT" ]; then
+  while [ "$(pgrep -f "/usr/bin/sing-box run -c *" | wc -l)" -gt "$PARALLEL_LIMIT" ]; do
     sleep 1
-  fi
+  done
   if [ "$(wc -l <"$CONFIGS")" -ge "$CONFIGS_LIMIT" ]; then
     if [ -f "/etc/init.d/ghost" ]; then
       if ! test_socks_port "9802"; then
