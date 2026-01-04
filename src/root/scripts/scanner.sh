@@ -9,6 +9,10 @@ if [ "$(id -u)" -ne 0 ]; then
   echo "❌ This script must be run as root (use sudo)"
   exit
 fi
+if ! command -v jq >/dev/null 2>&1; then
+  echo "❌ jq is not installed"
+  exit
+fi
 
 if [[ ! -f "/usr/bin/hiddify-cli" ]]; then
   source <(wget -qO- "https://raw.githubusercontent.com/amaleky/WrtMate/main/scripts/packages/hiddify.sh")
