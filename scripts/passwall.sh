@@ -65,7 +65,7 @@ ghost() {
 
   if [ "$TOTAL_RAM" -ge "$MIN_RAM_MB" ]; then
     if [ ! -f "/root/ghost/configs.conf" ] || [ "$(wc -l <"/root/ghost/configs.conf")" -eq 0 ]; then
-      touch /root/ghost/configs.conf
+      touch "/root/ghost/configs.conf"
       /etc/init.d/scanner start
     fi
   fi

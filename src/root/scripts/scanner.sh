@@ -5,7 +5,10 @@
 #
 
 [ -z "$HOME" ] || [ "$HOME" = "/" ] && HOME="/root"
-[ "$(id -u)" -eq 0 ] || error "This script must be run as root (use sudo)"
+if [ "$(id -u)" -ne 0 ]; then
+  echo "❌ This script must be run as root (use sudo)"
+  exit
+fi
 
 if [[ ! -f "/usr/bin/hiddify-cli" ]]; then
   source <(wget -qO- "https://raw.githubusercontent.com/amaleky/WrtMate/main/scripts/packages/hiddify.sh")
@@ -14,15 +17,15 @@ if [[ ! -f "/usr/bin/sing-box" ]]; then
   source <(wget -qO- "https://raw.githubusercontent.com/amaleky/WrtMate/main/scripts/packages/sing-box.sh")
 fi
 
-CONFIGS="$HOME/ghost/configs.conf"
-TMP_CONFIGS="$HOME/ghost/configs.backup"
-PREV_COUNT=$(wc -l <"$CONFIGS")
+CONFIGS="$HOME/ghost/configs.json"
 CACHE_DIR="$HOME/.cache/subscriptions"
-CONFIGS_LIMIT=40
-PARALLEL_LIMIT=20
-TESTED_COUNT=0
+TEST_HISTORY="/tmp/scanner.tags"
+CONFIGS_LIMIT=200
+PARALLEL_LIMIT=10
 
+echo -n >"$TEST_HISTORY"
 mkdir -p "$CACHE_DIR" "$HOME/ghost"
+pkill -9 -f "/usr/bin/sing-box run -c /tmp/scanner.json" 2>/dev/null || true
 
 CONFIG_URLS=(
   "https://raw.githubusercontent.com/sinavm/SVM/main/subscriptions/xray/normal/mix"
@@ -87,119 +90,96 @@ BASE64_URLS=(
 )
 
 cd "/tmp" || true
-echo "ℹ️ $PREV_COUNT Previous Configs Found"
+echo "🔍 $(wc -l <"$CONFIGS") Previous Configs"
 
 while ! ping -c 1 -W 2 "217.218.127.127" >/dev/null 2>&1; do
-  echo "ERROR: Connectivity test failed."
+  echo "❌ Connectivity test failed."
   sleep 2
 done
 
-throttle() {
-  TESTED_COUNT=$((TESTED_COUNT + 1))
-  if [ -f "/etc/openwrt_release" ]; then
-    local CPU_USAGE MEM_AVAILABLE
-    CPU_USAGE=$(top -n 1 | awk '
-    /CPU:/ {cpu = 100 - $8; gsub(/%/, "", cpu); print int(cpu); exit}
-    /Cpu\(s\):/ {gsub(/%.*/, "", $2); print int($2); exit}
-    ')
-    MEM_AVAILABLE=$(free -m | awk '/^Mem:/ {print $7}')
-    if [ "$CPU_USAGE" -gt 90 ] || [ "$MEM_AVAILABLE" -lt 100000 ]; then
-      wait
+normalize_tag() {
+  "$@" | jq -c '
+    def mkTag:
+      [ (.type? // empty),
+        (.server? // empty),
+        (.server_port? // empty | tostring)
+      ]
+      | map(select(length > 0))
+      | join("_");
+    .tag = mkTag
+  '
+}
+
+test_socks_port() {
+  local OUTBOUND_JSON
+  local SOCKS_PORT=$1
+  local OUTBOUND_TAG=$2
+  local PARSED_CONFIG=$3
+  OUTBOUND_JSON="$(normalize_tag jq -c --arg tag "$OUTBOUND_TAG" '.outbounds[] | select(.tag == $tag)' "$PARSED_CONFIG")"
+  NEW_TAG="$(jq -r '.tag' <<<"$OUTBOUND_JSON")"
+  if grep -q "$NEW_TAG" "$TEST_HISTORY"; then
+    return 0
+  fi
+  echo "$NEW_TAG" >> "$TEST_HISTORY"
+  if [ "$(curl -sLI --max-time 3 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://telegram.org/")" -eq 200 ] && \
+    [ "$(curl -sLI --max-time 3 --retry 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://www.oracle.com/")" -eq 200 ] && \
+    [ "$(curl -sLI --max-time 3 --retry 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://aws.amazon.com/")" -eq 200 ] && \
+    [ "$(curl -sLI --max-time 3 --retry 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://gemini.google.com/")" -eq 200 ] && \
+    [ "$(curl -sLI --max-time 3 --retry 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://cloud.nx.app/favicon.ico")" -eq 200 ]; then
+    echo "$OUTBOUND_JSON" >> "$CONFIGS"
+    echo "✅ Found ($(wc -l <"$CONFIGS")/$(wc -l <"$TEST_HISTORY")): $NEW_TAG"
+  fi
+}
+
+collect_clean_configs() {
+  local FILE TEMP PARSED_CONFIG
+  FILE=$1
+  PARSED_CONFIG="/tmp/scanner.json"
+  TEMP=$(mktemp)
+
+  echo "$(/usr/bin/hiddify-cli parse "$FILE" -o "$PARSED_CONFIG")" >/dev/null
+
+  jq '.outbounds = [.outbounds[] | select(.type != "xray")] |
+  .inbounds = [.outbounds | to_entries | .[] | {
+    type: "socks",
+    tag: .value.tag,
+    listen: "127.0.0.1",
+    listen_port: (20800 + .key)
+  }]' "$PARSED_CONFIG" > "$TEMP"
+
+  mv "$TEMP" "$PARSED_CONFIG"
+
+  /usr/bin/sing-box run -c "$PARSED_CONFIG" 2>&1 | while read -r LINE; do
+    if echo "$LINE" | grep -q "sing-box started"; then
+      echo "🚀 Testing $FILE"
+      PIDS=()
+      while IFS= read -r LINE; do
+        OUTBOUND_TAG=$(echo "$LINE" | jq -r '.tag')
+        SOCKS_PORT=$(echo "$LINE" | jq -r '.listen_port')
+        if [ "$(pgrep -f "curl -sLI --max-time 3 *" | wc -l)" -ge "$PARALLEL_LIMIT" ]; then
+          sleep 1
+        fi
+        test_socks_port "$SOCKS_PORT" "$OUTBOUND_TAG" "$PARSED_CONFIG" &
+        if [ "$(wc -l <"$CONFIGS")" -ge "$CONFIGS_LIMIT" ]; then
+          break
+        fi
+        PIDS+=($!)
+      done < <(cat "$PARSED_CONFIG" | jq -c '.inbounds[]')
+      for PID in "${PIDS[@]}"; do
+        wait "$PID"
+      done
+      pkill -9 -f "/usr/bin/sing-box run -c $PARSED_CONFIG"
     fi
-  fi
-  if [ "$(pgrep -f "/usr/bin/sing-box run -c *" | wc -l)" -ge "$PARALLEL_LIMIT" ]; then
-    wait
-  fi
+  done
+
   if [ "$(wc -l <"$CONFIGS")" -ge "$CONFIGS_LIMIT" ]; then
-    if [ -f "/etc/init.d/ghost" ]; then
-      if ! test_socks_port "9802"; then
-        /etc/init.d/ghost restart
-      fi
-    fi
-    wait
     exit
   fi
 }
 
-get_random_port() {
-  for i in $(seq 1 100); do
-    port=$(((RANDOM % 16384) + 49152))
-    nc -z 127.0.0.1 "$port" 2>/dev/null
-    if [ $? -ne 0 ]; then
-      echo "$port"
-      return 0
-    fi
-  done
-  echo "❌ Could not find free port after 100 tries" >&2
-  return 1
-}
-
-test_socks_port() {
-  local SOCKS_PORT=$1
-  if [ "$(curl -s -L -I --max-time 3 --retry 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://telegram.org/")" -eq 200 ] && \
-    [ "$(curl -s -L -I --max-time 3 --retry 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://www.oracle.com/")" -eq 200 ] && \
-    [ "$(curl -s -L -I --max-time 3 --retry 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://aws.amazon.com/")" -eq 200 ] && \
-    [ "$(curl -s -L -I --max-time 3 --retry 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://gemini.google.com/")" -eq 200 ] && \
-    [ "$(curl -s -L -I --max-time 3 --retry 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" -w "%{http_code}" "https://cloud.nx.app/favicon.ico")" -eq 200 ]; then
-    return 0
-  else
-    return 1
-  fi
-}
-
-process_config() {
-  local CONFIG SOCKS_PORT RAW_CONFIG PARSED_CONFIG FINAL_CONFIG
-  CONFIG="$1"
-  SOCKS_PORT="$(get_random_port)"
-  RAW_CONFIG="/tmp/scanner.raw.${SOCKS_PORT}"
-  PARSED_CONFIG="/tmp/scanner.parsed.${SOCKS_PORT}"
-  FINAL_CONFIG="/tmp/scanner.final.${SOCKS_PORT}"
-
-  if [[ -z $CONFIG ]] || [[ $CONFIG == \#* ]] || [ "$(wc -l <"$CONFIGS")" -ge "$CONFIGS_LIMIT" ]; then
-    return
-  fi
-
-  echo "$CONFIG" >"$RAW_CONFIG"
-
-  if grep -qxF "$CONFIG" "$CONFIGS" || /usr/bin/hiddify-cli parse "$RAW_CONFIG" -o "$PARSED_CONFIG" 2>&1 | grep -qiE "error|fatal"; then
-    rm -rf "$RAW_CONFIG" "$PARSED_CONFIG"
-    return
-  fi
-
-  jq --argjson port "$SOCKS_PORT" '{
-    "inbounds": [
-      { "type": "mixed", "tag": "mixed-in", "listen": "127.0.0.1", "listen_port": $port }
-    ],
-    "outbounds": .outbounds
-  }' "$PARSED_CONFIG" >"$FINAL_CONFIG"
-
-  /usr/bin/sing-box run -c "$FINAL_CONFIG" 2>&1 | while read -r LINE; do
-    if echo "$LINE" | grep -q "sing-box started"; then
-      if test_socks_port "$SOCKS_PORT"; then
-        echo "✅ Found ($(wc -l <"$CONFIGS") / $TESTED_COUNT)"
-        echo "$CONFIG" >>"$CONFIGS"
-      fi
-      kill -9 $(pgrep -f "/usr/bin/sing-box run -c $FINAL_CONFIG")
-    fi
-  done
-
-  rm -rf "$RAW_CONFIG" "$PARSED_CONFIG" "$FINAL_CONFIG"
-}
-
-test_subscriptions_local() {
-  cat "$CONFIGS" >>"$TMP_CONFIGS"
-  echo -n >"$CONFIGS"
-  echo "⏳ Testing $TMP_CONFIGS"
-  while IFS= read -r CONFIG; do
-    throttle
-    process_config "$CONFIG" &
-  done <"$TMP_CONFIGS"
-  echo -n >"$TMP_CONFIGS"
-}
-
-test_subscriptions() {
+test_remote_configs() {
+  local SUBSCRIPTION CACHE_FILE
   SUBSCRIPTION="$1"
-  IS_BASE64="$2"
   CACHE_FILE="$CACHE_DIR/$(echo "$SUBSCRIPTION" | md5sum | awk '{print $1}')"
   if curl -L --max-time 60 -o "$CACHE_FILE" "$SUBSCRIPTION"; then
     echo "✅ Downloaded $SUBSCRIPTION"
@@ -209,26 +189,24 @@ test_subscriptions() {
     echo "❌ Failed to download $SUBSCRIPTION"
     return
   fi
-  if [ "$IS_BASE64" = "true" ]; then
-    while IFS= read -r CONFIG; do
-      throttle
-      process_config "$CONFIG" &
-    done < <(base64 --decode "$CACHE_FILE" 2>/dev/null)
-  else
-    while IFS= read -r CONFIG; do
-      throttle
-      process_config "$CONFIG" &
-    done <"$CACHE_FILE"
+  collect_clean_configs "$CACHE_FILE"
+}
+
+test_local_configs() {
+  cp "$CONFIGS" "$CONFIGS.backup"
+  echo -n >"$CONFIGS"
+  if [ "$(wc -l <"$CONFIGS.backup")" -gt "0" ]; then
+    collect_clean_configs "$CONFIGS.backup"
   fi
 }
 
 main() {
-  test_subscriptions_local
+  test_local_configs
   for SUBSCRIPTION in "${CONFIG_URLS[@]}"; do
-    test_subscriptions "$SUBSCRIPTION" "false"
+    test_remote_configs "$SUBSCRIPTION"
   done
   for SUBSCRIPTION in "${BASE64_URLS[@]}"; do
-    test_subscriptions "$SUBSCRIPTION" "true"
+    test_remote_configs "$SUBSCRIPTION"
   done
 }
 

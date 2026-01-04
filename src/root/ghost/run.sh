@@ -1,12 +1,9 @@
 #!/bin/sh
 
-RAW_CONFIG="/root/ghost/configs.conf"
-PARSED_CONFIG="/tmp/ghost.parsed"
+PARSED_CONFIG="/root/ghost/configs.conf"
 FINAL_CONFIG="/tmp/ghost.final"
 
 kill -9 $(pgrep -f "/usr/bin/sing-box run -c $FINAL_CONFIG")
-
-/usr/bin/hiddify-cli parse "$RAW_CONFIG" -o "$PARSED_CONFIG" >/dev/null 2>&1 || exit 1
 
 jq '{
   "log": {
