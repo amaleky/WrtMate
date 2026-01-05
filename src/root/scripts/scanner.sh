@@ -162,7 +162,7 @@ process_config() {
   /usr/bin/sing-box run -c "$FINAL_CONFIG" 2>&1 | while read -r LINE; do
     if echo "$LINE" | grep -q "sing-box started"; then
       if test_socks_port "$SOCKS_PORT"; then
-        echo "🚀 Found ($(wc -l <"$CONFIGS") / $(wc -l <"$SCAN_HISTORY"))"
+        echo "🚀 Found: $(printf "%02d\n" $(($(wc -l < "$CONFIGS") + 1))) Scanned: $(wc -l <"$SCAN_HISTORY")"
         echo "$CONFIG" >>"$CONFIGS"
       fi
       kill -9 $(pgrep -f "/usr/bin/sing-box run -c $FINAL_CONFIG")
