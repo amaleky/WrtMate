@@ -28,7 +28,6 @@ CACHE_DIR="$HOME/.cache/subscriptions"
 CONFIGS_LIMIT=40
 PARALLEL_LIMIT=10
 
-echo -n >"$SCAN_HISTORY"
 mkdir -p "$CACHE_DIR" "$HOME/ghost"
 
 CONFIG_URLS=(
@@ -96,6 +95,7 @@ throttle() {
       fi
     fi
     wait
+    rm -rf "$TMP_CONFIGS" "$SCAN_HISTORY"
     exit
   fi
 }
@@ -181,7 +181,6 @@ test_subscriptions_local() {
     process_config "$CONFIG" &
   done <"$TMP_CONFIGS"
   wait
-  echo -n >"$TMP_CONFIGS"
 }
 
 test_subscriptions() {
