@@ -197,7 +197,7 @@ jobs:
           git clone --depth 1 https://github.com/getlantern/lantern-headless-client.git
           pushd ./lantern-headless-client || exit 1
           go get github.com/getlantern/flashlight/v7
-          go build -o ../lantern_${{ env.ASSET_NAME }} .
+          go build -o ../lantern_${{ env.ASSET_NAME }} -trimpath -ldflags "-s -w -buildid= -checklinkname=0 -linkmode external -extldflags=-static" .
           popd
 
       - name: Upload Lantern
