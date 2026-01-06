@@ -6,20 +6,6 @@ TOTAL_RAM=$(($(grep MemTotal /proc/meminfo | awk '{print $2}') / 1024))
 
 if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
 
-hiddify() {
-  info "hiddify"
-
-  REMOTE_VERSION="$(curl -s -L "https://api.github.com/repos/hiddify/hiddify-core/releases/latest" | jq -r '.tag_name')"
-  LOCAL_VERSION="$(cat "/root/.hiddify_version" 2>/dev/null || echo 'none')"
-
-  if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
-    source <(wget -qO- "${REPO_URL}/scripts/packages/hiddify.sh")
-    if [ -n "$REMOTE_VERSION" ]; then
-      echo "$REMOTE_VERSION" >"/root/.hiddify_version"
-    fi
-  fi
-}
-
 balancer() {
   info "balancer"
   if [ ! -d /root/balancer/ ]; then mkdir /root/balancer/; fi
@@ -51,8 +37,7 @@ balancer() {
 ghost() {
   info "ghost"
 
-  curl -s -L -o "/root/scripts/scanner.sh" "${REPO_URL}/src/root/scripts/scanner.sh" || error "Failed to download scanner.sh."
-  chmod +x /root/scripts/scanner.sh
+  source <(wget -qO- "${REPO_URL}/scripts/packages/scanner.sh") || error "Failed to download scanner."
 
   if [[ -f "/etc/init.d/scanner" ]] && /etc/init.d/scanner running; then
     /etc/init.d/scanner stop
@@ -64,15 +49,13 @@ ghost() {
   /etc/init.d/scanner disable
 
   if [ "$TOTAL_RAM" -ge "$MIN_RAM_MB" ]; then
-    if [ ! -f "/root/ghost/configs.conf" ] || [ "$(wc -l <"/root/ghost/configs.conf")" -eq 0 ]; then
-      touch /root/ghost/configs.conf
+    if [ ! -f "/root/ghost/configs.json" ] || [ "$(wc -l <"/root/ghost/configs.json")" -eq 0 ]; then
+      touch "/root/ghost/configs.json"
       /etc/init.d/scanner start
     fi
   fi
 
   add_cron_job "0 * * * * /etc/init.d/scanner start"
-
-  if [ ! -d /root/ghost/ ]; then mkdir /root/ghost/; fi
 
   if [[ -f "/etc/init.d/ghost" ]] && /etc/init.d/ghost running; then
     /etc/init.d/ghost stop
@@ -80,9 +63,6 @@ ghost() {
 
   curl -s -L -o "/etc/init.d/ghost" "${REPO_URL}/src/etc/init.d/ghost" || error "Failed to download ghost init script."
   chmod +x /etc/init.d/ghost
-
-  curl -s -L -o "/root/ghost/run.sh" "${REPO_URL}/src/root/ghost/run.sh" || error "Failed to download ghost run.sh configs."
-  chmod +x /root/ghost/run.sh
 
   curl -s -L -o "/root/scripts/logwatch.sh" "${REPO_URL}/src/root/scripts/logwatch.sh" || error "Failed to download logwatch.sh."
   chmod +x /root/scripts/logwatch.sh
@@ -110,15 +90,6 @@ warp() {
       echo "$REMOTE_VERSION" >"/root/.vwarp_version"
     fi
   fi
-
-  # REMOTE_VERSION="$(curl -s -L "https://api.github.com/repos/kyochikuto/sing-box-plus/releases/latest" | jq -r '.tag_name')"
-  # LOCAL_VERSION="$(cat "/root/.sing_box_plus_version" 2>/dev/null || echo 'none')"
-  # if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
-  #   source <(wget -qO- "${REPO_URL}/scripts/packages/sing-box-plus.sh")
-  #   if [ -n "$REMOTE_VERSION" ]; then
-  #     echo "$REMOTE_VERSION" >"/root/.sing_box_plus_version"
-  #   fi
-  # fi
 
   curl -s -L -o "/etc/init.d/warp-plus" "${REPO_URL}/src/etc/init.d/warp-plus" || error "Failed to download warp-plus init script."
   chmod +x /etc/init.d/warp-plus
@@ -325,7 +296,6 @@ main() {
     "$1"
   else
     check_min_requirements 200 500 2
-    hiddify
     balancer
     ghost
     warp

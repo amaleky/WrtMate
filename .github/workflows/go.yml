@@ -50,7 +50,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.24'
+          go-version: '1.25.1'
           check-latest: true
 
       - name: Build Psiphon
@@ -65,6 +65,18 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: psiphon_${{ env.ASSET_NAME }}
+          tag: ${{ github.ref }}
+          overwrite: true
+
+      - name: Build Scanner
+        run: |
+          go build -o scanner_${{ env.ASSET_NAME }} .
+
+      - name: Upload Scanner
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: scanner_${{ env.ASSET_NAME }}
           tag: ${{ github.ref }}
           overwrite: true
 

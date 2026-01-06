@@ -4,7 +4,7 @@ GHOST_ERRORS=0
 BALANCER_ERRORS=0
 
 logread -f | while IFS= read -r LINE; do
-  if echo "$LINE" | grep "run.sh\[$(pgrep -f '/root/ghost/run.sh')\]" | grep -q "ERROR"; then
+  if echo "$LINE" | grep "run.sh\[$(pgrep -f '/usr/bin/sing-box run -c /root/ghost/configs.json')\]" | grep -q "ERROR"; then
     GHOST_ERRORS=$((GHOST_ERRORS + 1))
     echo "Error detected. Counter: $GHOST_ERRORS"
     if [ "$GHOST_ERRORS" -gt 10 ]; then
