@@ -37,10 +37,22 @@ balancer() {
 ghost() {
   info "ghost"
 
-  source <(wget -qO- "${REPO_URL}/scripts/packages/scanner.sh") || error "Failed to download scanner."
+  if [[ -f "/etc/init.d/scanner" ]] && /etc/init.d/scanner running; then
+    /etc/init.d/scanner stop
+  fi
+
+  REMOTE_VERSION="$(curl -s -L "https://api.github.com/amaleky/WrtMate/releases/latest" | jq -r '.tag_name')"
+  LOCAL_VERSION="$(cat "/root/.scanner_version" 2>/dev/null || echo 'none')"
 
   if [[ -f "/etc/init.d/scanner" ]] && /etc/init.d/scanner running; then
     /etc/init.d/scanner stop
+  fi
+
+  if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
+    source <(wget -qO- "${REPO_URL}/scripts/packages/scanner.sh")
+    if [ -n "$REMOTE_VERSION" ]; then
+      echo "$REMOTE_VERSION" >"/root/.scanner_version"
+    fi
   fi
 
   curl -s -L -o "/etc/init.d/scanner" "${REPO_URL}/src/etc/init.d/scanner" || error "Failed to download scanner init script."
