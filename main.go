@@ -424,7 +424,6 @@ func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 					okMu.Unlock()
 				}
 			} else if output != nil {
-				fmt.Printf("%s\n", entry.rawLine)
 				fmt.Fprintln(output, entry.rawLine)
 			} else {
 				fmt.Printf("%s\n", entry.rawLine)
