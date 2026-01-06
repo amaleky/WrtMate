@@ -66,17 +66,8 @@ func main() {
 		}
 		return
 	}
-	resultsPath := filepath.Join(outputDir, "results")
-	if _, err := os.Stat(resultsPath); os.IsNotExist(err) {
-		file, err := os.OpenFile(resultsPath, os.O_RDONLY|os.O_CREATE, 0o644)
-		if err != nil {
-			if *verbose {
-				fmt.Println("create results file error:", err)
-			}
-			return
-		}
-		file.Close()
-	}
+
+	archivePath := filepath.Join(homeDir, ".subscriptions", "archive.txt")
 
 	subscriptionURLs := []string{
 		"https://raw.githubusercontent.com/sinavm/SVM/main/subscriptions/xray/normal/mix",
@@ -130,6 +121,25 @@ func main() {
 		}
 	}
 
+	prevArchiveLines := make(map[string]struct{})
+	archiveLines := make(map[string]struct{})
+
+	if data, err := os.ReadFile(archivePath); err == nil {
+		scanner := bufio.NewScanner(strings.NewReader(string(data)))
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+			if line != "" {
+				prevArchiveLines[line] = struct{}{}
+			}
+		}
+		_ = os.Truncate(archivePath, 0)
+	}
+
+	for line := range prevArchiveLines {
+		lines := []string{line}
+		_ = processLines(lines, *jobs, urlTestURLs, *verbose, outputWriter, outputIsJSON, seenKeys, outputPath, archivePath, archiveLines, prevArchiveLines)
+	}
+
 	for _, rawURL := range subscriptionURLs {
 		fileData, _, filePath, fetchErr := fetchURL(client, rawURL, outputDir)
 		if fetchErr != nil && *verbose {
@@ -141,7 +151,7 @@ func main() {
 			}
 			continue
 		}
-		err = processFile(filePath, *jobs, urlTestURLs, *verbose, outputWriter, outputIsJSON, seenKeys, outputPath)
+		err = processFile(filePath, *jobs, urlTestURLs, *verbose, outputWriter, outputIsJSON, seenKeys, outputPath, archivePath, archiveLines, prevArchiveLines)
 		if err != nil && *verbose {
 			fmt.Printf("process error (%s): %v\n", filePath, err)
 		}
@@ -256,7 +266,7 @@ func parseURLTestURLs(value string) []string {
 	return urls
 }
 
-func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, output io.Writer, outputJSON bool, seenKeys map[string]map[string]interface{}, outputPath string) error {
+func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, output io.Writer, outputJSON bool, seenKeys map[string]map[string]interface{}, outputPath string, archivePath string, archiveLines, prevArchiveLines map[string]struct{}) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
@@ -282,6 +292,10 @@ func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 		return nil
 	}
 
+	return processLines(lines, jobs, urlTestURLs, verbose, output, outputJSON, seenKeys, outputPath, archivePath, archiveLines, prevArchiveLines)
+}
+
+func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, output io.Writer, outputJSON bool, seenKeys map[string]map[string]interface{}, outputPath string, archivePath string, archiveLines, prevArchiveLines map[string]struct{}) error {
 	type outboundEntry struct {
 		tag      string
 		outbound map[string]interface{}
@@ -299,7 +313,7 @@ func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 			atomic.AddInt64(&parseFailCount, 1)
 			if verbose {
 				printMu.Lock()
-				fmt.Printf("GetOutbound error (%s): %s%v\n\n", filePath, line, err)
+				fmt.Printf("GetOutbound error: %s%v\n\n", line, err)
 				printMu.Unlock()
 			}
 			continue
@@ -318,9 +332,6 @@ func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 	}
 
 	if len(entries) == 0 {
-		if verbose {
-			fmt.Printf("# processed %s: ok=0 urltest_failed=0 parse_failed=%d\n", filePath, parseFailCount)
-		}
 		return nil
 	}
 
@@ -375,7 +386,7 @@ func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 				atomic.AddInt64(&urlTestFailCount, 1)
 				if verbose {
 					printMu.Lock()
-					fmt.Printf("urltest error (%s): outbound not found for tag %s\n", filePath, entry.tag)
+					fmt.Printf("urltest error: outbound not found for tag %s\n", entry.tag)
 					printMu.Unlock()
 				}
 				continue
@@ -430,6 +441,9 @@ func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 			}
 			printMu.Unlock()
 			atomic.AddInt64(&okCount, 1)
+      f, _ := os.OpenFile(archivePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+      defer f.Close()
+      _, err = f.WriteString(entry.rawLine + "\n")
 		}
 	}
 
@@ -444,9 +458,6 @@ func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 	close(entriesCh)
 	wg.Wait()
 
-	if output != nil {
-		fmt.Printf("# processed %s: ok=%d urltest_failed=%d parse_failed=%d\n", filePath, okCount, urlTestFailCount, parseFailCount)
-	}
 	return nil
 }
 
