@@ -319,7 +319,7 @@ func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 
 	if len(entries) == 0 {
 		if verbose {
-			fmt.Printf("processed %s: ok=0 urltest_failed=0 parse_failed=%d\n", filePath, parseFailCount)
+			fmt.Printf("# processed %s: ok=0 urltest_failed=0 parse_failed=%d\n", filePath, parseFailCount)
 		}
 		return nil
 	}
@@ -445,7 +445,7 @@ func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 	wg.Wait()
 
 	if output != nil {
-		fmt.Printf("processed %s: ok=%d urltest_failed=%d parse_failed=%d\n", filePath, okCount, urlTestFailCount, parseFailCount)
+		fmt.Printf("# processed %s: ok=%d urltest_failed=%d parse_failed=%d\n", filePath, okCount, urlTestFailCount, parseFailCount)
 	}
 	return nil
 }
