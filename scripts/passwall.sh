@@ -303,6 +303,17 @@ passwall() {
   rm -rfv /tmp/packages.zip /tmp/passwall /tmp/passwall.ipk
 }
 
+cleanup() {
+  for SERVICE in "hiddify" "hiddify-cli"; do
+    if [ -f "/etc/init.d/${SERVICE}" ]; then
+      /etc/init.d/${SERVICE} disable
+      /etc/init.d/${SERVICE} stop
+      rm -rfv "/etc/init.d/${SERVICE}"
+    fi
+  done
+  rm -rfv "/root/warp" "/root/scripts/scanner.sh" "/root/ghost/run.sh" "/usr/bin/hiddify-cli" "/usr/bin/hiddify" "/usr/bin/sing-box-plus" "/root/scripts/scanner.sh" "/root/ghost/configs.conf" "/root/ghost/configs.backup" "/root/ghost/run.sh" "/root/.cache/subscriptions" "/root/.hiddify_version" "/root/.sing_box_plus_version"
+}
+
 main() {
   if [ -n "${1-}" ]; then
     "$1"
@@ -319,6 +330,7 @@ main() {
     geo_update
     passwall
     tor
+    cleanup
   fi
 
   success "PassWall configuration completed successfully"
