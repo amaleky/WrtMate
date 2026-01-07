@@ -263,12 +263,15 @@ passwall() {
   fi
 
   if uci -q show passwall2.@subscribe_list[0] >/dev/null; then
-    uci show passwall2.@subscribe_list[0].url > "/tmp/passwall2_subscribe_list_url"
-    uci show passwall2.@subscribe_list[0].remark > "/tmp/passwall2_subscribe_list_remark"
+    uci get passwall2.@subscribe_list[0].url > "/tmp/passwall2_subscribe_list_url"
+    uci get passwall2.@subscribe_list[0].remark > "/tmp/passwall2_subscribe_list_remark"
   fi
+
   curl -s -L -o "/etc/config/passwall2" "${REPO_URL}/src/etc/config/passwall2" || error "Failed to download passwall config."
+  uci commit passwall2
+
   if [ -f "/tmp/passwall2_subscribe_list_url" ]; then
-    uci set passwall2.@subscribe_list[0]="subscribe_list"
+    uci -q add passwall2 subscribe_list
     uci set passwall2.@subscribe_list[0].remark="$(cat "/tmp/passwall2_subscribe_list_remark")"
     uci set passwall2.@subscribe_list[0].url="$(cat "/tmp/passwall2_subscribe_list_url")"
     uci set passwall2.@subscribe_list[0].allowInsecure="1"
@@ -281,10 +284,10 @@ passwall() {
     uci set passwall2.@subscribe_list[0].domain_strategy="global"
     uci set passwall2.@subscribe_list[0].auto_update="0"
     uci set passwall2.@subscribe_list[0].user_agent="curl"
+    uci commit passwall2
     rm -f "/tmp/passwall2_subscribe_list_*"
   fi
 
-  uci commit passwall2
   /etc/init.d/passwall2 restart
 
   if ! top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default' | grep 'global' >/dev/null; then
