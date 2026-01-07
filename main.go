@@ -128,16 +128,20 @@ func main() {
 		}
 	}
 
+	var lines []string
 	if data, err := os.ReadFile(archivePath); err == nil {
 		scanner := bufio.NewScanner(strings.NewReader(string(data)))
 		for scanner.Scan() {
 			line := strings.TrimSpace(scanner.Text())
-			if line == "" {
-				continue
+			if line != "" {
+				lines = append(lines, line)
 			}
-			_ = processLines([]string{line}, *jobs, urlTestURLs, *verbose, outputWriter, outputIsJSON, seenKeys, outputPath, archivePath)
 		}
 		_ = os.Truncate(archivePath, 0)
+	}
+
+	for _, line := range lines {
+		_ = processLines([]string{line}, *jobs, urlTestURLs, *verbose, outputWriter, outputIsJSON, seenKeys, outputPath, archivePath)
 	}
 
 	for _, rawURL := range subscriptionURLs {
