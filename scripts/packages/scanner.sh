@@ -76,11 +76,11 @@ main() {
   fi
 
   if [ "$DETECTED_OS" = "darwin" ]; then
-    curl -L -o "$HOME/scanner" "https://github.com/amaleky/WrtMate/releases/latest/download/scanner_darwin-arm64" || echo "Failed to download scanner."
+    curl -L -o "$HOME/scanner" "https://github.com/amaleky/WrtMate/releases/latest/download/scanner_${DETECTED_OS}-${DETECTED_ARCH}" || echo "Failed to download scanner."
     xattr -d com.apple.quarantine "$HOME/scanner"
     chmod +x "$HOME/scanner"
   else
-    curl -L -o "/usr/bin/scanner" "https://github.com/amaleky/WrtMate/releases/latest/download/scanner_darwin-arm64" || echo "Failed to download scanner."
+    curl -L -o "/usr/bin/scanner" "https://github.com/amaleky/WrtMate/releases/latest/download/scanner_${DETECTED_OS}-${DETECTED_ARCH}" || echo "Failed to download scanner."
     chmod +x "/usr/bin/scanner"
   fi
 }
