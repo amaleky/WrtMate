@@ -397,7 +397,7 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 			}
 			var testErr error
 			for _, testURL := range testURLs {
-				testCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+				testCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 				_, testErr = urltest.URLTest(testCtx, testURL, outbound)
 				cancel()
 				if testErr != nil {
@@ -437,12 +437,12 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 			} else if output != nil {
 				fmt.Fprintln(output, entry.rawLine)
 			}
-      fmt.Printf("%s\n", entry.rawLine)
+			fmt.Printf("%s\n", entry.rawLine)
 			printMu.Unlock()
 			atomic.AddInt64(&okCount, 1)
-      f, _ := os.OpenFile(archivePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
-      defer f.Close()
-      _, err = f.WriteString(entry.rawLine + "\n")
+			f, _ := os.OpenFile(archivePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+			defer f.Close()
+			_, err = f.WriteString(entry.rawLine + "\n")
 		}
 	}
 
