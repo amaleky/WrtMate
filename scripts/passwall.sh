@@ -41,7 +41,7 @@ ghost() {
     /etc/init.d/scanner stop
   fi
 
-  REMOTE_VERSION="$(curl -s -L "https://api.github.com/amaleky/WrtMate/releases/latest" | jq -r '.tag_name')"
+  REMOTE_VERSION="$(curl -s -L "https://api.github.com/repos/amaleky/WrtMate/releases/latest" | jq -r '.tag_name')"
   LOCAL_VERSION="$(cat "/root/.scanner_version" 2>/dev/null || echo 'none')"
 
   if [[ -f "/etc/init.d/scanner" ]] && /etc/init.d/scanner running; then
@@ -116,7 +116,7 @@ psiphon() {
   info "psiphon"
   if [ ! -d /root/psiphon/ ]; then mkdir /root/psiphon/; fi
 
-  REMOTE_VERSION="$(curl -s -L "https://api.github.com/amaleky/WrtMate/releases/latest" | jq -r '.tag_name')"
+  REMOTE_VERSION="$(curl -s -L "https://api.github.com/repos/amaleky/WrtMate/releases/latest" | jq -r '.tag_name')"
   LOCAL_VERSION="$(cat "/root/.psiphon_version" 2>/dev/null || echo 'none')"
 
   if [[ -f "/etc/init.d/psiphon" ]] && /etc/init.d/psiphon running; then
@@ -144,7 +144,7 @@ psiphon() {
 lantern() {
   info "lantern"
 
-  REMOTE_VERSION="$(curl -s -L "https://api.github.com/amaleky/WrtMate/releases/latest" | jq -r '.tag_name')"
+  REMOTE_VERSION="$(curl -s -L "https://api.github.com/repos/amaleky/WrtMate/releases/latest" | jq -r '.tag_name')"
   LOCAL_VERSION="$(cat "/root/.lantern_version" 2>/dev/null || echo 'none')"
 
   if [[ -f "/etc/init.d/lantern" ]] && /etc/init.d/lantern running; then
