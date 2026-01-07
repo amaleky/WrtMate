@@ -28,7 +28,8 @@ main() {
         DETECTED_ARCH="riscv64"
         ;;
       *)
-        error "Unsupported CPU architecture: $(uname -m)"
+        echo "Unsupported CPU architecture: $(uname -m)"
+        exit
         ;;
     esac
   else
@@ -48,7 +49,7 @@ main() {
         ;;
     esac
   fi
-  curl -L -o "/usr/bin/psiphon" "https://github.com/amaleky/WrtMate/releases/latest/download/psiphon_linux-${DETECTED_ARCH}" || error "Failed to download psiphon."
+  curl -L -o "/usr/bin/psiphon" "https://github.com/amaleky/WrtMate/releases/latest/download/psiphon_linux-${DETECTED_ARCH}" || echo "Failed to download psiphon."
   chmod +x "/usr/bin/psiphon"
 }
 

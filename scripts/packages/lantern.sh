@@ -28,7 +28,8 @@ main() {
         DETECTED_ARCH="riscv64"
         ;;
       *)
-        error "Unsupported CPU architecture: $(uname -m)"
+        echo "Unsupported CPU architecture: $(uname -m)"
+        exit
         ;;
     esac
   else
@@ -48,7 +49,7 @@ main() {
         ;;
     esac
   fi
-  curl -fL -o "/usr/bin/lantern" "https://github.com/amaleky/WrtMate/releases/latest/download/lantern_linux-${DETECTED_ARCH}" || error "Failed to download lantern."
+  curl -fL -o "/usr/bin/lantern" "https://github.com/amaleky/WrtMate/releases/latest/download/lantern_linux-${DETECTED_ARCH}" || echo "Failed to download lantern."
   chmod +x "/usr/bin/lantern"
 }
 

@@ -28,7 +28,8 @@ main() {
         DETECTED_ARCH="riscv64"
         ;;
       *)
-        error "Unsupported CPU architecture: $(uname -m)"
+        echo "Unsupported CPU architecture: $(uname -m)"
+        exit
         ;;
     esac
   else
@@ -48,7 +49,7 @@ main() {
         ;;
     esac
   fi
-  curl -L -o "/usr/bin/scanner" "https://github.com/amaleky/WrtMate/releases/latest/download/scanner_linux-${DETECTED_ARCH}" || error "Failed to download scanner."
+  curl -L -o "/usr/bin/scanner" "https://github.com/amaleky/WrtMate/releases/latest/download/scanner_linux-${DETECTED_ARCH}" || echo "Failed to download scanner."
   chmod +x "/usr/bin/scanner"
 }
 

@@ -34,7 +34,8 @@ main() {
         DETECTED_ARCH="riscv64"
         ;;
       *)
-        error "Unsupported CPU architecture: $(uname -m)"
+        echo "Unsupported CPU architecture: $(uname -m)"
+        exit
         ;;
     esac
   else
@@ -54,7 +55,7 @@ main() {
         ;;
     esac
   fi
-  curl -L -o "/tmp/warp.zip" "https://github.com/voidr3aper-anon/Vwarp/releases/latest/download/vwarp_linux-${DETECTED_ARCH}.zip" || error "Failed to download WARP zip."
+  curl -L -o "/tmp/warp.zip" "https://github.com/voidr3aper-anon/Vwarp/releases/latest/download/vwarp_linux-${DETECTED_ARCH}.zip" || echo "Failed to download WARP zip."
   unzip -o /tmp/warp.zip -d /tmp
   mv /tmp/vwarp /usr/bin/warp-plus
   chmod +x /usr/bin/warp-plus
