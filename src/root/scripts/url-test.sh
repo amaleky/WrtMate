@@ -85,7 +85,6 @@ test_service() {
 
 main() {
   test_connection
-  test_service "balancer" "Balancer" 9801 "true"
   test_service "ghost" "Ghost" 9802 "false"
   test_service "warp-plus" "WarpPlus" 9803 "true"
   test_service "psiphon" "Psiphon" 9804 "true"

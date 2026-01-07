@@ -6,34 +6,6 @@ TOTAL_RAM=$(($(grep MemTotal /proc/meminfo | awk '{print $2}') / 1024))
 
 if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
 
-balancer() {
-  info "balancer"
-  if [ ! -d /root/balancer/ ]; then mkdir /root/balancer/; fi
-
-  if [[ -f "/root/balancer/run.sh" ]]; then
-    SUBSCRIPTION_URL=$(grep -E "^SUBSCRIPTION_URL=" "/root/balancer/run.sh" | cut -d'=' -f2-)
-  fi
-
-  if [[ -f "/etc/init.d/balancer" ]] && /etc/init.d/balancer running; then
-    /etc/init.d/balancer stop
-  fi
-
-  curl -s -L -o "/etc/init.d/balancer" "${REPO_URL}/src/etc/init.d/balancer" || error "Failed to download balancer init script."
-  chmod +x /etc/init.d/balancer
-
-  curl -s -L -o "/root/balancer/run.sh" "${REPO_URL}/src/root/balancer/run.sh" || error "Failed to download balancer run.sh configs."
-  chmod +x /root/balancer/run.sh
-
-  if [ -z "$SUBSCRIPTION_URL" ] || [ "$SUBSCRIPTION_URL" = '""' ]; then
-    read -r -p "Enter Your Sing-Box Subscription: " SUBSCRIPTION_URL
-  fi
-  if [ -n "$SUBSCRIPTION_URL" ]; then
-    sed -i "s|^SUBSCRIPTION_URL=.*|SUBSCRIPTION_URL=${SUBSCRIPTION_URL}|" "/root/balancer/run.sh"
-    /etc/init.d/balancer enable
-    /etc/init.d/balancer start
-  fi
-}
-
 ghost() {
   info "ghost"
 
@@ -290,7 +262,27 @@ passwall() {
     fi
   fi
 
+  if uci -q show passwall2.@subscribe_list[0] >/dev/null; then
+    uci show passwall2.@subscribe_list[0].url > "/tmp/passwall2_subscribe_list_url"
+    uci show passwall2.@subscribe_list[0].remark > "/tmp/passwall2_subscribe_list_remark"
+  fi
   curl -s -L -o "/etc/config/passwall2" "${REPO_URL}/src/etc/config/passwall2" || error "Failed to download passwall config."
+  if [ -f "/tmp/passwall2_subscribe_list_url" ]; then
+    uci set passwall2.@subscribe_list[0]="subscribe_list"
+    uci set passwall2.@subscribe_list[0].remark="$(cat "/tmp/passwall2_subscribe_list_remark")"
+    uci set passwall2.@subscribe_list[0].url="$(cat "/tmp/passwall2_subscribe_list_url")"
+    uci set passwall2.@subscribe_list[0].allowInsecure="1"
+    uci set passwall2.@subscribe_list[0].filter_keyword_mode="5"
+    uci set passwall2.@subscribe_list[0].ss_type="global"
+    uci set passwall2.@subscribe_list[0].trojan_type="global"
+    uci set passwall2.@subscribe_list[0].vmess_type="global"
+    uci set passwall2.@subscribe_list[0].vless_type="global"
+    uci set passwall2.@subscribe_list[0].hysteria2_type="global"
+    uci set passwall2.@subscribe_list[0].domain_strategy="global"
+    uci set passwall2.@subscribe_list[0].auto_update="0"
+    uci set passwall2.@subscribe_list[0].user_agent="curl"
+    rm -f "/tmp/passwall2_subscribe_list_*"
+  fi
 
   uci commit passwall2
   /etc/init.d/passwall2 restart
@@ -304,14 +296,14 @@ passwall() {
 }
 
 cleanup() {
-  for SERVICE in "hiddify" "hiddify-cli"; do
+  for SERVICE in "hiddify" "hiddify-cli" "balancer"; do
     if [ -f "/etc/init.d/${SERVICE}" ]; then
       /etc/init.d/${SERVICE} disable
       /etc/init.d/${SERVICE} stop
       rm -rfv "/etc/init.d/${SERVICE}"
     fi
   done
-  rm -rfv "/root/warp" "/root/scripts/scanner.sh" "/root/ghost/run.sh" "/usr/bin/hiddify-cli" "/usr/bin/hiddify" "/usr/bin/sing-box-plus" "/root/scripts/scanner.sh" "/root/ghost/configs.conf" "/root/ghost/configs.backup" "/root/ghost/run.sh" "/root/.cache/subscriptions" "/root/.hiddify_version" "/root/.sing_box_plus_version"
+  rm -rfv "/root/warp" "/root/scripts/scanner.sh" "/root/ghost/run.sh" "/usr/bin/hiddify-cli" "/usr/bin/hiddify" "/usr/bin/sing-box-plus" "/root/scripts/scanner.sh" "/root/ghost/configs.conf" "/root/ghost/configs.backup" "/root/ghost/run.sh" "/root/.cache/subscriptions" "/root/.hiddify_version" "/root/.sing_box_plus_version" "/etc/init.d/balancer" "/root/balancer"
 }
 
 main() {
@@ -319,7 +311,6 @@ main() {
     "$1"
   else
     check_min_requirements 200 500 2
-    balancer
     ghost
     warp
     psiphon

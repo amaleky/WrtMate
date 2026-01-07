@@ -1,7 +1,6 @@
 #!/bin/bash
 
 GHOST_ERRORS=0
-BALANCER_ERRORS=0
 
 logread -f | while IFS= read -r LINE; do
   if echo "$LINE" | grep "sing-box\[$(pgrep -f '/usr/bin/sing-box run -c /root/ghost/configs.json')\]" | grep -q "ERROR"; then
@@ -11,15 +10,6 @@ logread -f | while IFS= read -r LINE; do
       echo "Restarting ghost due to excessive errors..."
       /etc/init.d/ghost restart
       GHOST_ERRORS=0
-    fi
-  fi
-  if echo "$LINE" | grep "run.sh\[$(pgrep -f '/root/balancer/run.sh')\]" | grep -q "ERROR"; then
-    BALANCER_ERRORS=$((BALANCER_ERRORS + 1))
-    echo "Error detected (balancer). Counter: $BALANCER_ERRORS"
-    if [ "$BALANCER_ERRORS" -gt 10 ]; then
-      echo "Restarting balancer due to excessive errors..."
-      /etc/init.d/balancer restart
-      BALANCER_ERRORS=0
     fi
   fi
 done
