@@ -74,8 +74,15 @@ main() {
         ;;
     esac
   fi
-  curl -fL -o "/usr/bin/lantern" "https://github.com/amaleky/WrtMate/releases/latest/download/lantern_${DETECTED_OS}-${DETECTED_ARCH}" || echo "Failed to download lantern."
-  chmod +x "/usr/bin/lantern"
+
+  if [ "$DETECTED_OS" = "darwin" ]; then
+    curl -L -o "$HOME/lantern" "https://github.com/amaleky/WrtMate/releases/latest/download/lantern_${DETECTED_OS}-${DETECTED_ARCH}" || echo "Failed to download lantern."
+    xattr -d com.apple.quarantine "$HOME/lantern"
+    chmod +x "$HOME/lantern"
+  else
+    curl -L -o "/usr/bin/lantern" "https://github.com/amaleky/WrtMate/releases/latest/download/lantern_${DETECTED_OS}-${DETECTED_ARCH}" || echo "Failed to download lantern."
+    chmod +x "/usr/bin/lantern"
+  fi
 }
 
 main "$@"

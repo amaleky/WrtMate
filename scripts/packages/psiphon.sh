@@ -74,8 +74,15 @@ main() {
         ;;
     esac
   fi
-  curl -L -o "/usr/bin/psiphon" "https://github.com/amaleky/WrtMate/releases/latest/download/psiphon_${DETECTED_OS}-${DETECTED_ARCH}" || echo "Failed to download psiphon."
-  chmod +x "/usr/bin/psiphon"
+
+  if [ "$DETECTED_OS" = "darwin" ]; then
+    curl -L -o "$HOME/psiphon" "https://github.com/amaleky/WrtMate/releases/latest/download/psiphon_${DETECTED_OS}-${DETECTED_ARCH}" || echo "Failed to download psiphon."
+    xattr -d com.apple.quarantine "$HOME/psiphon"
+    chmod +x "$HOME/psiphon"
+  else
+    curl -L -o "/usr/bin/psiphon" "https://github.com/amaleky/WrtMate/releases/latest/download/psiphon_${DETECTED_OS}-${DETECTED_ARCH}" || echo "Failed to download psiphon."
+    chmod +x "/usr/bin/psiphon"
+  fi
 }
 
 main "$@"
