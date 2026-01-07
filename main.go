@@ -4,13 +4,16 @@ import (
 	"bufio"
 	"context"
 	"crypto/sha256"
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -22,9 +25,14 @@ import (
 
 	"github.com/alireza0/s-ui/util"
 	B "github.com/sagernet/sing-box"
-	"github.com/sagernet/sing-box/common/urltest"
+	"github.com/sagernet/sing-box/adapter"
+	C "github.com/sagernet/sing-box/constant"
 	"github.com/sagernet/sing-box/include"
 	"github.com/sagernet/sing-box/option"
+	"github.com/sagernet/sing/common"
+	M "github.com/sagernet/sing/common/metadata"
+	N "github.com/sagernet/sing/common/network"
+	"github.com/sagernet/sing/common/ntp"
 )
 
 func main() {
@@ -295,6 +303,63 @@ func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 	return processLines(lines, jobs, urlTestURLs, verbose, output, outputJSON, seenKeys, outputPath, archivePath, archiveLines, prevArchiveLines)
 }
 
+func URLTest(ctx context.Context, link string, detour N.Dialer) (t uint16, err error) {
+	if link == "" {
+		link = "https://www.gstatic.com/generate_204"
+	}
+	linkURL, err := url.Parse(link)
+	if err != nil {
+		return
+	}
+	hostname := linkURL.Hostname()
+	port := linkURL.Port()
+	if port == "" {
+		switch linkURL.Scheme {
+		case "http":
+			port = "80"
+		case "https":
+			port = "443"
+		}
+	}
+
+	start := time.Now()
+	instance, err := detour.DialContext(ctx, "tcp", M.ParseSocksaddrHostPortStr(hostname, port))
+	if err != nil {
+		return
+	}
+	defer instance.Close()
+	if earlyConn, isEarlyConn := common.Cast[N.EarlyConn](instance); isEarlyConn && earlyConn.NeedHandshake() {
+		start = time.Now()
+	}
+	req, err := http.NewRequest(http.MethodHead, link, nil)
+	if err != nil {
+		return
+	}
+	client := http.Client{
+		Transport: &http.Transport{
+			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+				return instance, nil
+			},
+			TLSClientConfig: &tls.Config{
+				Time:    ntp.TimeFuncFromContext(ctx),
+				RootCAs: adapter.RootPoolFromContext(ctx),
+			},
+		},
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+		Timeout: C.TCPTimeout,
+	}
+	defer client.CloseIdleConnections()
+	resp, err := client.Do(req.WithContext(ctx))
+	if err != nil {
+		return
+	}
+	resp.Body.Close()
+	t = uint16(time.Since(start) / time.Millisecond)
+	return
+}
+
 func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, output io.Writer, outputJSON bool, seenKeys map[string]map[string]interface{}, outputPath string, archivePath string, archiveLines, prevArchiveLines map[string]struct{}) error {
 	type outboundEntry struct {
 		tag      string
@@ -398,7 +463,7 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 			var testErr error
 			for _, testURL := range testURLs {
 				testCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
-				_, testErr = urltest.URLTest(testCtx, testURL, outbound)
+				_, testErr = URLTest(testCtx, testURL, outbound)
 				cancel()
 				if testErr != nil {
 					break
