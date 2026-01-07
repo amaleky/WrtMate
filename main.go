@@ -331,7 +331,7 @@ func URLTest(ctx context.Context, link string, detour N.Dialer) (t uint16, err e
 	if earlyConn, isEarlyConn := common.Cast[N.EarlyConn](instance); isEarlyConn && earlyConn.NeedHandshake() {
 		start = time.Now()
 	}
-	req, err := http.NewRequest(http.MethodHead, link, nil)
+	req, err := http.NewRequest(http.MethodGet, link, nil)
 	if err != nil {
 		return
 	}
@@ -355,7 +355,14 @@ func URLTest(ctx context.Context, link string, detour N.Dialer) (t uint16, err e
 	if err != nil {
 		return
 	}
-	resp.Body.Close()
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode > 399 {
+		return
+	}
+	_, err = io.Copy(io.Discard, resp.Body)
+	if err != nil {
+		return
+	}
 	t = uint16(time.Since(start) / time.Millisecond)
 	return
 }
