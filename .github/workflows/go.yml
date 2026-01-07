@@ -34,15 +34,19 @@ jobs:
           - goos: linux
             goarch: mipsle
             gomips: softfloat
+          - goos: darwin
+            goarch: arm64
 
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.goos == 'darwin' && 'macos-latest' || 'ubuntu-latest' }}
+
     env:
       GOOS: ${{ matrix.goos }}
       GOARCH: ${{ matrix.goarch }}
       GOARM: ${{ matrix.goarm }}
       GOMIPS: ${{ matrix.gomips }}
       CGO_ENABLED: 0
-      ASSET_NAME: ${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goarm }}${{ matrix.gomips }}
+      ASSET_NAME: ${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goarm && format('v{0}', matrix.goarm) || '' }}${{ matrix.gomips && format('-{0}', matrix.gomips) || '' }}
+
     steps:
       - name: Checkout codebase
         uses: actions/checkout@v5
@@ -57,7 +61,7 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/Psiphon-Labs/psiphon-tunnel-core.git
           pushd ./psiphon-tunnel-core || exit 1
-          go build -o ../psiphon_${{ env.ASSET_NAME }} -trimpath -ldflags "-s -w -buildid= -checklinkname=0 -X main.version=${{ github.ref }}" ./ConsoleClient
+          go build -o ../psiphon_${ASSET_NAME} -trimpath -ldflags "-s -w -buildid= -checklinkname=0 -X main.version=${{ github.ref }}" ./ConsoleClient
           popd
 
       - name: Upload Psiphon
@@ -70,7 +74,7 @@ jobs:
 
       - name: Build Scanner
         run: |
-          go build -o scanner_${{ env.ASSET_NAME }} .
+          go build -o scanner_${ASSET_NAME} .
 
       - name: Upload Scanner
         uses: svenstaro/upload-release-action@v2
@@ -81,6 +85,7 @@ jobs:
           overwrite: true
 
       - name: Install Lantern toolchain
+        if: matrix.goos != 'darwin'
         run: |
           sudo apt-get update
           sudo apt-get install -y xz-utils
@@ -111,84 +116,15 @@ jobs:
 
           ZIG_FLOAT_FLAGS=""
           case "${{ matrix.goarch }}" in
-            amd64)
-              ZIG_TARGET="x86_64-linux-musl"
-              ;;
-            arm64)
-              ZIG_TARGET="aarch64-linux-musl"
-              ;;
-            arm)
-              ZIG_TARGET="arm-linux-musleabihf"
-              ;;
-            riscv64)
-              ZIG_TARGET="riscv64-linux-musl"
-              ;;
-            mips)
-              ZIG_TARGET="mips-linux-musleabi"
-              ;;
-            mipsle)
-              ZIG_TARGET="mipsel-linux-musleabi"
-              ;;
-            mips64)
-              ZIG_TARGET="mips64-linux-muslabi64"
-              ZIG_FLOAT_FLAGS="-msoft-float"
-              ;;
-            mips64le)
-              ZIG_TARGET="mips64el-linux-muslabi64"
-              ZIG_FLOAT_FLAGS="-msoft-float"
-              ;;
+            amd64)   ZIG_TARGET="x86_64-macos-musl" ;;
+            arm64)   ZIG_TARGET="${{ matrix.goos == 'darwin' && 'aarch64-macos-musl' || 'aarch64-linux-musl' }}" ;;
+            arm)     ZIG_TARGET="arm-macos-musl" ;;
+            riscv64) ZIG_TARGET="riscv64-macos-musl" ;;
+            mips)    ZIG_TARGET="mips-macos-musleabi" ;;
+            mipsle)  ZIG_TARGET="mipsel-macos-musleabi" ;;
           esac
 
-          if [[ "${{ matrix.gomips }}" == "softfloat" ]]; then
-            ZIG_FLOAT_FLAGS="-msoft-float"
-            echo "CGO_CFLAGS=-msoft-float" >> "$GITHUB_ENV"
-            echo "CGO_LDFLAGS=-msoft-float" >> "$GITHUB_ENV"
-          elif [[ "${{ matrix.goarch }}" == "mips64" || "${{ matrix.goarch }}" == "mips64le" ]]; then
-            echo "CGO_CFLAGS=-msoft-float" >> "$GITHUB_ENV"
-            echo "CGO_LDFLAGS=-msoft-float" >> "$GITHUB_ENV"
-            echo "GOMIPS=softfloat" >> "$GITHUB_ENV"
-          fi
-
           echo "ZIG_TARGET=${ZIG_TARGET}" >> "$GITHUB_ENV"
-          echo "ZIG_FLOAT_FLAGS=${ZIG_FLOAT_FLAGS}" >> "$GITHUB_ENV"
-
-          cat > /tmp/zig-cc <<'EOF'
-          #!/usr/bin/env bash
-          set -euo pipefail
-          args=()
-          for arg in "$@"; do
-            case "$arg" in
-              *hard-float*)
-                ;;
-              *)
-                args+=("$arg")
-                ;;
-            esac
-          done
-          exec zig cc -target "${ZIG_TARGET}" ${ZIG_FLOAT_FLAGS} "${args[@]}"
-          EOF
-          chmod +x /tmp/zig-cc
-
-          cat > /tmp/zig-cxx <<'EOF'
-          #!/usr/bin/env bash
-          set -euo pipefail
-          args=()
-          for arg in "$@"; do
-            case "$arg" in
-              *hard-float*)
-                ;;
-              *)
-                args+=("$arg")
-                ;;
-            esac
-          done
-          exec zig c++ -target "${ZIG_TARGET}" ${ZIG_FLOAT_FLAGS} "${args[@]}"
-          EOF
-          chmod +x /tmp/zig-cxx
-
-          echo "CC=/tmp/zig-cc" >> "$GITHUB_ENV"
-          echo "CXX=/tmp/zig-cxx" >> "$GITHUB_ENV"
-          echo "AR=zig ar" >> "$GITHUB_ENV"
 
       - name: Build Lantern
         env:
@@ -197,7 +133,7 @@ jobs:
           git clone --depth 1 https://github.com/getlantern/lantern-headless-client.git
           pushd ./lantern-headless-client || exit 1
           go get github.com/getlantern/flashlight/v7
-          go build -o ../lantern_${{ env.ASSET_NAME }} -trimpath -ldflags "-s -w -buildid= -checklinkname=0 -linkmode external -extldflags=-static" .
+          go build -o ../lantern_${ASSET_NAME} -trimpath -ldflags "-s -w -buildid= -checklinkname=0 -linkmode external -extldflags=-static" .
           popd
 
       - name: Upload Lantern
