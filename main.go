@@ -494,10 +494,13 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 					okMu.Lock()
 					seenKeys[key] = entry.outbound
 					if outputPath != "" {
-						outboundsForJSON := make([]map[string]interface{}, 0, len(seenKeys))
+						outboundsForJSON := make([]map[string]interface{}, 0, 50)
 						for _, outbound := range seenKeys {
 							if outbound != nil {
 								outboundsForJSON = append(outboundsForJSON, outbound)
+								if len(outboundsForJSON) >= 50 {
+									break
+								}
 							}
 						}
 						if err := writeJSONOutput(outputPath, outboundsForJSON); err != nil {
