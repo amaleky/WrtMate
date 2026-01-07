@@ -436,9 +436,8 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 				}
 			} else if output != nil {
 				fmt.Fprintln(output, entry.rawLine)
-			} else {
-				fmt.Printf("%s\n", entry.rawLine)
 			}
+      fmt.Printf("%s\n", entry.rawLine)
 			printMu.Unlock()
 			atomic.AddInt64(&okCount, 1)
       f, _ := os.OpenFile(archivePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
