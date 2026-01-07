@@ -19,7 +19,6 @@ import (
 	"runtime"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 	"unicode"
 
@@ -129,23 +128,16 @@ func main() {
 		}
 	}
 
-	prevArchiveLines := make(map[string]struct{})
-	archiveLines := make(map[string]struct{})
-
 	if data, err := os.ReadFile(archivePath); err == nil {
 		scanner := bufio.NewScanner(strings.NewReader(string(data)))
 		for scanner.Scan() {
 			line := strings.TrimSpace(scanner.Text())
-			if line != "" {
-				prevArchiveLines[line] = struct{}{}
+			if line == "" {
+				continue
 			}
+			_ = processLines([]string{line}, *jobs, urlTestURLs, *verbose, outputWriter, outputIsJSON, seenKeys, outputPath, archivePath)
 		}
 		_ = os.Truncate(archivePath, 0)
-	}
-
-	for line := range prevArchiveLines {
-		lines := []string{line}
-		_ = processLines(lines, *jobs, urlTestURLs, *verbose, outputWriter, outputIsJSON, seenKeys, outputPath, archivePath, archiveLines, prevArchiveLines)
 	}
 
 	for _, rawURL := range subscriptionURLs {
@@ -159,7 +151,7 @@ func main() {
 			}
 			continue
 		}
-		err = processFile(filePath, *jobs, urlTestURLs, *verbose, outputWriter, outputIsJSON, seenKeys, outputPath, archivePath, archiveLines, prevArchiveLines)
+		err = processFile(filePath, *jobs, urlTestURLs, *verbose, outputWriter, outputIsJSON, seenKeys, outputPath, archivePath)
 		if err != nil && *verbose {
 			fmt.Printf("process error (%s): %v\n", filePath, err)
 		}
@@ -274,7 +266,7 @@ func parseURLTestURLs(value string) []string {
 	return urls
 }
 
-func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, output io.Writer, outputJSON bool, seenKeys map[string]map[string]interface{}, outputPath string, archivePath string, archiveLines, prevArchiveLines map[string]struct{}) error {
+func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, output io.Writer, outputJSON bool, seenKeys map[string]map[string]interface{}, outputPath string, archivePath string) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
@@ -300,16 +292,16 @@ func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 		return nil
 	}
 
-	return processLines(lines, jobs, urlTestURLs, verbose, output, outputJSON, seenKeys, outputPath, archivePath, archiveLines, prevArchiveLines)
+	return processLines(lines, jobs, urlTestURLs, verbose, output, outputJSON, seenKeys, outputPath, archivePath)
 }
 
-func URLTest(ctx context.Context, link string, detour N.Dialer) (t uint16, err error) {
+func URLTest(ctx context.Context, link string, detour N.Dialer) (uint16, error) {
 	if link == "" {
 		link = "https://www.gstatic.com/generate_204"
 	}
 	linkURL, err := url.Parse(link)
 	if err != nil {
-		return
+		return 0, err
 	}
 	hostname := linkURL.Hostname()
 	port := linkURL.Port()
@@ -325,7 +317,7 @@ func URLTest(ctx context.Context, link string, detour N.Dialer) (t uint16, err e
 	start := time.Now()
 	instance, err := detour.DialContext(ctx, "tcp", M.ParseSocksaddrHostPortStr(hostname, port))
 	if err != nil {
-		return
+		return 0, err
 	}
 	defer instance.Close()
 	if earlyConn, isEarlyConn := common.Cast[N.EarlyConn](instance); isEarlyConn && earlyConn.NeedHandshake() {
@@ -333,7 +325,7 @@ func URLTest(ctx context.Context, link string, detour N.Dialer) (t uint16, err e
 	}
 	req, err := http.NewRequest(http.MethodGet, link, nil)
 	if err != nil {
-		return
+		return 0, err
 	}
 	client := http.Client{
 		Transport: &http.Transport{
@@ -353,21 +345,20 @@ func URLTest(ctx context.Context, link string, detour N.Dialer) (t uint16, err e
 	defer client.CloseIdleConnections()
 	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
-		return
+		return 0, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode > 399 {
-		return
+		return 0, fmt.Errorf("unexpected status: %d", resp.StatusCode)
 	}
 	_, err = io.Copy(io.Discard, resp.Body)
 	if err != nil {
-		return
+		return 0, err
 	}
-	t = uint16(time.Since(start) / time.Millisecond)
-	return
+	return uint16(time.Since(start) / time.Millisecond), nil
 }
 
-func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, output io.Writer, outputJSON bool, seenKeys map[string]map[string]interface{}, outputPath string, archivePath string, archiveLines, prevArchiveLines map[string]struct{}) error {
+func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, output io.Writer, outputJSON bool, seenKeys map[string]map[string]interface{}, outputPath string, archivePath string) error {
 	type outboundEntry struct {
 		tag      string
 		outbound map[string]interface{}
@@ -375,14 +366,12 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 	}
 
 	var entries []outboundEntry
-	var parseFailCount int64
 	var printMu sync.Mutex
 	seenKeySet := make(map[string]struct{})
 
 	for i, line := range lines {
 		outbound, tag, err := util.GetOutbound(line, i+1)
 		if err != nil {
-			atomic.AddInt64(&parseFailCount, 1)
 			if verbose {
 				printMu.Lock()
 				fmt.Printf("GetOutbound error: %s%v\n\n", line, err)
@@ -446,8 +435,6 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 
 	entriesCh := make(chan outboundEntry, jobs*2)
 	var wg sync.WaitGroup
-	var okCount int64
-	var urlTestFailCount int64
 	var okMu sync.Mutex
 
 	worker := func() {
@@ -455,7 +442,6 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 		for entry := range entriesCh {
 			outbound, ok := instance.Outbound().Outbound(entry.tag)
 			if !ok {
-				atomic.AddInt64(&urlTestFailCount, 1)
 				if verbose {
 					printMu.Lock()
 					fmt.Printf("urltest error: outbound not found for tag %s\n", entry.tag)
@@ -479,12 +465,10 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 			_, jsonErr := json.MarshalIndent(entry.outbound, "", "  ")
 			printMu.Lock()
 			if testErr != nil {
-				atomic.AddInt64(&urlTestFailCount, 1)
 				printMu.Unlock()
 				continue
 			}
 			if jsonErr != nil {
-				atomic.AddInt64(&urlTestFailCount, 1)
 				printMu.Unlock()
 				continue
 			}
@@ -514,7 +498,6 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 			}
 			fmt.Printf("%s\n", entry.rawLine)
 			printMu.Unlock()
-			atomic.AddInt64(&okCount, 1)
 			f, _ := os.OpenFile(archivePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 			defer f.Close()
 			_, err = f.WriteString(entry.rawLine + "\n")
