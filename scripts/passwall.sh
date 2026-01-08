@@ -54,7 +54,7 @@ ghost() {
   chmod +x /etc/init.d/logwatch
 
   /etc/init.d/logwatch enable
-  /etc/init.d/logwatch start
+  /etc/init.d/logwatch restart
   /etc/init.d/ghost enable
   /etc/init.d/ghost start
 }
