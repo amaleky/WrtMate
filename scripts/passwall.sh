@@ -166,17 +166,13 @@ ssh_proxy() {
   if [ ! -d /root/.ssh/ ]; then mkdir /root/.ssh/; fi
   ensure_packages "openssh-client"
 
-  if [ -f "/etc/init.d/ssh-proxy" ]; then
-    SSH_HOST=$(grep -E "^SSH_HOST=" "/etc/init.d/ssh-proxy" | cut -d'=' -f2-)
-    SSH_PORT=$(grep -E "^SSH_PORT=" "/etc/init.d/ssh-proxy" | cut -d'=' -f2-)
-  fi
+  SSH_USER=$(grep -E "^SSH_USER=" "/etc/init.d/ssh-proxy" | cut -d'=' -f2-)
+  SSH_HOST=$(grep -E "^SSH_HOST=" "/etc/init.d/ssh-proxy" | cut -d'=' -f2-)
+  SSH_PORT=$(grep -E "^SSH_PORT=" "/etc/init.d/ssh-proxy" | cut -d'=' -f2-)
 
-  if [ -z "$SSH_HOST" ] || [ "$SSH_HOST" = '""' ]; then
-    read -r -p "Enter SSH hostname: " SSH_HOST
-  fi
-  if [ -z "$SSH_PORT" ] || [ "$SSH_PORT" = '""' ]; then
-    read -r -p "Enter SSH port: " SSH_PORT
-  fi
+  read -r -p "Enter SSH user " -e -i "$SSH_USER" NEW_SSH_USER
+  read -r -p "Enter SSH host: " -e -i "$SSH_HOST" NEW_SSH_HOST
+  read -r -p "Enter SSH port: " -e -i "$SSH_PORT" NEW_SSH_PORT
 
   if [[ -f "/etc/init.d/ssh-proxy" ]] && /etc/init.d/ssh-proxy running; then
     /etc/init.d/ssh-proxy stop
@@ -191,15 +187,19 @@ ssh_proxy() {
     chmod 600 "/root/.ssh/id_rsa"
   fi
 
-  if [ -n "$SSH_HOST" ]; then
-    sed -i "s|^SSH_HOST=.*|SSH_HOST=${SSH_HOST}|" "/etc/init.d/ssh-proxy"
-    if [ -n "$SSH_PORT" ]; then
-      sed -i "s|^SSH_PORT=.*|SSH_PORT=${SSH_PORT}|" "/etc/init.d/ssh-proxy"
-      if [[ -f "/root/.ssh/id_rsa" ]]; then
-        /etc/init.d/ssh-proxy enable
-        /etc/init.d/ssh-proxy start
-      fi
-    fi
+  if [[ "$SSH_USER" != "$NEW_SSH_USER" ]]; then
+    sed -i "s|^SSH_USER=.*|SSH_USER=${NEW_SSH_USER}|" "/etc/init.d/ssh-proxy"
+  fi
+  if [[ "$SSH_HOST" != "$NEW_SSH_HOST" ]]; then
+    sed -i "s|^SSH_HOST=.*|SSH_HOST=${NEW_SSH_HOST}|" "/etc/init.d/ssh-proxy"
+  fi
+  if [[ "$SSH_PORT" != "$NEW_SSH_PORT" ]]; then
+    sed -i "s|^SSH_PORT=.*|SSH_PORT=${NEW_SSH_PORT}|" "/etc/init.d/ssh-proxy"
+  fi
+
+  if [[ -f "/root/.ssh/id_rsa" ]]; then
+    /etc/init.d/ssh-proxy enable
+    /etc/init.d/ssh-proxy start
   fi
 }
 
@@ -318,12 +318,12 @@ main() {
     warp
     psiphon
     lantern
-    ssh_proxy
     server_less
     url_test
     geo_update
     passwall
     tor
+    ssh_proxy
     cleanup
   fi
 

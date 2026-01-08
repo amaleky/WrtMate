@@ -3,9 +3,9 @@
 START=91
 USE_PROCD=1
 
-SSH_HOST=
 SSH_USER=root
-SSH_PORT=
+SSH_HOST=
+SSH_PORT=22
 
 start_service() {
   procd_open_instance
