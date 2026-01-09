@@ -145,7 +145,7 @@ func main() {
 	}
 
 	for _, rawURL := range subscriptionURLs {
-		fileData, _, filePath, fetchErr := fetchURL(client, rawURL, outputDir)
+		fileData, filePath, fetchErr := fetchURL(client, rawURL, outputDir)
 		if fetchErr != nil && *verbose {
 			fmt.Printf("fetch error (%s): %v\n", rawURL, fetchErr)
 		}
@@ -162,11 +162,10 @@ func main() {
 	}
 }
 
-func fetchURL(client *http.Client, rawURL, outputDir string) ([]byte, bool, string, error) {
+func fetchURL(client *http.Client, rawURL, outputDir string) ([]byte, string, error) {
 	fileName := hashAsFileName(rawURL)
 	filePath := filepath.Join(outputDir, fileName)
 	resp, err := client.Get(rawURL)
-	decoded := false
 	if err == nil {
 		defer resp.Body.Close()
 		if resp.StatusCode == http.StatusOK {
@@ -174,7 +173,6 @@ func fetchURL(client *http.Client, rawURL, outputDir string) ([]byte, bool, stri
 			if err == nil {
 				decodedData, isDecoded := decodeBase64IfNeeded(data)
 				if isDecoded {
-					decoded = true
 					data = decodedData
 				}
 				_ = os.WriteFile(filePath, data, 0o644)
@@ -183,9 +181,9 @@ func fetchURL(client *http.Client, rawURL, outputDir string) ([]byte, bool, stri
 	}
 	fileData, readErr := os.ReadFile(filePath)
 	if readErr != nil {
-		return nil, decoded, filePath, readErr
+		return nil, filePath, readErr
 	}
-	return fileData, decoded, filePath, err
+	return fileData, filePath, err
 }
 
 func hashAsFileName(url string) string {
