@@ -114,7 +114,6 @@ func main() {
 		"https://raw.githubusercontent.com/ripaojiedian/freenode/main/sub",
 	}
 
-	client := &http.Client{Timeout: 15 * time.Second}
 	seenKeys := make(map[string]map[string]interface{})
 	urlTestURLs := parseURLTestURLs(*urlTestURL)
 
@@ -128,62 +127,40 @@ func main() {
 		}
 	}
 
-	var lines []string
-	if data, err := os.ReadFile(archivePath); err == nil {
-		scanner := bufio.NewScanner(strings.NewReader(string(data)))
-		for scanner.Scan() {
-			line := strings.TrimSpace(scanner.Text())
-			if line != "" {
-				lines = append(lines, line)
-			}
-		}
-		_ = os.Truncate(archivePath, 0)
-	}
-
-	for _, line := range lines {
-		_ = processLines([]string{line}, *jobs, urlTestURLs, *verbose, outputWriter, outputIsJSON, seenKeys, outputPath, archivePath)
+	err = processFile(archivePath, *jobs, urlTestURLs, *verbose, outputWriter, outputIsJSON, seenKeys, outputPath, archivePath, true)
+	if err != nil && *verbose {
+		fmt.Printf("process error (%s): %v\n", archivePath, err)
 	}
 
 	for _, rawURL := range subscriptionURLs {
-		fileData, filePath, fetchErr := fetchURL(client, rawURL, outputDir)
-		if fetchErr != nil && *verbose {
-			fmt.Printf("fetch error (%s): %v\n", rawURL, fetchErr)
-		}
-		if len(fileData) == 0 {
-			if *verbose {
-				fmt.Printf("file is empty, skipping process (%s)\n", filePath)
-			}
-			continue
-		}
-		err = processFile(filePath, *jobs, urlTestURLs, *verbose, outputWriter, outputIsJSON, seenKeys, outputPath, archivePath)
+		filePath := fetchURL(rawURL, outputDir)
+		err = processFile(filePath, *jobs, urlTestURLs, *verbose, outputWriter, outputIsJSON, seenKeys, outputPath, archivePath, false)
 		if err != nil && *verbose {
 			fmt.Printf("process error (%s): %v\n", filePath, err)
 		}
 	}
 }
 
-func fetchURL(client *http.Client, rawURL, outputDir string) ([]byte, string, error) {
+func fetchURL(rawURL, outputDir string) string {
+	client := &http.Client{Timeout: 15 * time.Second}
 	fileName := hashAsFileName(rawURL)
 	filePath := filepath.Join(outputDir, fileName)
 	resp, err := client.Get(rawURL)
-	if err == nil {
-		defer resp.Body.Close()
-		if resp.StatusCode == http.StatusOK {
-			data, err := io.ReadAll(resp.Body)
-			if err == nil {
-				decodedData, isDecoded := decodeBase64IfNeeded(data)
-				if isDecoded {
-					data = decodedData
-				}
-				_ = os.WriteFile(filePath, data, 0o644)
+	if err != nil {
+		return filePath
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusOK {
+		data, err := io.ReadAll(resp.Body)
+		if err == nil {
+			decodedData, isDecoded := decodeBase64IfNeeded(data)
+			if isDecoded {
+				data = decodedData
 			}
+			_ = os.WriteFile(filePath, data, 0o644)
 		}
 	}
-	fileData, readErr := os.ReadFile(filePath)
-	if readErr != nil {
-		return nil, filePath, readErr
-	}
-	return fileData, filePath, err
+	return filePath
 }
 
 func hashAsFileName(url string) string {
@@ -268,7 +245,7 @@ func parseURLTestURLs(value string) []string {
 	return urls
 }
 
-func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, output io.Writer, outputJSON bool, seenKeys map[string]map[string]interface{}, outputPath string, archivePath string) error {
+func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, output io.Writer, outputJSON bool, seenKeys map[string]map[string]interface{}, outputPath string, archivePath string, truncate bool) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
@@ -292,6 +269,13 @@ func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 	}
 	if len(lines) == 0 {
 		return nil
+	}
+
+	if truncate {
+		err := os.Truncate(archivePath, 0)
+		if err != nil {
+			return err
+		}
 	}
 
 	return processLines(lines, jobs, urlTestURLs, verbose, output, outputJSON, seenKeys, outputPath, archivePath)
