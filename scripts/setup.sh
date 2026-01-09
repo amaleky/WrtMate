@@ -75,16 +75,12 @@ configure_wifi() {
 
 configure_dns() {
   for INTERFACE_V4 in $(uci show network | grep "proto='dhcp'" | cut -d. -f2 | cut -d= -f1); do
-    uci set network.${INTERFACE_V4}.peerdns='0'
+    uci del network.${INTERFACE_V4}.peerdns
     uci del network.${INTERFACE_V4}.dns
-    uci add_list network.${INTERFACE_V4}.dns='8.8.8.8'
-    uci add_list network.${INTERFACE_V4}.dns='8.8.4.4'
   done
   for INTERFACE_V6 in $(uci show network | grep "proto='dhcpv6'" | cut -d. -f2 | cut -d= -f1); do
-    uci set network.${INTERFACE_V6}.peerdns='0'
+    uci del network.${INTERFACE_V6}.peerdns
     uci del network.${INTERFACE_V6}.dns
-    uci add_list network.${INTERFACE_V6}.dns="2001:4860:4860::8888"
-    uci add_list network.${INTERFACE_V6}.dns="2001:4860:4860::8844"
   done
   uci commit network
 }
