@@ -283,7 +283,7 @@ func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 
 func URLTest(ctx context.Context, link string, detour N.Dialer) (uint16, error) {
 	if link == "" {
-		link = "https://www.gstatic.com/generate_204"
+		link = "https://1.1.1.1/cdn-cgi/trace/"
 	}
 	linkURL, err := url.Parse(link)
 	if err != nil {
