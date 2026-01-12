@@ -36,8 +36,9 @@ import (
 
 func main() {
 	jobs := flag.Int("jobs", runtime.NumCPU(), "number of parallel jobs")
-	urlTestURL := flag.String("urltest", "https://1.1.1.1/cdn-cgi/trace/", "comma-separated list of URLs to use for urltest (empty uses sing-box default)")
+	urlTestURL := flag.String("urltest", "https://1.1.1.1/cdn-cgi/trace/", "comma-separated list of URLs to use for urltest")
 	output := flag.String("output", "", "path to write output (default stdout)")
+	timeout := flag.Int("timeout", 15, "subscription download timeout")
 	verbose := flag.Bool("verbose", false, "print extra output")
 	flag.Parse()
 
@@ -133,7 +134,7 @@ func main() {
 	}
 
 	for _, rawURL := range subscriptionURLs {
-		filePath := fetchURL(rawURL, outputDir)
+		filePath := fetchURL(rawURL, outputDir, *timeout)
 		err = processFile(filePath, *jobs, urlTestURLs, *verbose, outputWriter, outputIsJSON, seenKeys, outputPath, archivePath, false)
 		if err != nil && *verbose {
 			fmt.Printf("process error (%s): %v\n", filePath, err)
@@ -141,8 +142,8 @@ func main() {
 	}
 }
 
-func fetchURL(rawURL, outputDir string) string {
-	client := &http.Client{Timeout: 15 * time.Second}
+func fetchURL(rawURL, outputDir string, timeout int) string {
+	client := &http.Client{Timeout: time.Duration(timeout) * time.Second}
 	fileName := hashAsFileName(rawURL)
 	filePath := filepath.Join(outputDir, fileName)
 	resp, err := client.Get(rawURL)
