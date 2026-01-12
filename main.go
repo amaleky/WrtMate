@@ -352,16 +352,13 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 	}
 
 	var entries []outboundEntry
-	var printMu sync.Mutex
 	seenKeySet := make(map[string]struct{})
 
 	for i, line := range lines {
 		outbound, tag, err := util.GetOutbound(line, i+1)
 		if err != nil {
 			if verbose {
-				printMu.Lock()
 				fmt.Printf("GetOutbound error: %s%v\n\n", line, err)
-				printMu.Unlock()
 			}
 			continue
 		}
@@ -429,9 +426,7 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 			outbound, ok := instance.Outbound().Outbound(entry.tag)
 			if !ok {
 				if verbose {
-					printMu.Lock()
 					fmt.Printf("urltest error: outbound not found for tag %s\n", entry.tag)
-					printMu.Unlock()
 				}
 				continue
 			}
@@ -449,13 +444,10 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 				}
 			}
 			_, jsonErr := json.MarshalIndent(entry.outbound, "", "  ")
-			printMu.Lock()
 			if testErr != nil {
-				printMu.Unlock()
 				continue
 			}
 			if jsonErr != nil {
-				printMu.Unlock()
 				continue
 			}
 			if outputJSON && seenKeys != nil {
@@ -483,7 +475,6 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 				fmt.Fprintln(output, entry.rawLine)
 			}
 			fmt.Printf("%s\n", entry.rawLine)
-			printMu.Unlock()
 			f, _ := os.OpenFile(archivePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 			defer f.Close()
 			_, err = f.WriteString(entry.rawLine + "\n")
