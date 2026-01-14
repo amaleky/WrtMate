@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -116,4 +117,25 @@ func PrintResult(archivePath string, seenKeys map[string]SeenKeyType, start time
 		lineCount++
 	}
 	fmt.Printf("Found %d/%d configs in %.2fs\n", lineCount, len(seenKeys), time.Since(start).Seconds())
+}
+
+func GeneratePaths(output *string, urlTestURL *string) (string, string, string, []string, bool) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		fmt.Println("# Failed to use home dir: ", err)
+		return "", "", "", nil, false
+	}
+	outputDir := filepath.Join(homeDir, ".subscriptions")
+	err = os.MkdirAll(outputDir, 0o755)
+	if err != nil {
+		fmt.Println("# Failed to create cache directory: ", err)
+		return "", "", "", nil, false
+	}
+
+	outputPath := *output
+	archivePath := filepath.Join(homeDir, ".subscriptions", "archive.txt")
+
+	urlTestURLs := ParseURLTestURLs(*urlTestURL)
+
+	return outputDir, outputPath, archivePath, urlTestURLs, true
 }

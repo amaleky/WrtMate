@@ -2,9 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
-	"os"
-	"path/filepath"
 	"runtime"
 	"scanner/util"
 	"time"
@@ -19,31 +16,18 @@ func main() {
 	verbose := flag.Bool("verbose", false, "print extra output")
 	flag.Parse()
 
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		fmt.Println("# Failed to use home dir: ", err)
-		return
-	}
-	outputDir := filepath.Join(homeDir, ".subscriptions")
-	err = os.MkdirAll(outputDir, 0o755)
-	if err != nil {
-		fmt.Println("# Failed to create cache directory: ", err)
-		return
-	}
-
-	outputPath := *output
-	hasOutput := output != nil && *output != ""
-	archivePath := filepath.Join(homeDir, ".subscriptions", "archive.txt")
-
 	seenKeys := make(map[string]util.SeenKeyType)
-	urlTestURLs := util.ParseURLTestURLs(*urlTestURL)
+	outputDir, outputPath, archivePath, urlTestURLs, ok := util.GeneratePaths(output, urlTestURL)
+	if !ok {
+		return
+	}
 
-	util.ProcessFile(archivePath, *jobs, urlTestURLs, *verbose, hasOutput, seenKeys, archivePath, true)
+	util.ProcessFile(archivePath, *jobs, urlTestURLs, *verbose, *output != "", seenKeys, archivePath, true)
 	util.SaveResult(outputPath, archivePath, seenKeys)
 
 	for _, rawURL := range util.SUBSCRIPTIONS {
 		filePath := util.FetchURL(rawURL, outputDir, *timeout)
-		util.ProcessFile(filePath, *jobs, urlTestURLs, *verbose, hasOutput, seenKeys, archivePath, false)
+		util.ProcessFile(filePath, *jobs, urlTestURLs, *verbose, *output != "", seenKeys, archivePath, false)
 		util.SaveResult(outputPath, archivePath, seenKeys)
 	}
 
