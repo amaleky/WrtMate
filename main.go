@@ -53,17 +53,13 @@ func main() {
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		if *verbose {
-			fmt.Println(err)
-		}
+		fmt.Println("# Failed to use home dir: ", err)
 		return
 	}
 	outputDir := filepath.Join(homeDir, ".subscriptions")
 	err = os.MkdirAll(outputDir, 0o755)
 	if err != nil {
-		if *verbose {
-			fmt.Println(err)
-		}
+		fmt.Println("# Failed to create cache directory: ", err)
 		return
 	}
 
@@ -409,18 +405,14 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 	}
 	configJSON, err := json.Marshal(config)
 	if err != nil {
-		if verbose {
-			fmt.Println(err)
-		}
+		fmt.Println("# Failed to marshal config: ", err)
 		return
 	}
 
 	ctx := include.Context(context.Background())
 	var opts option.Options
 	if err := opts.UnmarshalJSONContext(ctx, configJSON); err != nil {
-		if verbose {
-			fmt.Println(err)
-		}
+		fmt.Println("# Failed to unmarshal config: ", err)
 		return
 	}
 	instance, err := B.New(B.Options{
@@ -428,16 +420,12 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 		Options: opts,
 	})
 	if err != nil {
-		if verbose {
-			fmt.Println(err)
-		}
+		fmt.Println("# Failed to parse configs: ", err)
 		return
 	}
 	defer instance.Close()
 	if err := instance.Start(); err != nil {
-		if verbose {
-			fmt.Println(err)
-		}
+		fmt.Println("# Failed to start service: ", err)
 		return
 	}
 
