@@ -1,7 +1,6 @@
 package util
 
 import (
-	"fmt"
 	"net/url"
 	"strings"
 )
@@ -16,21 +15,6 @@ func ParseLink(uri string) (*url.URL, string, error) {
 		return u, u.String(), err
 	}
 	return nil, "", err
-}
-
-func ParseOutboundKey(outbound OutboundType) string {
-	getStr := func(keys ...string) string {
-		for _, k := range keys {
-			if v, ok := outbound[k]; ok && v != "" {
-				return fmt.Sprint(v)
-			}
-		}
-		return ""
-	}
-	server := getStr("server", "address", "host")
-	port := getStr("server_port", "port")
-	typ := getStr("type", "protocol")
-	return server + "|" + port + "|" + typ
 }
 
 func ParseURLTestURLs(value string) []string {

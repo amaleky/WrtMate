@@ -10,29 +10,29 @@ import (
 	"strings"
 )
 
-func GetOutbound(uri *url.URL, i int) (OutboundType, string, error) {
+func GetOutbound(uri *url.URL) (OutboundType, string, error) {
 	switch uri.Scheme {
 	case "vmess":
-		return vmess(uri.Host, i)
+		return vmess(uri.Host)
 	case "vless":
-		return vless(uri, i)
+		return vless(uri)
 	case "trojan":
-		return trojan(uri, i)
+		return trojan(uri)
 	case "hy", "hysteria":
-		return hy(uri, i)
+		return hy(uri)
 	case "hy2", "hysteria2":
-		return hy2(uri, i)
+		return hy2(uri)
 	case "anytls":
-		return anytls(uri, i)
+		return anytls(uri)
 	case "tuic":
-		return tuic(uri, i)
+		return tuic(uri)
 	case "ss", "shadowsocks":
-		return ss(uri, i)
+		return ss(uri)
 	}
 	return nil, "", errors.New("Unsupported protocol scheme: " + uri.Scheme)
 }
 
-func vmess(data string, i int) (OutboundType, string, error) {
+func vmess(data string) (OutboundType, string, error) {
 	dataByte, err := DecodeBase64IfNeeded(data)
 	if err != nil {
 		return nil, "", err
@@ -107,10 +107,6 @@ func vmess(data string, i int) (OutboundType, string, error) {
 			}
 		}
 	}
-	tag, _ := dataJson["ps"].(string)
-	if i > 0 {
-		tag = fmt.Sprintf("%d.%s", i, tag)
-	}
 	alter_id := 0
 	if aid, ok := dataJson["aid"].(float64); ok {
 		alter_id = int(aid)
@@ -130,6 +126,7 @@ func vmess(data string, i int) (OutboundType, string, error) {
 	default:
 		return nil, "", fmt.Errorf("unsupported port type: %T", v)
 	}
+	tag := "vmess" + "|" + dataJson["add"].(string) + "|" + strconv.Itoa(serverPort)
 	vmess := OutboundType{
 		"type":        "vmess",
 		"tag":         tag,
@@ -144,7 +141,7 @@ func vmess(data string, i int) (OutboundType, string, error) {
 	return vmess, tag, err
 }
 
-func vless(u *url.URL, i int) (OutboundType, string, error) {
+func vless(u *url.URL) (OutboundType, string, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	security := query.Get("security")
 	host, portStr, _ := net.SplitHostPort(u.Host)
@@ -157,10 +154,7 @@ func vless(u *url.URL, i int) (OutboundType, string, error) {
 		}
 	}
 	tp_type := query.Get("type")
-	tag := u.Fragment
-	if i > 0 {
-		tag = fmt.Sprintf("%d.%s", i, u.Fragment)
-	}
+	tag := "vless" + "|" + host + "|" + strconv.Itoa(port)
 	vless := OutboundType{
 		"type":        "vless",
 		"tag":         tag,
@@ -174,7 +168,7 @@ func vless(u *url.URL, i int) (OutboundType, string, error) {
 	return vless, tag, nil
 }
 
-func trojan(u *url.URL, i int) (OutboundType, string, error) {
+func trojan(u *url.URL) (OutboundType, string, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	security := query.Get("security")
 	host, portStr, _ := net.SplitHostPort(u.Host)
@@ -187,10 +181,7 @@ func trojan(u *url.URL, i int) (OutboundType, string, error) {
 		}
 	}
 	tp_type := query.Get("type")
-	tag := u.Fragment
-	if i > 0 {
-		tag = fmt.Sprintf("%d.%s", i, u.Fragment)
-	}
+	tag := "trojan" + "|" + host + "|" + strconv.Itoa(port)
 	trojan := OutboundType{
 		"type":        "trojan",
 		"tag":         tag,
@@ -203,7 +194,7 @@ func trojan(u *url.URL, i int) (OutboundType, string, error) {
 	return trojan, tag, nil
 }
 
-func hy(u *url.URL, i int) (OutboundType, string, error) {
+func hy(u *url.URL) (OutboundType, string, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	host, portStr, _ := net.SplitHostPort(u.Host)
 	port := 443
@@ -224,10 +215,7 @@ func hy(u *url.URL, i int) (OutboundType, string, error) {
 		tls["insecure"] = true
 	}
 
-	tag := u.Fragment
-	if i > 0 {
-		tag = fmt.Sprintf("%d.%s", i, u.Fragment)
-	}
+	tag := "hysteria" + "|" + host + "|" + strconv.Itoa(port)
 	hy := OutboundType{
 		"type":        "hysteria",
 		"tag":         tag,
@@ -256,7 +244,7 @@ func hy(u *url.URL, i int) (OutboundType, string, error) {
 	return hy, tag, nil
 }
 
-func hy2(u *url.URL, i int) (OutboundType, string, error) {
+func hy2(u *url.URL) (OutboundType, string, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	host, portStr, _ := net.SplitHostPort(u.Host)
 	port := 443
@@ -277,10 +265,7 @@ func hy2(u *url.URL, i int) (OutboundType, string, error) {
 		tls["insecure"] = true
 	}
 
-	tag := u.Fragment
-	if i > 0 {
-		tag = fmt.Sprintf("%d.%s", i, u.Fragment)
-	}
+	tag := "hysteria2" + "|" + host + "|" + strconv.Itoa(port)
 	hy2 := OutboundType{
 		"type":        "hysteria2",
 		"tag":         tag,
@@ -307,7 +292,7 @@ func hy2(u *url.URL, i int) (OutboundType, string, error) {
 	return hy2, tag, nil
 }
 
-func anytls(u *url.URL, i int) (OutboundType, string, error) {
+func anytls(u *url.URL) (OutboundType, string, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	host, portStr, _ := net.SplitHostPort(u.Host)
 	port := 443
@@ -328,10 +313,7 @@ func anytls(u *url.URL, i int) (OutboundType, string, error) {
 		tls["insecure"] = true
 	}
 
-	tag := u.Fragment
-	if i > 0 {
-		tag = fmt.Sprintf("%d.%s", i, u.Fragment)
-	}
+	tag := "anytls" + "|" + host + "|" + strconv.Itoa(port)
 	anytls := OutboundType{
 		"type":        "anytls",
 		"tag":         tag,
@@ -343,7 +325,7 @@ func anytls(u *url.URL, i int) (OutboundType, string, error) {
 	return anytls, tag, nil
 }
 
-func tuic(u *url.URL, i int) (OutboundType, string, error) {
+func tuic(u *url.URL) (OutboundType, string, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	host, portStr, _ := net.SplitHostPort(u.Host)
 	port := 443
@@ -368,10 +350,7 @@ func tuic(u *url.URL, i int) (OutboundType, string, error) {
 		tls["disable_sni"] = true
 	}
 
-	tag := u.Fragment
-	if i > 0 {
-		tag = fmt.Sprintf("%d.%s", i, u.Fragment)
-	}
+	tag := "tuic" + "|" + host + "|" + strconv.Itoa(port)
 	password, _ := u.User.Password()
 	tuic := OutboundType{
 		"type":               "tuic",
@@ -387,7 +366,7 @@ func tuic(u *url.URL, i int) (OutboundType, string, error) {
 	return tuic, tag, nil
 }
 
-func ss(u *url.URL, i int) (OutboundType, string, error) {
+func ss(u *url.URL) (OutboundType, string, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	host, portStr, _ := net.SplitHostPort(u.Host)
 	port := 443
@@ -410,10 +389,7 @@ func ss(u *url.URL, i int) (OutboundType, string, error) {
 		}
 	}
 
-	tag := u.Fragment
-	if i > 0 {
-		tag = fmt.Sprintf("%d.%s", i, u.Fragment)
-	}
+	tag := "shadowsocks" + "|" + host + "|" + strconv.Itoa(port)
 	ss := OutboundType{
 		"type":        "shadowsocks",
 		"tag":         tag,

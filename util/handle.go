@@ -26,15 +26,14 @@ func ProcessLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 			if err != nil || uri == nil {
 				continue
 			}
-			outbound, _, err := GetOutbound(uri, 1)
+			outbound, _, err := GetOutbound(uri)
 			if err != nil {
 				if verbose {
 					fmt.Printf("# Failed to get outbound: %s => %v\n", parsed, err)
 				}
 				continue
 			}
-			tag := ParseOutboundKey(outbound)
-			outbound["tag"] = tag
+			tag := outbound["tag"].(string)
 
 			seenKeysMu.Lock()
 			if _, exists := seenKeys[tag]; exists {
