@@ -397,30 +397,9 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 		outbounds = append(outbounds, entry.outbound)
 	}
 
-	config := map[string]interface{}{
-		"log": map[string]interface{}{
-			"disabled": true,
-		},
-		"outbounds": outbounds,
-	}
-	configJSON, err := json.Marshal(config)
+	ctx, instance, err := newOutbound(outbounds)
 	if err != nil {
-		fmt.Println("# Failed to marshal config: ", err)
-		return
-	}
-
-	ctx := include.Context(context.Background())
-	var opts option.Options
-	if err := opts.UnmarshalJSONContext(ctx, configJSON); err != nil {
-		fmt.Println("# Failed to unmarshal config: ", err)
-		return
-	}
-	instance, err := B.New(B.Options{
-		Context: ctx,
-		Options: opts,
-	})
-	if err != nil {
-		fmt.Println("# Failed to parse configs: ", err)
+		fmt.Println("# Failed to parse config: ", err)
 		return
 	}
 	defer instance.Close()
@@ -480,6 +459,32 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 	wg.Wait()
 
 	return
+}
+
+func newOutbound(outbounds []map[string]interface{}) (context.Context, *B.Box, error) {
+	config := map[string]interface{}{
+		"log": map[string]interface{}{
+			"disabled": true,
+		},
+		"outbounds": outbounds,
+	}
+	configJSON, err := json.Marshal(config)
+	if err != nil {
+		return nil, nil, err
+	}
+	ctx := include.Context(context.Background())
+	var opts option.Options
+	if err := opts.UnmarshalJSONContext(ctx, configJSON); err != nil {
+		return nil, nil, err
+	}
+	instance, err := B.New(B.Options{
+		Context: ctx,
+		Options: opts,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return ctx, instance, nil
 }
 
 func writeJSONOutput(outputPath string, outbounds []map[string]interface{}) error {
