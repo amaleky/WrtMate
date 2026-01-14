@@ -33,8 +33,8 @@ func ProcessLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 				}
 				continue
 			}
-			tag := ParseOutboundKey(*outbound)
-			(*outbound)["tag"] = tag
+			tag := ParseOutboundKey(outbound)
+			outbound["tag"] = tag
 
 			seenKeysMu.Lock()
 			if _, exists := seenKeys[tag]; exists {
@@ -45,12 +45,12 @@ func ProcessLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 				Ok:       false,
 				Tag:      tag,
 				Raw:      parsed,
-				Outbound: *outbound,
+				Outbound: outbound,
 			}
 			seenKeysMu.Unlock()
 
 			singleOutbound := make([]map[string]interface{}, 0, 1)
-			singleOutbound = append(singleOutbound, *outbound)
+			singleOutbound = append(singleOutbound, outbound)
 			ctx, instance, err := NewOutbound(singleOutbound)
 			if err != nil {
 				if verbose {

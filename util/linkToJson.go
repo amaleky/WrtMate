@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func GetOutbound(uri *url.URL, i int) (*map[string]interface{}, string, error) {
+func GetOutbound(uri *url.URL, i int) (map[string]interface{}, string, error) {
 	switch uri.Scheme {
 	case "vmess":
 		return vmess(uri.Host, i)
@@ -32,7 +32,7 @@ func GetOutbound(uri *url.URL, i int) (*map[string]interface{}, string, error) {
 	return nil, "", errors.New("Unsupported protocol scheme: " + uri.Scheme)
 }
 
-func vmess(data string, i int) (*map[string]interface{}, string, error) {
+func vmess(data string, i int) (map[string]interface{}, string, error) {
 	dataByte, err := DecodeBase64IfNeeded(data)
 	if err != nil {
 		return nil, "", err
@@ -141,10 +141,10 @@ func vmess(data string, i int) (*map[string]interface{}, string, error) {
 		"tls":         tls,
 		"transport":   transport,
 	}
-	return &vmess, tag, err
+	return vmess, tag, err
 }
 
-func vless(u *url.URL, i int) (*map[string]interface{}, string, error) {
+func vless(u *url.URL, i int) (map[string]interface{}, string, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	security := query.Get("security")
 	host, portStr, _ := net.SplitHostPort(u.Host)
@@ -171,10 +171,10 @@ func vless(u *url.URL, i int) (*map[string]interface{}, string, error) {
 		"tls":         getTls(security, &query),
 		"transport":   getTransport(tp_type, &query),
 	}
-	return &vless, tag, nil
+	return vless, tag, nil
 }
 
-func trojan(u *url.URL, i int) (*map[string]interface{}, string, error) {
+func trojan(u *url.URL, i int) (map[string]interface{}, string, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	security := query.Get("security")
 	host, portStr, _ := net.SplitHostPort(u.Host)
@@ -200,10 +200,10 @@ func trojan(u *url.URL, i int) (*map[string]interface{}, string, error) {
 		"tls":         getTls(security, &query),
 		"transport":   getTransport(tp_type, &query),
 	}
-	return &trojan, tag, nil
+	return trojan, tag, nil
 }
 
-func hy(u *url.URL, i int) (*map[string]interface{}, string, error) {
+func hy(u *url.URL, i int) (map[string]interface{}, string, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	host, portStr, _ := net.SplitHostPort(u.Host)
 	port := 443
@@ -253,10 +253,10 @@ func hy(u *url.URL, i int) (*map[string]interface{}, string, error) {
 	if recv_window > 0 {
 		hy["recv_window"] = recv_window
 	}
-	return &hy, tag, nil
+	return hy, tag, nil
 }
 
-func hy2(u *url.URL, i int) (*map[string]interface{}, string, error) {
+func hy2(u *url.URL, i int) (map[string]interface{}, string, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	host, portStr, _ := net.SplitHostPort(u.Host)
 	port := 443
@@ -304,10 +304,10 @@ func hy2(u *url.URL, i int) (*map[string]interface{}, string, error) {
 			"password": query.Get("obfs-password"),
 		}
 	}
-	return &hy2, tag, nil
+	return hy2, tag, nil
 }
 
-func anytls(u *url.URL, i int) (*map[string]interface{}, string, error) {
+func anytls(u *url.URL, i int) (map[string]interface{}, string, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	host, portStr, _ := net.SplitHostPort(u.Host)
 	port := 443
@@ -340,10 +340,10 @@ func anytls(u *url.URL, i int) (*map[string]interface{}, string, error) {
 		"password":    u.User.Username(),
 		"tls":         tls,
 	}
-	return &anytls, tag, nil
+	return anytls, tag, nil
 }
 
-func tuic(u *url.URL, i int) (*map[string]interface{}, string, error) {
+func tuic(u *url.URL, i int) (map[string]interface{}, string, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	host, portStr, _ := net.SplitHostPort(u.Host)
 	port := 443
@@ -384,10 +384,10 @@ func tuic(u *url.URL, i int) (*map[string]interface{}, string, error) {
 		"udp_relay_mode":     query.Get("udp_relay_mode"),
 		"tls":                tls,
 	}
-	return &tuic, tag, nil
+	return tuic, tag, nil
 }
 
-func ss(u *url.URL, i int) (*map[string]interface{}, string, error) {
+func ss(u *url.URL, i int) (map[string]interface{}, string, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	host, portStr, _ := net.SplitHostPort(u.Host)
 	port := 443
@@ -447,7 +447,7 @@ func ss(u *url.URL, i int) (*map[string]interface{}, string, error) {
 			ss["plugin_opts"] = strings.Join(pl_arr[1:], ";")
 		}
 	}
-	return &ss, tag, nil
+	return ss, tag, nil
 }
 
 func getTransport(tp_type string, q *url.Values) map[string]interface{} {
