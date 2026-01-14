@@ -34,6 +34,7 @@ import (
 )
 
 func main() {
+	start := time.Now()
 	jobs := flag.Int("jobs", runtime.NumCPU(), "number of parallel jobs")
 	urlTestURL := flag.String("urltest", "https://1.1.1.1/cdn-cgi/trace/", "comma-separated list of URLs to use for urltest")
 	output := flag.String("output", "", "path to write output (default stdout)")
@@ -139,6 +140,27 @@ func main() {
 			fmt.Printf("process error (%s): %v\n", filePath, err)
 		}
 	}
+
+	printResult(archivePath, seenKeys, start)
+}
+
+func printResult(archivePath string, seenKeys map[string]map[string]interface{}, start time.Time) {
+	file, fileOpenErr := os.Open(archivePath)
+	if fileOpenErr != nil {
+		fmt.Printf("Error opening file: %v\n", fileOpenErr)
+		return
+	}
+	defer file.Close()
+	data, fileReadErr := io.ReadAll(file)
+	if fileReadErr != nil {
+		fmt.Printf("Error reading file: %v\n", fileReadErr)
+		return
+	}
+	lineCount := strings.Count(string(data), "\n")
+	if len(data) > 0 && data[len(data)-1] != '\n' {
+		lineCount++
+	}
+	fmt.Printf("Found %d/%d configs in %.2fs\n", lineCount, len(seenKeys), time.Since(start).Seconds())
 }
 
 func fetchURL(rawURL, outputDir string, timeout int) string {
@@ -345,7 +367,6 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 	}
 
 	var entries []outboundEntry
-	seenKeySet := make(map[string]struct{})
 
 	for i, line := range lines {
 		outbound, tag, err := util.GetOutbound(line, i+1)
@@ -356,10 +377,10 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 			continue
 		}
 		tag = outboundKey(*outbound)
-		if _, exists := seenKeySet[tag]; exists {
+		if _, exists := seenKeys[tag]; exists {
 			continue
 		}
-		seenKeySet[tag] = struct{}{}
+		seenKeys[tag] = map[string]interface{}{}
 		(*outbound)["tag"] = tag
 		entries = append(entries, outboundEntry{
 			tag:      tag,
