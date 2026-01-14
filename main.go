@@ -33,6 +33,8 @@ import (
 	"github.com/sagernet/sing/common/ntp"
 )
 
+var DEFAULT_URL_TEST = "https://1.1.1.1/cdn-cgi/trace/"
+
 type outboundEntry struct {
 	ok       bool
 	tag      string
@@ -43,7 +45,7 @@ type outboundEntry struct {
 func main() {
 	start := time.Now()
 	jobs := flag.Int("jobs", runtime.NumCPU(), "number of parallel jobs")
-	urlTestURL := flag.String("urltest", "https://1.1.1.1/cdn-cgi/trace/", "comma-separated list of URLs to use for urltest")
+	urlTestURL := flag.String("urltest", DEFAULT_URL_TEST, "comma-separated list of URLs to use for urltest")
 	output := flag.String("output", "", "path to write output (default stdout)")
 	timeout := flag.Int("timeout", 15, "subscription download timeout")
 	verbose := flag.Bool("verbose", false, "print extra output")
@@ -259,7 +261,7 @@ func parseURLTestURLs(value string) []string {
 	for _, part := range rawParts {
 		trimmed := strings.TrimSpace(part)
 		if trimmed == "" {
-			urls = append(urls, "https://1.1.1.1/cdn-cgi/trace/")
+			urls = append(urls, DEFAULT_URL_TEST)
 		} else {
 			urls = append(urls, trimmed)
 		}
@@ -535,7 +537,7 @@ func writeJSONOutput(outputPath string, outbounds []map[string]interface{}) erro
 				"type":                        "urltest",
 				"tag":                         "Auto",
 				"outbounds":                   tags,
-				"url":                         "https://1.1.1.1/cdn-cgi/trace/",
+				"url":                         DEFAULT_URL_TEST,
 				"interval":                    "10m",
 				"tolerance":                   50,
 				"interrupt_exist_connections": false,
