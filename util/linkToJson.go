@@ -1,7 +1,6 @@
 package util
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,7 +8,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"unicode"
 )
 
 func GetOutbound(uri *url.URL, i int) (*map[string]interface{}, string, error) {
@@ -34,62 +32,8 @@ func GetOutbound(uri *url.URL, i int) (*map[string]interface{}, string, error) {
 	return nil, "", errors.New("Unsupported protocol scheme: " + uri.Scheme)
 }
 
-func ParseLink(uri string) (*url.URL, string, error) {
-	u, err := url.Parse(uri)
-	if err == nil && u != nil {
-		params := u.Query()
-		delete(params, "remark")
-		u.Fragment = ""
-		u.RawQuery = params.Encode()
-		return u, u.String(), err
-	}
-	return nil, "", err
-}
-
-func decodeBase64IfNeeded(input string) (string, error) {
-	var builder strings.Builder
-	builder.Grow(len(input))
-	for _, r := range input {
-		if !unicode.IsSpace(r) {
-			builder.WriteRune(r)
-		}
-	}
-	compact := builder.String()
-	if compact == "" {
-		return input, errors.New("Input is empty")
-	}
-	if !looksLikeBase64(compact) {
-		return input, errors.New("Input is not base64")
-	}
-	decoded, err := base64.StdEncoding.DecodeString(compact)
-	if err != nil {
-		decoded, err = base64.RawStdEncoding.DecodeString(compact)
-	}
-	if err != nil {
-		return input, err
-	}
-	return string(decoded), nil
-}
-
-func looksLikeBase64(input string) bool {
-	if len(input) < 16 {
-		return false
-	}
-	for _, r := range input {
-		switch {
-		case r >= 'A' && r <= 'Z':
-		case r >= 'a' && r <= 'z':
-		case r >= '0' && r <= '9':
-		case r == '+' || r == '/' || r == '=' || r == '-' || r == '_':
-		default:
-			return false
-		}
-	}
-	return true
-}
-
 func vmess(data string, i int) (*map[string]interface{}, string, error) {
-	dataByte, err := decodeBase64IfNeeded(data)
+	dataByte, err := DecodeBase64IfNeeded(data)
 	if err != nil {
 		return nil, "", err
 	}
@@ -453,7 +397,7 @@ func ss(u *url.URL, i int) (*map[string]interface{}, string, error) {
 	method := u.User.Username()
 	password, ok := u.User.Password()
 	if !ok {
-		decrypted, err := decodeBase64IfNeeded(method)
+		decrypted, err := DecodeBase64IfNeeded(method)
 		if err != nil {
 			return nil, "", err
 		}
