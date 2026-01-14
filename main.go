@@ -239,9 +239,10 @@ func parseURLTestURLs(value string) []string {
 	for _, part := range rawParts {
 		trimmed := strings.TrimSpace(part)
 		if trimmed == "" {
-			continue
+			urls = append(urls, "https://1.1.1.1/cdn-cgi/trace/")
+		} else {
+			urls = append(urls, trimmed)
 		}
-		urls = append(urls, trimmed)
 	}
 	return urls
 }
@@ -283,9 +284,6 @@ func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 }
 
 func URLTest(ctx context.Context, link string, detour N.Dialer) (uint16, error) {
-	if link == "" {
-		link = "https://1.1.1.1/cdn-cgi/trace/"
-	}
 	linkURL, err := url.Parse(link)
 	if err != nil {
 		return 0, err
