@@ -187,7 +187,15 @@ func hashAsFileName(url string) string {
 }
 
 func decodeBase64IfNeeded(data []byte) ([]byte, bool) {
-	compact := compactWhitespace(string(data))
+	var input = string(data)
+	var builder strings.Builder
+	builder.Grow(len(input))
+	for _, r := range input {
+		if !unicode.IsSpace(r) {
+			builder.WriteRune(r)
+		}
+	}
+	compact := builder.String()
 	if compact == "" {
 		return data, false
 	}
@@ -202,17 +210,6 @@ func decodeBase64IfNeeded(data []byte) ([]byte, bool) {
 		return data, false
 	}
 	return decoded, true
-}
-
-func compactWhitespace(input string) string {
-	var builder strings.Builder
-	builder.Grow(len(input))
-	for _, r := range input {
-		if !unicode.IsSpace(r) {
-			builder.WriteRune(r)
-		}
-	}
-	return builder.String()
 }
 
 func looksLikeBase64(input string) bool {
