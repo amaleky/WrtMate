@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 func GetOutbound(uri string, i int) (*map[string]interface{}, string, error) {
@@ -36,25 +37,56 @@ func GetOutbound(uri string, i int) (*map[string]interface{}, string, error) {
 	return nil, "", errors.New("Unsupported link format")
 }
 
-func StrOrBase64Encoded(str string) string {
-	decoded, err := base64.StdEncoding.DecodeString(str)
-	if err == nil {
-		return string(decoded)
+func decodeBase64IfNeeded(data string) (string, error) {
+	var input = string(data)
+	var builder strings.Builder
+	builder.Grow(len(input))
+	for _, r := range input {
+		if !unicode.IsSpace(r) {
+			builder.WriteRune(r)
+		}
 	}
-	return str
+	compact := builder.String()
+	if compact == "" {
+		return data, errors.New("Input is empty")
+	}
+	if !looksLikeBase64(compact) {
+		return data, errors.New("Input is not base64")
+	}
+	decoded, err := base64.StdEncoding.DecodeString(compact)
+	if err != nil {
+		decoded, err = base64.RawStdEncoding.DecodeString(compact)
+	}
+	if err != nil {
+		return data, err
+	}
+	return string(decoded), nil
 }
 
-func B64StrToByte(str string) ([]byte, error) {
-	return base64.StdEncoding.DecodeString(str)
+func looksLikeBase64(input string) bool {
+	if len(input) < 16 {
+		return false
+	}
+	for _, r := range input {
+		switch {
+		case r >= 'A' && r <= 'Z':
+		case r >= 'a' && r <= 'z':
+		case r >= '0' && r <= '9':
+		case r == '+' || r == '/' || r == '=' || r == '-' || r == '_':
+		default:
+			return false
+		}
+	}
+	return true
 }
 
 func vmess(data string, i int) (*map[string]interface{}, string, error) {
-	dataByte, err := B64StrToByte(data)
+	dataByte, err := decodeBase64IfNeeded(data)
 	if err != nil {
 		return nil, "", err
 	}
 	var dataJson map[string]interface{}
-	err = json.Unmarshal(dataByte, &dataJson)
+	err = json.Unmarshal([]byte(dataByte), &dataJson)
 	if err != nil {
 		return nil, "", err
 	}
@@ -413,7 +445,10 @@ func ss(u *url.URL, i int) (*map[string]interface{}, string, error) {
 	method := u.User.Username()
 	password, ok := u.User.Password()
 	if !ok {
-		decrypted := StrOrBase64Encoded(method)
+		decrypted, err := decodeBase64IfNeeded(method)
+		if err != nil {
+			return nil, "", err
+		}
 		decrypted_arr := strings.Split(decrypted, ":")
 		if len(decrypted_arr) > 1 {
 			method = decrypted_arr[0]
