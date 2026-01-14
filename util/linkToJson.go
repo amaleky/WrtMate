@@ -131,11 +131,26 @@ func vmess(data string, i int) (*map[string]interface{}, string, error) {
 	if aid, ok := dataJson["aid"].(float64); ok {
 		alter_id = int(aid)
 	}
+	var serverPort int
+	switch v := dataJson["port"].(type) {
+	case string:
+		portInt, err := strconv.Atoi(v)
+		if err != nil {
+			return nil, "", err
+		}
+		serverPort = portInt
+	case float64:
+		serverPort = int(v)
+	case int:
+		serverPort = v
+	default:
+		return nil, "", fmt.Errorf("unsupported port type: %T", v)
+	}
 	vmess := map[string]interface{}{
 		"type":        "vmess",
 		"tag":         tag,
 		"server":      dataJson["add"],
-		"server_port": dataJson["port"],
+		"server_port": serverPort,
 		"uuid":        dataJson["id"],
 		"security":    "auto",
 		"alter_id":    alter_id,
