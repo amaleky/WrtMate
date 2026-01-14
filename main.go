@@ -28,7 +28,6 @@ import (
 	C "github.com/sagernet/sing-box/constant"
 	"github.com/sagernet/sing-box/include"
 	"github.com/sagernet/sing-box/option"
-	"github.com/sagernet/sing/common"
 	M "github.com/sagernet/sing/common/metadata"
 	N "github.com/sagernet/sing/common/network"
 	"github.com/sagernet/sing/common/ntp"
@@ -283,10 +282,10 @@ func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 	return processLines(lines, jobs, urlTestURLs, verbose, output, outputJSON, seenKeys, outputPath, archivePath)
 }
 
-func URLTest(ctx context.Context, link string, detour N.Dialer) (uint16, error) {
+func URLTest(ctx context.Context, link string, detour N.Dialer) error {
 	linkURL, err := url.Parse(link)
 	if err != nil {
-		return 0, err
+		return err
 	}
 	hostname := linkURL.Hostname()
 	port := linkURL.Port()
@@ -298,19 +297,14 @@ func URLTest(ctx context.Context, link string, detour N.Dialer) (uint16, error) 
 			port = "443"
 		}
 	}
-
-	start := time.Now()
 	instance, err := detour.DialContext(ctx, "tcp", M.ParseSocksaddrHostPortStr(hostname, port))
 	if err != nil {
-		return 0, err
+		return err
 	}
 	defer instance.Close()
-	if earlyConn, isEarlyConn := common.Cast[N.EarlyConn](instance); isEarlyConn && earlyConn.NeedHandshake() {
-		start = time.Now()
-	}
 	req, err := http.NewRequest(http.MethodGet, link, nil)
 	if err != nil {
-		return 0, err
+		return err
 	}
 	client := http.Client{
 		Transport: &http.Transport{
@@ -330,17 +324,17 @@ func URLTest(ctx context.Context, link string, detour N.Dialer) (uint16, error) 
 	defer client.CloseIdleConnections()
 	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
-		return 0, err
+		return err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode > 399 {
-		return 0, fmt.Errorf("unexpected status: %d", resp.StatusCode)
+		return fmt.Errorf("unexpected status: %d", resp.StatusCode)
 	}
 	_, err = io.Copy(io.Discard, resp.Body)
 	if err != nil {
-		return 0, err
+		return err
 	}
-	return uint16(time.Since(start) / time.Millisecond), nil
+	return nil
 }
 
 func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, output io.Writer, outputJSON bool, seenKeys map[string]map[string]interface{}, outputPath string, archivePath string) error {
@@ -432,7 +426,7 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 			var testErr error
 			for _, testURL := range urlTestURLs {
 				testCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
-				_, testErr = URLTest(testCtx, testURL, outbound)
+				testErr = URLTest(testCtx, testURL, outbound)
 				cancel()
 				if testErr != nil {
 					break
