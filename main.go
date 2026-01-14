@@ -124,17 +124,11 @@ func main() {
 		}
 	}
 
-	err = processFile(archivePath, *jobs, urlTestURLs, *verbose, outputWriter, outputIsJSON, seenKeys, outputPath, archivePath, true)
-	if err != nil && *verbose {
-		fmt.Printf("process error (%s): %v\n", archivePath, err)
-	}
+	processFile(archivePath, *jobs, urlTestURLs, *verbose, outputWriter, outputIsJSON, seenKeys, outputPath, archivePath, true)
 
 	for _, rawURL := range subscriptionURLs {
 		filePath := fetchURL(rawURL, outputDir, *timeout)
-		err = processFile(filePath, *jobs, urlTestURLs, *verbose, outputWriter, outputIsJSON, seenKeys, outputPath, archivePath, false)
-		if err != nil && *verbose {
-			fmt.Printf("process error (%s): %v\n", filePath, err)
-		}
+		processFile(filePath, *jobs, urlTestURLs, *verbose, outputWriter, outputIsJSON, seenKeys, outputPath, archivePath, false)
 	}
 
 	printResult(archivePath, seenKeys, start)
@@ -261,10 +255,10 @@ func parseURLTestURLs(value string) []string {
 	return urls
 }
 
-func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, output io.Writer, outputJSON bool, seenKeys map[string]map[string]interface{}, outputPath string, archivePath string, truncate bool) error {
+func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, output io.Writer, outputJSON bool, seenKeys map[string]map[string]interface{}, outputPath string, archivePath string, truncate bool) {
 	file, err := os.Open(filePath)
 	if err != nil {
-		return err
+		return
 	}
 	defer file.Close()
 
@@ -281,20 +275,20 @@ func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 		lines = append(lines, line)
 	}
 	if err := scanner.Err(); err != nil {
-		return err
+		return
 	}
 	if len(lines) == 0 {
-		return nil
+		return
 	}
 
 	if truncate {
 		err := os.Truncate(archivePath, 0)
 		if err != nil {
-			return err
+			return
 		}
 	}
 
-	return processLines(lines, jobs, urlTestURLs, verbose, output, outputJSON, seenKeys, outputPath, archivePath)
+	processLines(lines, jobs, urlTestURLs, verbose, output, outputJSON, seenKeys, outputPath, archivePath)
 }
 
 func URLTest(ctx context.Context, link string, detour N.Dialer) error {
@@ -352,7 +346,7 @@ func URLTest(ctx context.Context, link string, detour N.Dialer) error {
 	return nil
 }
 
-func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, output io.Writer, outputJSON bool, seenKeys map[string]map[string]interface{}, outputPath string, archivePath string) error {
+func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, output io.Writer, outputJSON bool, seenKeys map[string]map[string]interface{}, outputPath string, archivePath string) {
 	type outboundEntry struct {
 		tag      string
 		outbound map[string]interface{}
@@ -365,7 +359,7 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 		outbound, tag, err := util.GetOutbound(line, i+1)
 		if err != nil {
 			if verbose {
-				fmt.Printf("GetOutbound error: %s%v\n\n", line, err)
+				fmt.Printf("GetOutbound error: %s => %v\n", line, err)
 			}
 			continue
 		}
@@ -383,7 +377,7 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 	}
 
 	if len(entries) == 0 {
-		return nil
+		return
 	}
 
 	outbounds := make([]map[string]interface{}, 0, len(entries))
@@ -399,24 +393,24 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 	}
 	configJSON, err := json.Marshal(config)
 	if err != nil {
-		return err
+		return
 	}
 
 	ctx := include.Context(context.Background())
 	var opts option.Options
 	if err := opts.UnmarshalJSONContext(ctx, configJSON); err != nil {
-		return err
+		return
 	}
 	instance, err := B.New(B.Options{
 		Context: ctx,
 		Options: opts,
 	})
 	if err != nil {
-		return err
+		return
 	}
 	defer instance.Close()
 	if err := instance.Start(); err != nil {
-		return err
+		return
 	}
 
 	if jobs < 1 {
@@ -495,7 +489,7 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 	close(entriesCh)
 	wg.Wait()
 
-	return nil
+	return
 }
 
 func writeJSONOutput(outputPath string, outbounds []map[string]interface{}) error {
