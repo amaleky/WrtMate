@@ -33,6 +33,13 @@ import (
 	"github.com/sagernet/sing/common/ntp"
 )
 
+type outboundEntry struct {
+	ok       bool
+	tag      string
+	raw      string
+	outbound map[string]interface{}
+}
+
 func main() {
 	start := time.Now()
 	jobs := flag.Int("jobs", runtime.NumCPU(), "number of parallel jobs")
@@ -42,39 +49,25 @@ func main() {
 	verbose := flag.Bool("verbose", false, "print extra output")
 	flag.Parse()
 
-	var outputWriter io.Writer = os.Stdout
-	var outputFile *os.File
-	outputPath := *output
-	if outputPath == "" && flag.NArg() > 0 {
-		outputPath = flag.Arg(0)
-	}
-	outputIsJSON := strings.HasSuffix(strings.ToLower(outputPath), ".json")
-	if outputPath != "" && !outputIsJSON {
-		file, err := os.Create(outputPath)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "open output file error (%s): %v\n", outputPath, err)
-			return
-		}
-		outputFile = file
-		outputWriter = file
-		defer outputFile.Close()
-	}
+	hasOutput := output != nil && *output != ""
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		if *verbose {
-			fmt.Println("get user home dir error:", err)
+			fmt.Println(err)
 		}
 		return
 	}
 	outputDir := filepath.Join(homeDir, ".subscriptions")
-	if err := os.MkdirAll(outputDir, 0o755); err != nil {
+	err = os.MkdirAll(outputDir, 0o755)
+	if err != nil {
 		if *verbose {
-			fmt.Println("create output dir error:", err)
+			fmt.Println(err)
 		}
 		return
 	}
 
+	outputPath := *output
 	archivePath := filepath.Join(homeDir, ".subscriptions", "archive.txt")
 
 	subscriptionURLs := []string{
@@ -115,26 +108,22 @@ func main() {
 		"https://raw.githubusercontent.com/ripaojiedian/freenode/main/sub",
 	}
 
-	seenKeys := make(map[string]map[string]interface{})
+	seenKeys := make(map[string]outboundEntry)
 	urlTestURLs := parseURLTestURLs(*urlTestURL)
 
-	if outputIsJSON {
-		if err := writeJSONOutput(outputPath, make([]map[string]interface{}, 0)); err != nil {
-			fmt.Fprintf(os.Stderr, "write json output error (%s): %v\n", outputPath, err)
-		}
-	}
-
-	processFile(archivePath, *jobs, urlTestURLs, *verbose, outputWriter, outputIsJSON, seenKeys, outputPath, archivePath, true)
+	processFile(archivePath, *jobs, urlTestURLs, *verbose, hasOutput, seenKeys, archivePath, true)
+	saveResult(outputPath, archivePath, seenKeys)
 
 	for _, rawURL := range subscriptionURLs {
 		filePath := fetchURL(rawURL, outputDir, *timeout)
-		processFile(filePath, *jobs, urlTestURLs, *verbose, outputWriter, outputIsJSON, seenKeys, outputPath, archivePath, false)
+		processFile(filePath, *jobs, urlTestURLs, *verbose, hasOutput, seenKeys, archivePath, false)
+		saveResult(outputPath, archivePath, seenKeys)
 	}
 
 	printResult(archivePath, seenKeys, start)
 }
 
-func printResult(archivePath string, seenKeys map[string]map[string]interface{}, start time.Time) {
+func printResult(archivePath string, seenKeys map[string]outboundEntry, start time.Time) {
 	file, fileOpenErr := os.Open(archivePath)
 	if fileOpenErr != nil {
 		fmt.Printf("Error opening file: %v\n", fileOpenErr)
@@ -151,6 +140,33 @@ func printResult(archivePath string, seenKeys map[string]map[string]interface{},
 		lineCount++
 	}
 	fmt.Printf("Found %d/%d configs in %.2fs\n", lineCount, len(seenKeys), time.Since(start).Seconds())
+}
+
+func saveResult(outputPath string, archivePath string, seenKeys map[string]outboundEntry) {
+	if len(seenKeys) == 0 {
+		return
+	}
+	var rawConfigs []string
+	jsonOutbounds := make([]map[string]interface{}, 0, 50)
+	outputIsJSON := strings.HasSuffix(strings.ToLower(outputPath), ".json")
+
+	for _, entry := range seenKeys {
+		if entry.ok == true {
+			rawConfigs = append(rawConfigs, entry.raw)
+			if outputIsJSON {
+				if len(jsonOutbounds) < 50 {
+					jsonOutbounds = append(jsonOutbounds, entry.outbound)
+				}
+			}
+		}
+	}
+
+	if outputIsJSON {
+		writeJSONOutput(outputPath, jsonOutbounds)
+	} else if outputPath != "" {
+		writeRawOutput(outputPath, rawConfigs)
+	}
+	writeRawOutput(archivePath, rawConfigs)
 }
 
 func fetchURL(rawURL, outputDir string, timeout int) string {
@@ -255,12 +271,16 @@ func parseURLTestURLs(value string) []string {
 	return urls
 }
 
-func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, output io.Writer, outputJSON bool, seenKeys map[string]map[string]interface{}, outputPath string, archivePath string, truncate bool) {
+func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, hasOutput bool, seenKeys map[string]outboundEntry, archivePath string, truncate bool) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return
 	}
 	defer file.Close()
+
+	if verbose {
+		fmt.Println("# Processing", filePath)
+	}
 
 	scanner := bufio.NewScanner(file)
 	buf := make([]byte, 0, 64*1024)
@@ -288,7 +308,7 @@ func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 		}
 	}
 
-	processLines(lines, jobs, urlTestURLs, verbose, output, outputJSON, seenKeys, outputPath, archivePath)
+	processLines(lines, jobs, urlTestURLs, verbose, hasOutput, seenKeys)
 }
 
 func URLTest(ctx context.Context, link string, detour N.Dialer) error {
@@ -346,34 +366,30 @@ func URLTest(ctx context.Context, link string, detour N.Dialer) error {
 	return nil
 }
 
-func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, output io.Writer, outputJSON bool, seenKeys map[string]map[string]interface{}, outputPath string, archivePath string) {
-	type outboundEntry struct {
-		tag      string
-		outbound map[string]interface{}
-		rawLine  string
-	}
-
+func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, hasOutput bool, seenKeys map[string]outboundEntry) {
 	var entries []outboundEntry
 
 	for i, line := range lines {
-		outbound, tag, err := util.GetOutbound(line, i+1)
+		outbound, _, err := util.GetOutbound(line, i+1)
 		if err != nil {
 			if verbose {
 				fmt.Printf("GetOutbound error: %s => %v\n", line, err)
 			}
 			continue
 		}
-		tag = outboundKey(*outbound)
+		tag := outboundKey(*outbound)
 		if _, exists := seenKeys[tag]; exists {
 			continue
 		}
-		seenKeys[tag] = map[string]interface{}{}
 		(*outbound)["tag"] = tag
-		entries = append(entries, outboundEntry{
+		entry := outboundEntry{
+			ok:       false,
 			tag:      tag,
+			raw:      line,
 			outbound: *outbound,
-			rawLine:  line,
-		})
+		}
+		seenKeys[tag] = entry
+		entries = append(entries, entry)
 	}
 
 	if len(entries) == 0 {
@@ -393,12 +409,18 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 	}
 	configJSON, err := json.Marshal(config)
 	if err != nil {
+		if verbose {
+			fmt.Println(err)
+		}
 		return
 	}
 
 	ctx := include.Context(context.Background())
 	var opts option.Options
 	if err := opts.UnmarshalJSONContext(ctx, configJSON); err != nil {
+		if verbose {
+			fmt.Println(err)
+		}
 		return
 	}
 	instance, err := B.New(B.Options{
@@ -406,10 +428,16 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 		Options: opts,
 	})
 	if err != nil {
+		if verbose {
+			fmt.Println(err)
+		}
 		return
 	}
 	defer instance.Close()
 	if err := instance.Start(); err != nil {
+		if verbose {
+			fmt.Println(err)
+		}
 		return
 	}
 
@@ -426,9 +454,6 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 		for entry := range entriesCh {
 			outbound, ok := instance.Outbound().Outbound(entry.tag)
 			if !ok {
-				if verbose {
-					fmt.Printf("urltest error: outbound not found for tag %s\n", entry.tag)
-				}
 				continue
 			}
 			var testErr error
@@ -440,37 +465,18 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 					break
 				}
 			}
-			_, jsonErr := json.MarshalIndent(entry.outbound, "", "  ")
 			if testErr != nil {
 				continue
 			}
-			if jsonErr != nil {
-				continue
+
+			okMu.Lock()
+			entry.ok = true
+			seenKeys[entry.tag] = entry
+			okMu.Unlock()
+
+			if !hasOutput {
+				fmt.Println(entry.raw)
 			}
-			if outputJSON {
-				key := outboundKey(entry.outbound)
-				okMu.Lock()
-				seenKeys[key] = entry.outbound
-				outboundsForJSON := make([]map[string]interface{}, 0, 50)
-				for _, outbound := range seenKeys {
-					if outbound != nil {
-						outboundsForJSON = append(outboundsForJSON, outbound)
-						if len(outboundsForJSON) >= 50 {
-							break
-						}
-					}
-				}
-				if err := writeJSONOutput(outputPath, outboundsForJSON); err != nil {
-					fmt.Fprintf(os.Stderr, "write json output error (%s): %v\n", outputPath, err)
-				}
-				okMu.Unlock()
-			} else if output != nil {
-				fmt.Fprintln(output, entry.rawLine)
-			}
-			fmt.Printf("%s\n", entry.rawLine)
-			f, _ := os.OpenFile(archivePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
-			defer f.Close()
-			_, err = f.WriteString(entry.rawLine + "\n")
 		}
 	}
 
@@ -538,4 +544,8 @@ func writeJSONOutput(outputPath string, outbounds []map[string]interface{}) erro
 	}
 	configJSON = append(configJSON, '\n')
 	return os.WriteFile(outputPath, configJSON, 0o644)
+}
+
+func writeRawOutput(outputPath string, rawConfigs []string) error {
+	return os.WriteFile(outputPath, []byte(strings.Join(rawConfigs, "\n")), 0o644)
 }
