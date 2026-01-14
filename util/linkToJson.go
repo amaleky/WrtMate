@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func GetOutbound(uri *url.URL, i int) (map[string]interface{}, string, error) {
+func GetOutbound(uri *url.URL, i int) (OutboundType, string, error) {
 	switch uri.Scheme {
 	case "vmess":
 		return vmess(uri.Host, i)
@@ -32,17 +32,17 @@ func GetOutbound(uri *url.URL, i int) (map[string]interface{}, string, error) {
 	return nil, "", errors.New("Unsupported protocol scheme: " + uri.Scheme)
 }
 
-func vmess(data string, i int) (map[string]interface{}, string, error) {
+func vmess(data string, i int) (OutboundType, string, error) {
 	dataByte, err := DecodeBase64IfNeeded(data)
 	if err != nil {
 		return nil, "", err
 	}
-	var dataJson map[string]interface{}
+	var dataJson OutboundType
 	err = json.Unmarshal([]byte(dataByte), &dataJson)
 	if err != nil {
 		return nil, "", err
 	}
-	transport := map[string]interface{}{}
+	transport := OutboundType{}
 	tp_net, _ := dataJson["net"].(string)
 	tp_type, _ := dataJson["type"].(string)
 	tp_host, _ := dataJson["host"].(string)
@@ -67,7 +67,7 @@ func vmess(data string, i int) (map[string]interface{}, string, error) {
 		transport["path"] = tp_path
 		transport["early_data_header_name"] = "Sec-WebSocket-Protocol"
 		if len(tp_host) > 0 {
-			transport["headers"] = map[string]interface{}{
+			transport["headers"] = OutboundType{
 				"Host": tp_host,
 			}
 		}
@@ -83,7 +83,7 @@ func vmess(data string, i int) (map[string]interface{}, string, error) {
 	default:
 		return nil, "", errors.New("Invalid vmess")
 	}
-	tls := map[string]interface{}{}
+	tls := OutboundType{}
 	vmess_tls, _ := dataJson["tls"].(string)
 	if vmess_tls == "tls" {
 		tls["enabled"] = true
@@ -101,7 +101,7 @@ func vmess(data string, i int) (map[string]interface{}, string, error) {
 			tls["insecure"] = true
 		}
 		if len(tls_fp) > 0 {
-			tls["utls"] = map[string]interface{}{
+			tls["utls"] = OutboundType{
 				"enabled":     true,
 				"fingerprint": tls_fp,
 			}
@@ -130,7 +130,7 @@ func vmess(data string, i int) (map[string]interface{}, string, error) {
 	default:
 		return nil, "", fmt.Errorf("unsupported port type: %T", v)
 	}
-	vmess := map[string]interface{}{
+	vmess := OutboundType{
 		"type":        "vmess",
 		"tag":         tag,
 		"server":      dataJson["add"],
@@ -144,7 +144,7 @@ func vmess(data string, i int) (map[string]interface{}, string, error) {
 	return vmess, tag, err
 }
 
-func vless(u *url.URL, i int) (map[string]interface{}, string, error) {
+func vless(u *url.URL, i int) (OutboundType, string, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	security := query.Get("security")
 	host, portStr, _ := net.SplitHostPort(u.Host)
@@ -161,7 +161,7 @@ func vless(u *url.URL, i int) (map[string]interface{}, string, error) {
 	if i > 0 {
 		tag = fmt.Sprintf("%d.%s", i, u.Fragment)
 	}
-	vless := map[string]interface{}{
+	vless := OutboundType{
 		"type":        "vless",
 		"tag":         tag,
 		"server":      host,
@@ -174,7 +174,7 @@ func vless(u *url.URL, i int) (map[string]interface{}, string, error) {
 	return vless, tag, nil
 }
 
-func trojan(u *url.URL, i int) (map[string]interface{}, string, error) {
+func trojan(u *url.URL, i int) (OutboundType, string, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	security := query.Get("security")
 	host, portStr, _ := net.SplitHostPort(u.Host)
@@ -191,7 +191,7 @@ func trojan(u *url.URL, i int) (map[string]interface{}, string, error) {
 	if i > 0 {
 		tag = fmt.Sprintf("%d.%s", i, u.Fragment)
 	}
-	trojan := map[string]interface{}{
+	trojan := OutboundType{
 		"type":        "trojan",
 		"tag":         tag,
 		"server":      host,
@@ -203,7 +203,7 @@ func trojan(u *url.URL, i int) (map[string]interface{}, string, error) {
 	return trojan, tag, nil
 }
 
-func hy(u *url.URL, i int) (map[string]interface{}, string, error) {
+func hy(u *url.URL, i int) (OutboundType, string, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	host, portStr, _ := net.SplitHostPort(u.Host)
 	port := 443
@@ -211,7 +211,7 @@ func hy(u *url.URL, i int) (map[string]interface{}, string, error) {
 		port, _ = strconv.Atoi(portStr)
 	}
 
-	tls := map[string]interface{}{
+	tls := OutboundType{
 		"enabled":     true,
 		"server_name": query.Get("peer"),
 	}
@@ -228,7 +228,7 @@ func hy(u *url.URL, i int) (map[string]interface{}, string, error) {
 	if i > 0 {
 		tag = fmt.Sprintf("%d.%s", i, u.Fragment)
 	}
-	hy := map[string]interface{}{
+	hy := OutboundType{
 		"type":        "hysteria",
 		"tag":         tag,
 		"server":      host,
@@ -256,7 +256,7 @@ func hy(u *url.URL, i int) (map[string]interface{}, string, error) {
 	return hy, tag, nil
 }
 
-func hy2(u *url.URL, i int) (map[string]interface{}, string, error) {
+func hy2(u *url.URL, i int) (OutboundType, string, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	host, portStr, _ := net.SplitHostPort(u.Host)
 	port := 443
@@ -264,7 +264,7 @@ func hy2(u *url.URL, i int) (map[string]interface{}, string, error) {
 		port, _ = strconv.Atoi(portStr)
 	}
 
-	tls := map[string]interface{}{
+	tls := OutboundType{
 		"enabled":     true,
 		"server_name": query.Get("sni"),
 	}
@@ -281,7 +281,7 @@ func hy2(u *url.URL, i int) (map[string]interface{}, string, error) {
 	if i > 0 {
 		tag = fmt.Sprintf("%d.%s", i, u.Fragment)
 	}
-	hy2 := map[string]interface{}{
+	hy2 := OutboundType{
 		"type":        "hysteria2",
 		"tag":         tag,
 		"server":      host,
@@ -299,7 +299,7 @@ func hy2(u *url.URL, i int) (map[string]interface{}, string, error) {
 		hy2["up_mbps"] = up
 	}
 	if obfs == "salamander" {
-		hy2["obfs"] = map[string]interface{}{
+		hy2["obfs"] = OutboundType{
 			"type":     "salamander",
 			"password": query.Get("obfs-password"),
 		}
@@ -307,7 +307,7 @@ func hy2(u *url.URL, i int) (map[string]interface{}, string, error) {
 	return hy2, tag, nil
 }
 
-func anytls(u *url.URL, i int) (map[string]interface{}, string, error) {
+func anytls(u *url.URL, i int) (OutboundType, string, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	host, portStr, _ := net.SplitHostPort(u.Host)
 	port := 443
@@ -315,7 +315,7 @@ func anytls(u *url.URL, i int) (map[string]interface{}, string, error) {
 		port, _ = strconv.Atoi(portStr)
 	}
 
-	tls := map[string]interface{}{
+	tls := OutboundType{
 		"enabled":     true,
 		"server_name": query.Get("sni"),
 	}
@@ -332,7 +332,7 @@ func anytls(u *url.URL, i int) (map[string]interface{}, string, error) {
 	if i > 0 {
 		tag = fmt.Sprintf("%d.%s", i, u.Fragment)
 	}
-	anytls := map[string]interface{}{
+	anytls := OutboundType{
 		"type":        "anytls",
 		"tag":         tag,
 		"server":      host,
@@ -343,7 +343,7 @@ func anytls(u *url.URL, i int) (map[string]interface{}, string, error) {
 	return anytls, tag, nil
 }
 
-func tuic(u *url.URL, i int) (map[string]interface{}, string, error) {
+func tuic(u *url.URL, i int) (OutboundType, string, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	host, portStr, _ := net.SplitHostPort(u.Host)
 	port := 443
@@ -351,7 +351,7 @@ func tuic(u *url.URL, i int) (map[string]interface{}, string, error) {
 		port, _ = strconv.Atoi(portStr)
 	}
 
-	tls := map[string]interface{}{
+	tls := OutboundType{
 		"enabled":     true,
 		"server_name": query.Get("sni"),
 	}
@@ -373,7 +373,7 @@ func tuic(u *url.URL, i int) (map[string]interface{}, string, error) {
 		tag = fmt.Sprintf("%d.%s", i, u.Fragment)
 	}
 	password, _ := u.User.Password()
-	tuic := map[string]interface{}{
+	tuic := OutboundType{
 		"type":               "tuic",
 		"tag":                tag,
 		"server":             host,
@@ -387,7 +387,7 @@ func tuic(u *url.URL, i int) (map[string]interface{}, string, error) {
 	return tuic, tag, nil
 }
 
-func ss(u *url.URL, i int) (map[string]interface{}, string, error) {
+func ss(u *url.URL, i int) (OutboundType, string, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	host, portStr, _ := net.SplitHostPort(u.Host)
 	port := 443
@@ -414,7 +414,7 @@ func ss(u *url.URL, i int) (map[string]interface{}, string, error) {
 	if i > 0 {
 		tag = fmt.Sprintf("%d.%s", i, u.Fragment)
 	}
-	ss := map[string]interface{}{
+	ss := OutboundType{
 		"type":        "shadowsocks",
 		"tag":         tag,
 		"server":      host,
@@ -450,8 +450,8 @@ func ss(u *url.URL, i int) (map[string]interface{}, string, error) {
 	return ss, tag, nil
 }
 
-func getTransport(tp_type string, q *url.Values) map[string]interface{} {
-	transport := map[string]interface{}{}
+func getTransport(tp_type string, q *url.Values) OutboundType {
+	transport := OutboundType{}
 	tp_host := q.Get("host")
 	tp_path := q.Get("path")
 	switch strings.ToLower(tp_type) {
@@ -473,7 +473,7 @@ func getTransport(tp_type string, q *url.Values) map[string]interface{} {
 		transport["type"] = "ws"
 		transport["path"] = tp_path
 		if len(tp_host) > 0 {
-			transport["headers"] = map[string]interface{}{
+			transport["headers"] = OutboundType{
 				"Host": tp_host,
 			}
 		}
@@ -490,8 +490,8 @@ func getTransport(tp_type string, q *url.Values) map[string]interface{} {
 	return transport
 }
 
-func getTls(security string, q *url.Values) map[string]interface{} {
-	tls := map[string]interface{}{}
+func getTls(security string, q *url.Values) OutboundType {
+	tls := OutboundType{}
 	tls_fp := q.Get("fp")
 	tls_sni := q.Get("sni")
 	tls_insecure := q.Get("allowInsecure")
@@ -502,7 +502,7 @@ func getTls(security string, q *url.Values) map[string]interface{} {
 		tls["enabled"] = true
 	case "reality":
 		tls["enabled"] = true
-		tls["reality"] = map[string]interface{}{
+		tls["reality"] = OutboundType{
 			"enabled":    true,
 			"public_key": q.Get("pbk"),
 			"short_id":   q.Get("sid"),
@@ -518,13 +518,13 @@ func getTls(security string, q *url.Values) map[string]interface{} {
 		tls["insecure"] = true
 	}
 	if len(tls_fp) > 0 {
-		tls["utls"] = map[string]interface{}{
+		tls["utls"] = OutboundType{
 			"enabled":     true,
 			"fingerprint": tls_fp,
 		}
 	}
 	if len(tls_ech) > 0 {
-		tls["ech"] = map[string]interface{}{
+		tls["ech"] = OutboundType{
 			"enabled": true,
 			"config": []string{
 				tls_ech,

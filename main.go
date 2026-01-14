@@ -35,7 +35,7 @@ func main() {
 	hasOutput := output != nil && *output != ""
 	archivePath := filepath.Join(homeDir, ".subscriptions", "archive.txt")
 
-	seenKeys := make(map[string]util.OutboundEntry)
+	seenKeys := make(map[string]util.SeenKeyType)
 	urlTestURLs := util.ParseURLTestURLs(*urlTestURL)
 
 	util.ProcessFile(archivePath, *jobs, urlTestURLs, *verbose, hasOutput, seenKeys, archivePath, true)

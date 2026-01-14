@@ -18,7 +18,7 @@ func ParseLink(uri string) (*url.URL, string, error) {
 	return nil, "", err
 }
 
-func ParseOutboundKey(outbound map[string]interface{}) string {
+func ParseOutboundKey(outbound OutboundType) string {
 	getStr := func(keys ...string) string {
 		for _, k := range keys {
 			if v, ok := outbound[k]; ok && v != "" {

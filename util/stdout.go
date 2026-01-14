@@ -16,11 +16,11 @@ func hashAsFileName(url string) string {
 	return hex.EncodeToString(sum[:]) + ".txt"
 }
 
-func WriteJSONOutput(outputPath string, outbounds []map[string]interface{}) error {
+func WriteJSONOutput(outputPath string, outbounds []OutboundType) error {
 	if outputPath == "" {
 		return fmt.Errorf("output path is empty")
 	}
-	filtered := make([]map[string]interface{}, 0, len(outbounds))
+	filtered := make([]OutboundType, 0, len(outbounds))
 	tags := make([]string, 0, len(outbounds))
 	for _, outbound := range outbounds {
 		if outboundType, ok := outbound["type"].(string); ok {
@@ -46,7 +46,7 @@ func WriteJSONOutput(outputPath string, outbounds []map[string]interface{}) erro
 				"listen_port": 9802,
 			},
 		},
-		"outbounds": append([]map[string]interface{}{
+		"outbounds": append([]OutboundType{
 			{
 				"type":                        "urltest",
 				"tag":                         "Auto",
@@ -72,12 +72,12 @@ func WriteRawOutput(outputPath string, rawConfigs []string) error {
 	return os.WriteFile(outputPath, []byte(strings.Join(rawConfigs, "\n")), 0o644)
 }
 
-func SaveResult(outputPath string, archivePath string, seenKeys map[string]OutboundEntry) {
+func SaveResult(outputPath string, archivePath string, seenKeys map[string]SeenKeyType) {
 	if len(seenKeys) == 0 {
 		return
 	}
 	var rawConfigs []string
-	jsonOutbounds := make([]map[string]interface{}, 0, 50)
+	jsonOutbounds := make([]OutboundType, 0, 50)
 	outputIsJSON := strings.HasSuffix(strings.ToLower(outputPath), ".json")
 
 	for _, entry := range seenKeys {
@@ -99,7 +99,7 @@ func SaveResult(outputPath string, archivePath string, seenKeys map[string]Outbo
 	WriteRawOutput(archivePath, rawConfigs)
 }
 
-func PrintResult(archivePath string, seenKeys map[string]OutboundEntry, start time.Time) {
+func PrintResult(archivePath string, seenKeys map[string]SeenKeyType, start time.Time) {
 	file, fileOpenErr := os.Open(archivePath)
 	if fileOpenErr != nil {
 		fmt.Printf("Error opening file: %v\n", fileOpenErr)

@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func ProcessLines(lines []string, jobs int, urlTestURLs []string, verbose bool, hasOutput bool, seenKeys map[string]OutboundEntry) {
+func ProcessLines(lines []string, jobs int, urlTestURLs []string, verbose bool, hasOutput bool, seenKeys map[string]SeenKeyType) {
 	if jobs < 1 {
 		jobs = 1
 	}
@@ -41,7 +41,7 @@ func ProcessLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 				seenKeysMu.Unlock()
 				continue
 			}
-			seenKeys[tag] = OutboundEntry{
+			seenKeys[tag] = SeenKeyType{
 				Ok:       false,
 				Tag:      tag,
 				Raw:      parsed,
@@ -49,7 +49,7 @@ func ProcessLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 			}
 			seenKeysMu.Unlock()
 
-			singleOutbound := make([]map[string]interface{}, 0, 1)
+			singleOutbound := make([]OutboundType, 0, 1)
 			singleOutbound = append(singleOutbound, outbound)
 			ctx, instance, err := NewOutbound(singleOutbound)
 			if err != nil {
@@ -110,7 +110,7 @@ func ProcessLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 	wg.Wait()
 }
 
-func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, hasOutput bool, seenKeys map[string]OutboundEntry, archivePath string, truncate bool) {
+func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, hasOutput bool, seenKeys map[string]SeenKeyType, archivePath string, truncate bool) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return

@@ -1,10 +1,12 @@
 package util
 
-type OutboundEntry struct {
+type OutboundType map[string]interface{}
+
+type SeenKeyType struct {
 	Ok       bool
 	Tag      string
 	Raw      string
-	Outbound map[string]interface{}
+	Outbound OutboundType
 }
 
 var DEFAULT_URL_TEST = "https://1.1.1.1/cdn-cgi/trace/"
