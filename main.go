@@ -119,12 +119,8 @@ func main() {
 	urlTestURLs := parseURLTestURLs(*urlTestURL)
 
 	if outputIsJSON {
-		configJSON, _ := buildJSONTemplate([]map[string]interface{}{})
-		configJSON = append(configJSON, '\n')
-		if outputPath == "" {
-			os.Stdout.Write(configJSON)
-		} else {
-			os.WriteFile(outputPath, configJSON, 0o644)
+		if err := writeJSONOutput(outputPath, make([]map[string]interface{}, 0)); err != nil {
+			fmt.Fprintf(os.Stderr, "write json output error (%s): %v\n", outputPath, err)
 		}
 	}
 
@@ -509,15 +505,6 @@ func writeJSONOutput(outputPath string, outbounds []map[string]interface{}) erro
 	if outputPath == "" {
 		return fmt.Errorf("output path is empty")
 	}
-	configJSON, err := buildJSONTemplate(outbounds)
-	if err != nil {
-		return err
-	}
-	configJSON = append(configJSON, '\n')
-	return os.WriteFile(outputPath, configJSON, 0o644)
-}
-
-func buildJSONTemplate(outbounds []map[string]interface{}) ([]byte, error) {
 	filtered := make([]map[string]interface{}, 0, len(outbounds))
 	tags := make([]string, 0, len(outbounds))
 	for _, outbound := range outbounds {
@@ -532,7 +519,7 @@ func buildJSONTemplate(outbounds []map[string]interface{}) ([]byte, error) {
 		filtered = append(filtered, outbound)
 	}
 
-	config := map[string]interface{}{
+	configJSON, err := json.MarshalIndent(map[string]interface{}{
 		"log": map[string]interface{}{
 			"level": "warning",
 		},
@@ -558,7 +545,10 @@ func buildJSONTemplate(outbounds []map[string]interface{}) ([]byte, error) {
 		"route": map[string]interface{}{
 			"final": "Auto",
 		},
+	}, "", "  ")
+	if err != nil {
+		return err
 	}
-
-	return json.MarshalIndent(config, "", "  ")
+	configJSON = append(configJSON, '\n')
+	return os.WriteFile(outputPath, configJSON, 0o644)
 }
