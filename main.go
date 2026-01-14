@@ -367,10 +367,14 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 	outbounds := make([]map[string]interface{}, 0, len(entries))
 
 	for i, line := range lines {
-		outbound, _, err := util.GetOutbound(line, i+1)
+		uri, parsed, err := util.ParseLink(line)
+		if err != nil || uri == nil {
+			continue
+		}
+		outbound, _, err := util.GetOutbound(uri, i+1)
 		if err != nil {
 			if verbose {
-				fmt.Printf("GetOutbound error: %s => %v\n", line, err)
+				fmt.Printf("# Failed to get outbound: %s => %v\n", parsed, err)
 			}
 			continue
 		}
@@ -382,7 +386,7 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 		entry := outboundEntry{
 			ok:       false,
 			tag:      tag,
-			raw:      line,
+			raw:      parsed,
 			outbound: *outbound,
 		}
 		seenKeys[tag] = entry
@@ -392,6 +396,10 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 		if err == nil {
 			entries = append(entries, entry)
 			outbounds = append(outbounds, entry.outbound)
+		} else {
+			if verbose {
+				fmt.Printf("# Failed to parse config: %s => %v\n", parsed, err)
+			}
 		}
 		if instance != nil {
 			instance.Close()
@@ -404,7 +412,7 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 
 	ctx, instance, err := newOutbound(outbounds)
 	if err != nil {
-		fmt.Println("# Failed to parse config: ", err)
+		fmt.Println("# Failed to parse configs: ", err)
 		return
 	}
 	defer instance.Close()

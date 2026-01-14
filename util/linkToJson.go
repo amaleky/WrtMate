@@ -12,33 +12,41 @@ import (
 	"unicode"
 )
 
-func GetOutbound(uri string, i int) (*map[string]interface{}, string, error) {
-	u, err := url.Parse(uri)
-	if err == nil {
-		switch u.Scheme {
-		case "vmess":
-			return vmess(u.Host, i)
-		case "vless":
-			return vless(u, i)
-		case "trojan":
-			return trojan(u, i)
-		case "hy", "hysteria":
-			return hy(u, i)
-		case "hy2", "hysteria2":
-			return hy2(u, i)
-		case "anytls":
-			return anytls(u, i)
-		case "tuic":
-			return tuic(u, i)
-		case "ss", "shadowsocks":
-			return ss(u, i)
-		}
+func GetOutbound(uri *url.URL, i int) (*map[string]interface{}, string, error) {
+	switch uri.Scheme {
+	case "vmess":
+		return vmess(uri.Host, i)
+	case "vless":
+		return vless(uri, i)
+	case "trojan":
+		return trojan(uri, i)
+	case "hy", "hysteria":
+		return hy(uri, i)
+	case "hy2", "hysteria2":
+		return hy2(uri, i)
+	case "anytls":
+		return anytls(uri, i)
+	case "tuic":
+		return tuic(uri, i)
+	case "ss", "shadowsocks":
+		return ss(uri, i)
 	}
-	return nil, "", errors.New("Unsupported link format")
+	return nil, "", errors.New("Unsupported protocol scheme: " + uri.Scheme)
 }
 
-func decodeBase64IfNeeded(data string) (string, error) {
-	var input = string(data)
+func ParseLink(uri string) (*url.URL, string, error) {
+	u, err := url.Parse(uri)
+	if err == nil && u != nil {
+		params := u.Query()
+		delete(params, "remark")
+		u.Fragment = ""
+		u.RawQuery = params.Encode()
+		return u, u.String(), err
+	}
+	return nil, "", err
+}
+
+func decodeBase64IfNeeded(input string) (string, error) {
 	var builder strings.Builder
 	builder.Grow(len(input))
 	for _, r := range input {
@@ -48,17 +56,17 @@ func decodeBase64IfNeeded(data string) (string, error) {
 	}
 	compact := builder.String()
 	if compact == "" {
-		return data, errors.New("Input is empty")
+		return input, errors.New("Input is empty")
 	}
 	if !looksLikeBase64(compact) {
-		return data, errors.New("Input is not base64")
+		return input, errors.New("Input is not base64")
 	}
 	decoded, err := base64.StdEncoding.DecodeString(compact)
 	if err != nil {
 		decoded, err = base64.RawStdEncoding.DecodeString(compact)
 	}
 	if err != nil {
-		return data, err
+		return input, err
 	}
 	return string(decoded), nil
 }
