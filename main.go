@@ -447,27 +447,23 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 			if jsonErr != nil {
 				continue
 			}
-			if outputJSON && seenKeys != nil {
+			if outputJSON {
 				key := outboundKey(entry.outbound)
-				if ok {
-					okMu.Lock()
-					seenKeys[key] = entry.outbound
-					if outputPath != "" {
-						outboundsForJSON := make([]map[string]interface{}, 0, 50)
-						for _, outbound := range seenKeys {
-							if outbound != nil {
-								outboundsForJSON = append(outboundsForJSON, outbound)
-								if len(outboundsForJSON) >= 50 {
-									break
-								}
-							}
-						}
-						if err := writeJSONOutput(outputPath, outboundsForJSON); err != nil {
-							fmt.Fprintf(os.Stderr, "write json output error (%s): %v\n", outputPath, err)
+				okMu.Lock()
+				seenKeys[key] = entry.outbound
+				outboundsForJSON := make([]map[string]interface{}, 0, 50)
+				for _, outbound := range seenKeys {
+					if outbound != nil {
+						outboundsForJSON = append(outboundsForJSON, outbound)
+						if len(outboundsForJSON) >= 50 {
+							break
 						}
 					}
-					okMu.Unlock()
 				}
+				if err := writeJSONOutput(outputPath, outboundsForJSON); err != nil {
+					fmt.Fprintf(os.Stderr, "write json output error (%s): %v\n", outputPath, err)
+				}
+				okMu.Unlock()
 			} else if output != nil {
 				fmt.Fprintln(output, entry.rawLine)
 			}
