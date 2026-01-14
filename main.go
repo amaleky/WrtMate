@@ -275,7 +275,7 @@ func processFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 	var lines []string
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		if line == "" {
+		if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//") {
 			continue
 		}
 		lines = append(lines, line)
