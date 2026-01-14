@@ -17,12 +17,12 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"scanner/util"
 	"strings"
 	"sync"
 	"time"
 	"unicode"
 
-	"github.com/alireza0/s-ui/util"
 	B "github.com/sagernet/sing-box"
 	"github.com/sagernet/sing-box/adapter"
 	C "github.com/sagernet/sing-box/constant"
