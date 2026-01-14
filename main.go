@@ -431,12 +431,8 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 				}
 				continue
 			}
-			testURLs := urlTestURLs
-			if len(testURLs) == 0 {
-				testURLs = []string{""}
-			}
 			var testErr error
-			for _, testURL := range testURLs {
+			for _, testURL := range urlTestURLs {
 				testCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 				_, testErr = URLTest(testCtx, testURL, outbound)
 				cancel()
