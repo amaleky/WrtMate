@@ -364,6 +364,7 @@ func URLTest(ctx context.Context, link string, detour N.Dialer) error {
 
 func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, hasOutput bool, seenKeys map[string]outboundEntry) {
 	var entries []outboundEntry
+	outbounds := make([]map[string]interface{}, 0, len(entries))
 
 	for i, line := range lines {
 		outbound, _, err := util.GetOutbound(line, i+1)
@@ -385,16 +386,20 @@ func processLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 			outbound: *outbound,
 		}
 		seenKeys[tag] = entry
-		entries = append(entries, entry)
+		singleOutbound := make([]map[string]interface{}, 0, 1)
+		singleOutbound = append(singleOutbound, entry.outbound)
+		_, instance, err := newOutbound(singleOutbound)
+		if err == nil {
+			entries = append(entries, entry)
+			outbounds = append(outbounds, entry.outbound)
+		}
+		if instance != nil {
+			instance.Close()
+		}
 	}
 
 	if len(entries) == 0 {
 		return
-	}
-
-	outbounds := make([]map[string]interface{}, 0, len(entries))
-	for _, entry := range entries {
-		outbounds = append(outbounds, entry.outbound)
 	}
 
 	ctx, instance, err := newOutbound(outbounds)
