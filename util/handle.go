@@ -11,100 +11,88 @@ import (
 )
 
 func ProcessLines(lines []string, jobs int, urlTestURLs []string, verbose bool, hasOutput bool, seenKeys map[string]OutboundEntry) {
-	var entries []OutboundEntry
-	outbounds := make([]map[string]interface{}, 0, len(entries))
-
-	for i, line := range lines {
-		uri, parsed, err := ParseLink(line)
-		if err != nil || uri == nil {
-			continue
-		}
-		outbound, _, err := GetOutbound(uri, i+1)
-		if err != nil {
-			if verbose {
-				fmt.Printf("# Failed to get outbound: %s => %v\n", parsed, err)
-			}
-			continue
-		}
-		tag := ParseOutboundKey(*outbound)
-		if _, exists := seenKeys[tag]; exists {
-			continue
-		}
-		(*outbound)["tag"] = tag
-		entry := OutboundEntry{
-			Ok:       false,
-			Tag:      tag,
-			Raw:      parsed,
-			Outbound: *outbound,
-		}
-		seenKeys[tag] = entry
-		singleOutbound := make([]map[string]interface{}, 0, 1)
-		singleOutbound = append(singleOutbound, entry.Outbound)
-		_, instance, err := NewOutbound(singleOutbound)
-		if err == nil {
-			entries = append(entries, entry)
-			outbounds = append(outbounds, entry.Outbound)
-		} else {
-			if verbose {
-				fmt.Printf("# Failed to parse config: %s => %v\n", parsed, err)
-			}
-		}
-		if instance != nil {
-			instance.Close()
-		}
-	}
-
-	if len(entries) == 0 {
-		return
-	}
-
-	ctx, instance, err := NewOutbound(outbounds)
-	if err != nil {
-		fmt.Println("# Failed to parse configs: ", err)
-		return
-	}
-	defer instance.Close()
-	if err := instance.Start(); err != nil {
-		fmt.Println("# Failed to start service: ", err)
-		return
-	}
-
 	if jobs < 1 {
 		jobs = 1
 	}
 
-	entriesCh := make(chan OutboundEntry, jobs*2)
+	linesCh := make(chan string, jobs*2)
 	var wg sync.WaitGroup
-	var okMu sync.Mutex
+	var seenKeysMu sync.Mutex
 
 	worker := func() {
 		defer wg.Done()
-		for entry := range entriesCh {
-			outbound, ok := instance.Outbound().Outbound(entry.Tag)
+		for line := range linesCh {
+			uri, parsed, err := ParseLink(line)
+			if err != nil || uri == nil {
+				continue
+			}
+			outbound, _, err := GetOutbound(uri, 1)
+			if err != nil {
+				if verbose {
+					fmt.Printf("# Failed to get outbound: %s => %v\n", parsed, err)
+				}
+				continue
+			}
+			tag := ParseOutboundKey(*outbound)
+			(*outbound)["tag"] = tag
+
+			seenKeysMu.Lock()
+			if _, exists := seenKeys[tag]; exists {
+				seenKeysMu.Unlock()
+				continue
+			}
+			seenKeys[tag] = OutboundEntry{
+				Ok:       false,
+				Tag:      tag,
+				Raw:      parsed,
+				Outbound: *outbound,
+			}
+			seenKeysMu.Unlock()
+
+			singleOutbound := make([]map[string]interface{}, 0, 1)
+			singleOutbound = append(singleOutbound, *outbound)
+			ctx, instance, err := NewOutbound(singleOutbound)
+			if err != nil {
+				if verbose {
+					fmt.Println("# Failed to parse config: ", err)
+				}
+				continue
+			}
+			defer instance.Close()
+			if err := instance.Start(); err != nil {
+				if verbose {
+					fmt.Println("# Failed to start service: ", err)
+				}
+				continue
+			}
+			out, ok := instance.Outbound().Outbound(tag)
 			if !ok {
 				continue
 			}
 			var testErr error
 			for _, testURL := range urlTestURLs {
 				testCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
-				testErr = URLTest(testCtx, testURL, outbound)
+				testErr = URLTest(testCtx, testURL, out)
 				cancel()
 				if testErr != nil {
 					break
 				}
 			}
 			if testErr != nil {
-				fmt.Printf("# Failed to parse config: %s => %v\n", entry.Raw, testErr)
+				if verbose {
+					fmt.Printf("# Failed to test config: %s => %v\n", parsed, testErr)
+				}
 				continue
 			}
 
-			okMu.Lock()
-			entry.Ok = true
-			seenKeys[entry.Tag] = entry
-			okMu.Unlock()
+			seenKeysMu.Lock()
+			updatedTag := seenKeys[tag]
+			updatedTag.Ok = true
+			seenKeys[tag] = updatedTag
+			seenKeysMu.Unlock()
 
 			if !hasOutput {
-				fmt.Println(entry.Raw)
+				fmt.Println(parsed)
 			}
 		}
 	}
@@ -114,13 +102,12 @@ func ProcessLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 		go worker()
 	}
 
-	for _, entry := range entries {
-		entriesCh <- entry
+	for _, line := range lines {
+		linesCh <- line
 	}
-	close(entriesCh)
-	wg.Wait()
 
-	return
+	close(linesCh)
+	wg.Wait()
 }
 
 func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, hasOutput bool, seenKeys map[string]OutboundEntry, archivePath string, truncate bool) {
