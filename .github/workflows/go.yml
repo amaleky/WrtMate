@@ -74,7 +74,7 @@ jobs:
 
       - name: Build Scanner
         run: |
-          go build -o scanner_${ASSET_NAME} .
+          go build -tags with_gvisor,with_quic,with_wireguard,with_utls,with_clash_api,with_conntrac -o scanner_${ASSET_NAME} .
 
       - name: Upload Scanner
         uses: svenstaro/upload-release-action@v2

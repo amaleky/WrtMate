@@ -1,3 +1,6 @@
+//go:build with_gvisor with_quic with_wireguard with_utls with_clash_api with_conntrack
+// +build with_gvisor,with_quic,with_wireguard,with_utls,with_clash_api,with_conntrack
+
 module scanner
 
 go 1.25.1
