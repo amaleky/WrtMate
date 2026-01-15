@@ -13,7 +13,7 @@ import (
 func GetOutbound(uri *url.URL) (OutboundType, string, error) {
 	switch uri.Scheme {
 	case "vmess":
-		return vmess(uri.Host)
+		return vmess(uri)
 	case "vless":
 		return vless(uri)
 	case "trojan":
@@ -32,17 +32,27 @@ func GetOutbound(uri *url.URL) (OutboundType, string, error) {
 	return nil, "", errors.New("Unsupported protocol scheme: " + uri.Scheme)
 }
 
-func vmess(data string) (OutboundType, string, error) {
+func isInList(list []string, method string) bool {
+	for _, listMethod := range list {
+		if listMethod == method {
+			return true
+		}
+	}
+	return false
+}
+
+func vmess(u *url.URL) (OutboundType, string, error) {
+	data := strings.TrimPrefix(u.String(), "vmess://")
 	dataByte, err := DecodeBase64IfNeeded(data)
 	if err != nil {
 		return nil, "", err
 	}
-	var dataJson OutboundType
+	var dataJson map[string]interface{}
 	err = json.Unmarshal([]byte(dataByte), &dataJson)
 	if err != nil {
 		return nil, "", err
 	}
-	transport := OutboundType{}
+	transport := map[string]interface{}{}
 	tp_net, _ := dataJson["net"].(string)
 	tp_type, _ := dataJson["type"].(string)
 	tp_host, _ := dataJson["host"].(string)
@@ -67,7 +77,7 @@ func vmess(data string) (OutboundType, string, error) {
 		transport["path"] = tp_path
 		transport["early_data_header_name"] = "Sec-WebSocket-Protocol"
 		if len(tp_host) > 0 {
-			transport["headers"] = OutboundType{
+			transport["headers"] = map[string]interface{}{
 				"Host": tp_host,
 			}
 		}
@@ -83,7 +93,7 @@ func vmess(data string) (OutboundType, string, error) {
 	default:
 		return nil, "", errors.New("Invalid vmess")
 	}
-	tls := OutboundType{}
+	tls := map[string]interface{}{}
 	vmess_tls, _ := dataJson["tls"].(string)
 	if vmess_tls == "tls" {
 		tls["enabled"] = true
@@ -101,7 +111,7 @@ func vmess(data string) (OutboundType, string, error) {
 			tls["insecure"] = true
 		}
 		if len(tls_fp) > 0 {
-			tls["utls"] = OutboundType{
+			tls["utls"] = map[string]interface{}{
 				"enabled":     true,
 				"fingerprint": tls_fp,
 			}
@@ -155,14 +165,27 @@ func vless(u *url.URL) (OutboundType, string, error) {
 	}
 	tp_type := query.Get("type")
 	tag := "vless" + "|" + host + "|" + strconv.Itoa(port)
+	tls, err := getTls(security, &query)
+	if err != nil {
+		return nil, tag, err
+	}
+
+	flow := query.Get("flow")
+	if flow == "xtls-rprx-vision-udp443" {
+		flow = "xtls-rprx-vision"
+	}
+	if !isInList([]string{"", "xtls-rprx-vision"}, flow) {
+		return nil, "", errors.New("Unsupported vless flow: " + flow)
+	}
+
 	vless := OutboundType{
 		"type":        "vless",
 		"tag":         tag,
 		"server":      host,
 		"server_port": port,
 		"uuid":        u.User.Username(),
-		"flow":        query.Get("flow"),
-		"tls":         getTls(security, &query),
+		"flow":        flow,
+		"tls":         tls,
 		"transport":   getTransport(tp_type, &query),
 	}
 	return vless, tag, nil
@@ -182,13 +205,17 @@ func trojan(u *url.URL) (OutboundType, string, error) {
 	}
 	tp_type := query.Get("type")
 	tag := "trojan" + "|" + host + "|" + strconv.Itoa(port)
+	tls, err := getTls(security, &query)
+	if err != nil {
+		return nil, tag, err
+	}
 	trojan := OutboundType{
 		"type":        "trojan",
 		"tag":         tag,
 		"server":      host,
 		"server_port": port,
 		"password":    u.User.Username(),
-		"tls":         getTls(security, &query),
+		"tls":         tls,
 		"transport":   getTransport(tp_type, &query),
 	}
 	return trojan, tag, nil
@@ -202,7 +229,7 @@ func hy(u *url.URL) (OutboundType, string, error) {
 		port, _ = strconv.Atoi(portStr)
 	}
 
-	tls := OutboundType{
+	tls := map[string]interface{}{
 		"enabled":     true,
 		"server_name": query.Get("peer"),
 	}
@@ -252,7 +279,7 @@ func hy2(u *url.URL) (OutboundType, string, error) {
 		port, _ = strconv.Atoi(portStr)
 	}
 
-	tls := OutboundType{
+	tls := map[string]interface{}{
 		"enabled":     true,
 		"server_name": query.Get("sni"),
 	}
@@ -284,9 +311,12 @@ func hy2(u *url.URL) (OutboundType, string, error) {
 		hy2["up_mbps"] = up
 	}
 	if obfs == "salamander" {
-		hy2["obfs"] = OutboundType{
+		hy2["obfs"] = map[string]interface{}{
 			"type":     "salamander",
 			"password": query.Get("obfs-password"),
+		}
+		if len(query.Get("obfs-password")) == 0 {
+			return nil, "", errors.New("Missing shadowsocks password")
 		}
 	}
 	return hy2, tag, nil
@@ -300,7 +330,7 @@ func anytls(u *url.URL) (OutboundType, string, error) {
 		port, _ = strconv.Atoi(portStr)
 	}
 
-	tls := OutboundType{
+	tls := map[string]interface{}{
 		"enabled":     true,
 		"server_name": query.Get("sni"),
 	}
@@ -333,7 +363,7 @@ func tuic(u *url.URL) (OutboundType, string, error) {
 		port, _ = strconv.Atoi(portStr)
 	}
 
-	tls := OutboundType{
+	tls := map[string]interface{}{
 		"enabled":     true,
 		"server_name": query.Get("sni"),
 	}
@@ -368,6 +398,10 @@ func tuic(u *url.URL) (OutboundType, string, error) {
 
 func ss(u *url.URL) (OutboundType, string, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
+	security := query.Get("security")
+	if security != "" {
+		return vless(u)
+	}
 	host, portStr, _ := net.SplitHostPort(u.Host)
 	port := 443
 	if len(portStr) > 0 {
@@ -384,6 +418,9 @@ func ss(u *url.URL) (OutboundType, string, error) {
 		if len(decrypted_arr) > 1 {
 			method = decrypted_arr[0]
 			password = strings.Join(decrypted_arr[1:], ":")
+			if len(password) == 0 {
+				return nil, "", errors.New("Missing shadowsocks password")
+			}
 		} else {
 			return nil, "", errors.New("Unsupported shadowsocks")
 		}
@@ -413,21 +450,29 @@ func ss(u *url.URL) (OutboundType, string, error) {
 			pl_arr = append(pl_arr, "host="+host_header)
 		}
 		ss["plugin"] = "v2ray-plugin"
-		ss["plugin_opts"] = strings.Join(pl_arr, ";")
+		ss["plugin_opts"] = strings.TrimSpace(strings.Join(pl_arr, ";"))
 	}
 	plugin := query.Get("plugin")
 	if len(plugin) > 0 {
 		pl_arr := strings.Split(plugin, ";")
 		if len(pl_arr) > 0 {
 			ss["plugin"] = pl_arr[0]
-			ss["plugin_opts"] = strings.Join(pl_arr[1:], ";")
+			ss["plugin_opts"] = strings.TrimSpace(strings.Join(pl_arr[1:], ";"))
 		}
 	}
+
+	if ss["plugin_opts"] != nil {
+		_, err := strconv.Atoi(ss["plugin_opts"].(string))
+		if err != nil {
+			return nil, tag, errors.New("Unable to parse mux value")
+		}
+	}
+
 	return ss, tag, nil
 }
 
-func getTransport(tp_type string, q *url.Values) OutboundType {
-	transport := OutboundType{}
+func getTransport(tp_type string, q *url.Values) map[string]interface{} {
+	transport := map[string]interface{}{}
 	tp_host := q.Get("host")
 	tp_path := q.Get("path")
 	switch strings.ToLower(tp_type) {
@@ -449,7 +494,7 @@ func getTransport(tp_type string, q *url.Values) OutboundType {
 		transport["type"] = "ws"
 		transport["path"] = tp_path
 		if len(tp_host) > 0 {
-			transport["headers"] = OutboundType{
+			transport["headers"] = map[string]interface{}{
 				"Host": tp_host,
 			}
 		}
@@ -466,8 +511,8 @@ func getTransport(tp_type string, q *url.Values) OutboundType {
 	return transport
 }
 
-func getTls(security string, q *url.Values) OutboundType {
-	tls := OutboundType{}
+func getTls(security string, q *url.Values) (map[string]interface{}, error) {
+	tls := map[string]interface{}{}
 	tls_fp := q.Get("fp")
 	tls_sni := q.Get("sni")
 	tls_insecure := q.Get("allowInsecure")
@@ -478,10 +523,15 @@ func getTls(security string, q *url.Values) OutboundType {
 		tls["enabled"] = true
 	case "reality":
 		tls["enabled"] = true
-		tls["reality"] = OutboundType{
+		tls["reality"] = map[string]interface{}{
 			"enabled":    true,
-			"public_key": q.Get("pbk"),
-			"short_id":   q.Get("sid"),
+			"public_key": strings.TrimSpace(q.Get("pbk")),
+			"short_id":   strings.TrimSpace(q.Get("sid")),
+		}
+	}
+	if security == "reality" {
+		if len(q.Get("pbk")) == 0 {
+			return nil, errors.New("reality requires public_key")
 		}
 	}
 	if len(tls_sni) > 0 {
@@ -493,19 +543,23 @@ func getTls(security string, q *url.Values) OutboundType {
 	if tls_insecure == "1" || tls_insecure == "true" {
 		tls["insecure"] = true
 	}
-	if len(tls_fp) > 0 {
-		tls["utls"] = OutboundType{
+	if len(tls_fp) > 0 || security == "reality" {
+		fingerprint := tls_fp
+		if !isInList([]string{"", "chrome", "firefox", "edge", "safari", "360", "qq", "ios", "android"}, fingerprint) {
+			fingerprint = "chrome"
+		}
+		tls["utls"] = map[string]interface{}{
 			"enabled":     true,
-			"fingerprint": tls_fp,
+			"fingerprint": fingerprint,
 		}
 	}
 	if len(tls_ech) > 0 {
-		tls["ech"] = OutboundType{
+		tls["ech"] = map[string]interface{}{
 			"enabled": true,
 			"config": []string{
 				tls_ech,
 			},
 		}
 	}
-	return tls
+	return tls, nil
 }

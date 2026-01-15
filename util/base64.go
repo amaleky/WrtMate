@@ -16,11 +16,11 @@ func DecodeBase64IfNeeded(input string) (string, error) {
 		}
 	}
 	compact := builder.String()
-	if compact == "" {
+	if compact == "" && input != "" {
 		return input, errors.New("Input is empty")
 	}
 	if !LooksLikeBase64(compact) {
-		return input, errors.New("Input is not base64")
+		return input, nil
 	}
 	decoded, err := base64.StdEncoding.DecodeString(compact)
 	if err != nil {
