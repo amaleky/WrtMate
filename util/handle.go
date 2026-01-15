@@ -3,6 +3,7 @@ package util
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -52,9 +53,12 @@ func ProcessLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 			singleOutbound = append(singleOutbound, outbound)
 			ctx, instance, err := NewOutbound(singleOutbound)
 			if err != nil {
-				if verbose {
-					fmt.Println("# Failed to parse config: ", err)
+				outboundJSON, marshalErr := json.Marshal(outbound)
+				if marshalErr != nil {
+					fmt.Println("# Failed to marshaling outbound: ", marshalErr, outbound)
+					continue
 				}
+				fmt.Println("# Failed to parse config: ", err, string(outboundJSON), parsed)
 				continue
 			}
 			defer instance.Close()
