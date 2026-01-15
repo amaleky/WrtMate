@@ -11,7 +11,20 @@ import (
 	"time"
 )
 
-func ProcessLines(lines []string, jobs int, urlTestURLs []string, verbose bool, hasOutput bool, seenKeys map[string]SeenKeyType) {
+func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, hasOutput bool, seenKeys map[string]SeenKeyType, archivePath string, truncate bool) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	buf := make([]byte, 0, 64*1024)
+	scanner.Buffer(buf, 2*1024*1024)
+	if err := scanner.Err(); err != nil {
+		return
+	}
+
 	if jobs < 1 {
 		jobs = 1
 	}
@@ -49,25 +62,19 @@ func ProcessLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 			}
 			seenKeysMu.Unlock()
 
-			singleOutbound := make([]OutboundType, 0, 1)
-			singleOutbound = append(singleOutbound, outbound)
-			ctx, instance, err := NewOutbound(singleOutbound)
+			ctx, instance, err := StartOutbound(outbound)
 			if err != nil {
-				outboundJSON, marshalErr := json.Marshal(outbound)
-				if marshalErr != nil {
-					fmt.Println("# Failed to marshaling outbound: ", marshalErr, outbound)
-					continue
+				if verbose {
+					outboundJSON, marshalErr := json.Marshal(outbound)
+					if marshalErr != nil {
+						fmt.Println("# Failed to marshaling outbound: ", marshalErr, outbound)
+						continue
+					}
+					fmt.Println("# Failed to start service: ", err, string(outboundJSON), parsed)
 				}
-				fmt.Println("# Failed to parse config: ", err, string(outboundJSON), parsed)
 				continue
 			}
 			defer instance.Close()
-			if err := instance.Start(); err != nil {
-				if verbose {
-					fmt.Println("# Failed to start service: ", err)
-				}
-				continue
-			}
 			out, ok := instance.Outbound().Outbound(tag)
 			if !ok {
 				continue
@@ -82,9 +89,6 @@ func ProcessLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 				}
 			}
 			if testErr != nil {
-				if verbose {
-					fmt.Printf("# Failed to test config: %s => %v\n", parsed, testErr)
-				}
 				continue
 			}
 
@@ -105,40 +109,16 @@ func ProcessLines(lines []string, jobs int, urlTestURLs []string, verbose bool, 
 		go worker()
 	}
 
-	for _, line := range lines {
-		linesCh <- line
-	}
-
-	close(linesCh)
-	wg.Wait()
-}
-
-func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, hasOutput bool, seenKeys map[string]SeenKeyType, archivePath string, truncate bool) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return
-	}
-	defer file.Close()
-
-	fmt.Println("# Processing", filePath)
-
-	scanner := bufio.NewScanner(file)
-	buf := make([]byte, 0, 64*1024)
-	scanner.Buffer(buf, 2*1024*1024)
-
-	var lines []string
+	linesCount := 0
+	correctLinesCount := 0
 	for scanner.Scan() {
+		linesCount++
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//") {
 			continue
 		}
-		lines = append(lines, line)
-	}
-	if err := scanner.Err(); err != nil {
-		return
-	}
-	if len(lines) == 0 {
-		return
+		correctLinesCount++
+		linesCh <- line
 	}
 
 	if truncate {
@@ -148,5 +128,8 @@ func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 		}
 	}
 
-	ProcessLines(lines, jobs, urlTestURLs, verbose, hasOutput, seenKeys)
+	fmt.Printf("# Processing: %v [%v/%v]\n", filePath, correctLinesCount, linesCount)
+
+	close(linesCh)
+	wg.Wait()
 }
