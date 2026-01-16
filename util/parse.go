@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func ParseLink(uri string) (*url.URL, string, error) {
+func ParseLink(uri string) (*url.URL, error) {
 	u, err := url.Parse(uri)
 	if err == nil && u != nil {
 		if u.Scheme != "vmess" {
@@ -23,9 +23,9 @@ func ParseLink(uri string) (*url.URL, string, error) {
 		delete(params, "spx")
 		u.Fragment = ""
 		u.RawQuery = params.Encode()
-		return u, u.String(), err
+		return u, err
 	}
-	return nil, "", err
+	return nil, err
 }
 
 func ParseURLTestURLs(value string) []string {

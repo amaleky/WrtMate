@@ -10,7 +10,11 @@ import (
 	"strings"
 )
 
-func GetOutbound(uri *url.URL) (OutboundType, string, error) {
+func GetOutbound(line string) (OutboundType, error) {
+	uri, err := ParseLink(line)
+	if err != nil || uri == nil {
+		return nil, err
+	}
 	switch uri.Scheme {
 	case "vmess":
 		return vmess(uri)
@@ -29,7 +33,7 @@ func GetOutbound(uri *url.URL) (OutboundType, string, error) {
 	case "ss", "shadowsocks":
 		return ss(uri)
 	}
-	return nil, "", errors.New("Unsupported protocol scheme: " + uri.Scheme)
+	return nil, errors.New("Unsupported protocol scheme: " + uri.Scheme)
 }
 
 func isInList(list []string, method string) bool {
@@ -41,16 +45,16 @@ func isInList(list []string, method string) bool {
 	return false
 }
 
-func vmess(u *url.URL) (OutboundType, string, error) {
+func vmess(u *url.URL) (OutboundType, error) {
 	data := strings.TrimPrefix(u.String(), "vmess://")
 	dataByte, err := DecodeBase64IfNeeded(data)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 	var dataJson map[string]interface{}
 	err = json.Unmarshal([]byte(dataByte), &dataJson)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 	transport := map[string]interface{}{}
 	tp_net, _ := dataJson["net"].(string)
@@ -91,7 +95,7 @@ func vmess(u *url.URL) (OutboundType, string, error) {
 		transport["path"] = tp_path
 		transport["host"] = tp_host
 	default:
-		return nil, "", errors.New("Invalid vmess")
+		return nil, errors.New("Invalid vmess")
 	}
 	tls := map[string]interface{}{}
 	vmess_tls, _ := dataJson["tls"].(string)
@@ -126,7 +130,7 @@ func vmess(u *url.URL) (OutboundType, string, error) {
 	case string:
 		portInt, err := strconv.Atoi(v)
 		if err != nil {
-			return nil, "", err
+			return nil, err
 		}
 		serverPort = portInt
 	case float64:
@@ -134,7 +138,7 @@ func vmess(u *url.URL) (OutboundType, string, error) {
 	case int:
 		serverPort = v
 	default:
-		return nil, "", fmt.Errorf("unsupported port type: %T", v)
+		return nil, fmt.Errorf("unsupported port type: %T", v)
 	}
 	tag := "vmess" + "|" + dataJson["add"].(string) + "|" + strconv.Itoa(serverPort)
 	vmess := OutboundType{
@@ -148,10 +152,10 @@ func vmess(u *url.URL) (OutboundType, string, error) {
 		"tls":         tls,
 		"transport":   transport,
 	}
-	return vmess, tag, err
+	return vmess, err
 }
 
-func vless(u *url.URL) (OutboundType, string, error) {
+func vless(u *url.URL) (OutboundType, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	security := query.Get("security")
 	host, portStr, _ := net.SplitHostPort(u.Host)
@@ -167,7 +171,7 @@ func vless(u *url.URL) (OutboundType, string, error) {
 	tag := "vless" + "|" + host + "|" + strconv.Itoa(port)
 	tls, err := getTls(security, &query)
 	if err != nil {
-		return nil, tag, err
+		return nil, err
 	}
 
 	flow := query.Get("flow")
@@ -175,7 +179,7 @@ func vless(u *url.URL) (OutboundType, string, error) {
 		flow = "xtls-rprx-vision"
 	}
 	if !isInList([]string{"", "xtls-rprx-vision"}, flow) {
-		return nil, "", errors.New("Unsupported vless flow: " + flow)
+		return nil, errors.New("Unsupported vless flow: " + flow)
 	}
 
 	vless := OutboundType{
@@ -188,10 +192,10 @@ func vless(u *url.URL) (OutboundType, string, error) {
 		"tls":         tls,
 		"transport":   getTransport(tp_type, &query),
 	}
-	return vless, tag, nil
+	return vless, nil
 }
 
-func trojan(u *url.URL) (OutboundType, string, error) {
+func trojan(u *url.URL) (OutboundType, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	security := query.Get("security")
 	host, portStr, _ := net.SplitHostPort(u.Host)
@@ -207,7 +211,7 @@ func trojan(u *url.URL) (OutboundType, string, error) {
 	tag := "trojan" + "|" + host + "|" + strconv.Itoa(port)
 	tls, err := getTls(security, &query)
 	if err != nil {
-		return nil, tag, err
+		return nil, err
 	}
 	trojan := OutboundType{
 		"type":        "trojan",
@@ -218,10 +222,10 @@ func trojan(u *url.URL) (OutboundType, string, error) {
 		"tls":         tls,
 		"transport":   getTransport(tp_type, &query),
 	}
-	return trojan, tag, nil
+	return trojan, nil
 }
 
-func hy(u *url.URL) (OutboundType, string, error) {
+func hy(u *url.URL) (OutboundType, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	host, portStr, _ := net.SplitHostPort(u.Host)
 	port := 443
@@ -268,10 +272,10 @@ func hy(u *url.URL) (OutboundType, string, error) {
 	if recv_window > 0 {
 		hy["recv_window"] = recv_window
 	}
-	return hy, tag, nil
+	return hy, nil
 }
 
-func hy2(u *url.URL) (OutboundType, string, error) {
+func hy2(u *url.URL) (OutboundType, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	host, portStr, _ := net.SplitHostPort(u.Host)
 	port := 443
@@ -316,13 +320,13 @@ func hy2(u *url.URL) (OutboundType, string, error) {
 			"password": query.Get("obfs-password"),
 		}
 		if len(query.Get("obfs-password")) == 0 {
-			return nil, "", errors.New("Missing shadowsocks password")
+			return nil, errors.New("Missing shadowsocks password")
 		}
 	}
-	return hy2, tag, nil
+	return hy2, nil
 }
 
-func anytls(u *url.URL) (OutboundType, string, error) {
+func anytls(u *url.URL) (OutboundType, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	host, portStr, _ := net.SplitHostPort(u.Host)
 	port := 443
@@ -352,10 +356,10 @@ func anytls(u *url.URL) (OutboundType, string, error) {
 		"password":    u.User.Username(),
 		"tls":         tls,
 	}
-	return anytls, tag, nil
+	return anytls, nil
 }
 
-func tuic(u *url.URL) (OutboundType, string, error) {
+func tuic(u *url.URL) (OutboundType, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	host, portStr, _ := net.SplitHostPort(u.Host)
 	port := 443
@@ -393,10 +397,10 @@ func tuic(u *url.URL) (OutboundType, string, error) {
 		"udp_relay_mode":     query.Get("udp_relay_mode"),
 		"tls":                tls,
 	}
-	return tuic, tag, nil
+	return tuic, nil
 }
 
-func ss(u *url.URL) (OutboundType, string, error) {
+func ss(u *url.URL) (OutboundType, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	security := query.Get("security")
 	if security != "" {
@@ -412,17 +416,17 @@ func ss(u *url.URL) (OutboundType, string, error) {
 	if !ok {
 		decrypted, err := DecodeBase64IfNeeded(method)
 		if err != nil {
-			return nil, "", err
+			return nil, err
 		}
 		decrypted_arr := strings.Split(decrypted, ":")
 		if len(decrypted_arr) > 1 {
 			method = decrypted_arr[0]
 			password = strings.Join(decrypted_arr[1:], ":")
 			if len(password) == 0 {
-				return nil, "", errors.New("Missing shadowsocks password")
+				return nil, errors.New("Missing shadowsocks password")
 			}
 		} else {
-			return nil, "", errors.New("Unsupported shadowsocks")
+			return nil, errors.New("Unsupported shadowsocks")
 		}
 	}
 
@@ -464,11 +468,11 @@ func ss(u *url.URL) (OutboundType, string, error) {
 	if ss["plugin_opts"] != nil {
 		_, err := strconv.Atoi(ss["plugin_opts"].(string))
 		if err != nil {
-			return nil, tag, errors.New("Unable to parse mux value")
+			return nil, errors.New("Unable to parse mux value")
 		}
 	}
 
-	return ss, tag, nil
+	return ss, nil
 }
 
 func getTransport(tp_type string, q *url.Values) map[string]interface{} {

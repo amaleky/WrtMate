@@ -35,16 +35,12 @@ func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 	worker := func() {
 		defer wg.Done()
 		for line := range linesCh {
-			uri, parsed, err := ParseLink(line)
-			if err != nil || uri == nil {
-				continue
-			}
-			outbound, _, err := GetOutbound(uri)
+			outbound, err := GetOutbound(line)
 			if err != nil {
 				if verbose {
-					fmt.Printf("# Failed to get outbound: %s => %v\n", parsed, err)
+					fmt.Printf("# Failed to get outbound: %s => %v\n", line, err)
 				}
-				continue
+				return
 			}
 			tag := outbound["tag"].(string)
 
@@ -55,7 +51,7 @@ func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 
 			seenKeys.Store(tag, SeenKeyType{
 				Ok:       false,
-				Raw:      parsed,
+				Raw:      line,
 				Outbound: outbound,
 			})
 
@@ -67,7 +63,7 @@ func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 						fmt.Println("# Failed to marshaling outbound: ", marshalErr, outbound)
 						continue
 					}
-					fmt.Println("# Failed to start service: ", err, string(outboundJSON), parsed)
+					fmt.Println("# Failed to start service: ", err, string(outboundJSON), line)
 				}
 				continue
 			}
@@ -91,12 +87,12 @@ func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 
 			seenKeys.Store(tag, SeenKeyType{
 				Ok:       true,
-				Raw:      parsed,
+				Raw:      line,
 				Outbound: outbound,
 			})
 
 			if printResults {
-				fmt.Println(parsed)
+				fmt.Println(line)
 			}
 		}
 	}
