@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -74,14 +73,18 @@ func WriteRawOutput(outputPath string, rawConfigs []string) error {
 	return os.WriteFile(outputPath, []byte(strings.Join(rawConfigs, "\n")), 0o644)
 }
 
-func SaveResult(outputPath string, archivePath string, seenKeys *sync.Map) {
+func SaveResult(outputPath string, archivePath string, start time.Time, seenKeys *sync.Map) {
+	linesCount := 0
+	foundCount := 0
 	var rawConfigs []string
 	jsonOutbounds := make([]OutboundType, 0, 50)
 	outputIsJSON := strings.HasSuffix(strings.ToLower(outputPath), ".json")
 
 	seenKeys.Range(func(key, value interface{}) bool {
+		linesCount++
 		entry := value.(SeenKeyType)
 		if entry.Ok == true {
+			foundCount++
 			rawConfigs = append(rawConfigs, entry.Raw)
 			if outputIsJSON && len(jsonOutbounds) <= 50 {
 				jsonOutbounds = append(jsonOutbounds, entry.Outbound)
@@ -96,32 +99,8 @@ func SaveResult(outputPath string, archivePath string, seenKeys *sync.Map) {
 		WriteRawOutput(outputPath, rawConfigs)
 	}
 	WriteRawOutput(archivePath, rawConfigs)
-}
 
-func PrintResult(archivePath string, seenKeys *sync.Map, start time.Time) {
-	file, fileOpenErr := os.Open(archivePath)
-	if fileOpenErr != nil {
-		fmt.Printf("Error opening file: %v\n", fileOpenErr)
-		return
-	}
-	defer file.Close()
-	data, fileReadErr := io.ReadAll(file)
-	if fileReadErr != nil {
-		fmt.Printf("Error reading file: %v\n", fileReadErr)
-		return
-	}
-	lineCount := strings.Count(string(data), "\n")
-	if len(data) > 0 && data[len(data)-1] != '\n' {
-		lineCount++
-	}
-
-	count := 0
-	seenKeys.Range(func(key, value interface{}) bool {
-		count++
-		return true
-	})
-
-	fmt.Printf("Found %d/%d configs in %.2fs\n", lineCount, count, time.Since(start).Seconds())
+	fmt.Printf("# Found %d configurations from %d lines in %.2fs\n", foundCount, linesCount, time.Since(start).Seconds())
 }
 
 func GeneratePaths(output *string, urlTestURL *string) (string, string, string, []string, bool) {

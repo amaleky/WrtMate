@@ -24,13 +24,11 @@ func main() {
 	}
 
 	util.ProcessFile(archivePath, *jobs, urlTestURLs, *verbose, *output != "", seenKeys, archivePath, true)
-	util.SaveResult(outputPath, archivePath, seenKeys)
+	util.SaveResult(outputPath, archivePath, start, seenKeys)
 
 	for _, rawURL := range util.SUBSCRIPTIONS {
 		filePath := util.FetchURL(rawURL, outputDir, *timeout)
 		util.ProcessFile(filePath, *jobs, urlTestURLs, *verbose, *output != "", seenKeys, archivePath, false)
-		util.SaveResult(outputPath, archivePath, seenKeys)
+		util.SaveResult(outputPath, archivePath, start, seenKeys)
 	}
-
-	util.PrintResult(archivePath, seenKeys, start)
 }

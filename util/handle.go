@@ -108,26 +108,20 @@ func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 		go worker()
 	}
 
-	linesCount := 0
-	correctLinesCount := 0
 	for scanner.Scan() {
-		linesCount++
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//") {
 			continue
 		}
-		correctLinesCount++
 		linesCh <- line
 	}
 
 	if truncate {
 		err := os.Truncate(archivePath, 0)
 		if err != nil {
-			return
+			fmt.Println(err)
 		}
 	}
-
-	fmt.Printf("# Processing: %v [%v/%v]\n", filePath, correctLinesCount, linesCount)
 
 	close(linesCh)
 	wg.Wait()
