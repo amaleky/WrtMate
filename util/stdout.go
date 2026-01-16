@@ -17,24 +17,7 @@ func hashAsFileName(url string) string {
 	return hex.EncodeToString(sum[:]) + ".txt"
 }
 
-func WriteJSONOutput(outputPath string, outbounds []OutboundType) error {
-	if outputPath == "" {
-		return fmt.Errorf("output path is empty")
-	}
-	filtered := make([]OutboundType, 0, len(outbounds))
-	tags := make([]string, 0, len(outbounds))
-	for _, outbound := range outbounds {
-		if outboundType, ok := outbound["type"].(string); ok {
-			if outboundType == "selector" || outboundType == "urltest" || outboundType == "direct" {
-				continue
-			}
-		}
-		if tag, ok := outbound["tag"].(string); ok && tag != "" {
-			tags = append(tags, tag)
-		}
-		filtered = append(filtered, outbound)
-	}
-
+func WriteJSONOutput(outputPath string, outbounds []OutboundType, tags []string) error {
 	configJSON, err := json.MarshalIndent(map[string]interface{}{
 		"log": map[string]interface{}{
 			"level": "warning",
@@ -57,7 +40,7 @@ func WriteJSONOutput(outputPath string, outbounds []OutboundType) error {
 				"tolerance":                   50,
 				"interrupt_exist_connections": false,
 			},
-		}, filtered...),
+		}, outbounds...),
 		"route": map[string]interface{}{
 			"final": "Auto",
 		},
@@ -84,6 +67,7 @@ func SaveResult(outputPath string, archivePath string, start time.Time, seenKeys
 	linesCount := 0
 	foundCount := 0
 	var rawConfigs []string
+	tags := make([]string, 0, 50)
 	jsonOutbounds := make([]OutboundType, 0, 50)
 	outputIsJSON := strings.HasSuffix(strings.ToLower(outputPath), ".json")
 
@@ -93,7 +77,8 @@ func SaveResult(outputPath string, archivePath string, start time.Time, seenKeys
 		if entry.Ok == true {
 			foundCount++
 			rawConfigs = append(rawConfigs, entry.Raw)
-			if outputIsJSON && len(jsonOutbounds) <= 50 {
+			if outputIsJSON && len(jsonOutbounds) < 50 {
+				tags = append(tags, entry.Tag)
 				jsonOutbounds = append(jsonOutbounds, entry.Outbound)
 			}
 		}
@@ -101,7 +86,7 @@ func SaveResult(outputPath string, archivePath string, start time.Time, seenKeys
 	})
 
 	if outputIsJSON {
-		WriteJSONOutput(outputPath, jsonOutbounds)
+		WriteJSONOutput(outputPath, jsonOutbounds, tags)
 	} else if outputPath != "" {
 		WriteRawOutput(outputPath, rawConfigs)
 	}
