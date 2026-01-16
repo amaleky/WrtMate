@@ -4,6 +4,7 @@ import (
 	"flag"
 	"runtime"
 	"scanner/util"
+	"sync"
 	"time"
 )
 
@@ -16,7 +17,7 @@ func main() {
 	verbose := flag.Bool("verbose", false, "print extra output")
 	flag.Parse()
 
-	seenKeys := make(map[string]util.SeenKeyType)
+	seenKeys := &sync.Map{}
 	outputDir, outputPath, archivePath, urlTestURLs, ok := util.GeneratePaths(output, urlTestURL)
 	if !ok {
 		return

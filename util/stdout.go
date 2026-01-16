@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -73,24 +74,21 @@ func WriteRawOutput(outputPath string, rawConfigs []string) error {
 	return os.WriteFile(outputPath, []byte(strings.Join(rawConfigs, "\n")), 0o644)
 }
 
-func SaveResult(outputPath string, archivePath string, seenKeys map[string]SeenKeyType) {
-	if len(seenKeys) == 0 {
-		return
-	}
+func SaveResult(outputPath string, archivePath string, seenKeys *sync.Map) {
 	var rawConfigs []string
 	jsonOutbounds := make([]OutboundType, 0, 50)
 	outputIsJSON := strings.HasSuffix(strings.ToLower(outputPath), ".json")
 
-	for _, entry := range seenKeys {
+	seenKeys.Range(func(key, value interface{}) bool {
+		entry := value.(SeenKeyType)
 		if entry.Ok == true {
 			rawConfigs = append(rawConfigs, entry.Raw)
-			if outputIsJSON {
-				if len(jsonOutbounds) < 50 {
-					jsonOutbounds = append(jsonOutbounds, entry.Outbound)
-				}
+			if outputIsJSON && len(jsonOutbounds) <= 50 {
+				jsonOutbounds = append(jsonOutbounds, entry.Outbound)
 			}
 		}
-	}
+		return true
+	})
 
 	if outputIsJSON {
 		WriteJSONOutput(outputPath, jsonOutbounds)
@@ -100,7 +98,7 @@ func SaveResult(outputPath string, archivePath string, seenKeys map[string]SeenK
 	WriteRawOutput(archivePath, rawConfigs)
 }
 
-func PrintResult(archivePath string, seenKeys map[string]SeenKeyType, start time.Time) {
+func PrintResult(archivePath string, seenKeys *sync.Map, start time.Time) {
 	file, fileOpenErr := os.Open(archivePath)
 	if fileOpenErr != nil {
 		fmt.Printf("Error opening file: %v\n", fileOpenErr)
@@ -116,7 +114,14 @@ func PrintResult(archivePath string, seenKeys map[string]SeenKeyType, start time
 	if len(data) > 0 && data[len(data)-1] != '\n' {
 		lineCount++
 	}
-	fmt.Printf("Found %d/%d configs in %.2fs\n", lineCount, len(seenKeys), time.Since(start).Seconds())
+
+	count := 0
+	seenKeys.Range(func(key, value interface{}) bool {
+		count++
+		return true
+	})
+
+	fmt.Printf("Found %d/%d configs in %.2fs\n", lineCount, count, time.Since(start).Seconds())
 }
 
 func GeneratePaths(output *string, urlTestURL *string) (string, string, string, []string, bool) {

@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, hasOutput bool, seenKeys map[string]SeenKeyType, archivePath string, truncate bool) {
+func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, hasOutput bool, seenKeys *sync.Map, archivePath string, truncate bool) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return
@@ -31,7 +31,6 @@ func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 
 	linesCh := make(chan string, jobs*2)
 	var wg sync.WaitGroup
-	var seenKeysMu sync.Mutex
 
 	worker := func() {
 		defer wg.Done()
@@ -49,18 +48,17 @@ func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 			}
 			tag := outbound["tag"].(string)
 
-			seenKeysMu.Lock()
-			if _, exists := seenKeys[tag]; exists {
-				seenKeysMu.Unlock()
+			_, loaded := seenKeys.Load(tag)
+			if loaded {
 				continue
 			}
-			seenKeys[tag] = SeenKeyType{
+
+			seenKeys.Store(tag, SeenKeyType{
 				Ok:       false,
 				Tag:      tag,
 				Raw:      parsed,
 				Outbound: outbound,
-			}
-			seenKeysMu.Unlock()
+			})
 
 			ctx, instance, err := StartOutbound(outbound)
 			if err != nil {
@@ -92,11 +90,12 @@ func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 				continue
 			}
 
-			seenKeysMu.Lock()
-			updatedTag := seenKeys[tag]
-			updatedTag.Ok = true
-			seenKeys[tag] = updatedTag
-			seenKeysMu.Unlock()
+			seenKeys.Store(tag, SeenKeyType{
+				Ok:       true,
+				Tag:      tag,
+				Raw:      parsed,
+				Outbound: outbound,
+			})
 
 			if !hasOutput {
 				fmt.Println(parsed)
