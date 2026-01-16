@@ -73,7 +73,14 @@ func WriteRawOutput(outputPath string, rawConfigs []string) error {
 	return os.WriteFile(outputPath, []byte(strings.Join(rawConfigs, "\n")), 0o644)
 }
 
-func SaveResult(outputPath string, archivePath string, start time.Time, seenKeys *sync.Map) {
+func SaveResult(outputPath string, archivePath string, start time.Time, seenKeys *sync.Map, truncateArchives bool) {
+	if truncateArchives {
+		err := os.Truncate(archivePath, 0)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
 	linesCount := 0
 	foundCount := 0
 	var rawConfigs []string

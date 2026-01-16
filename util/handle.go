@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, hasOutput bool, seenKeys *sync.Map, archivePath string, truncate bool) {
+func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, seenKeys *sync.Map, printResults bool) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return
@@ -97,7 +97,7 @@ func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 				Outbound: outbound,
 			})
 
-			if !hasOutput {
+			if printResults {
 				fmt.Println(parsed)
 			}
 		}
@@ -114,13 +114,6 @@ func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 			continue
 		}
 		linesCh <- line
-	}
-
-	if truncate {
-		err := os.Truncate(archivePath, 0)
-		if err != nil {
-			fmt.Println(err)
-		}
 	}
 
 	close(linesCh)
