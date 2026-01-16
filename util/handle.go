@@ -55,7 +55,6 @@ func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 
 			seenKeys.Store(tag, SeenKeyType{
 				Ok:       false,
-				Tag:      tag,
 				Raw:      parsed,
 				Outbound: outbound,
 			})
@@ -92,7 +91,6 @@ func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 
 			seenKeys.Store(tag, SeenKeyType{
 				Ok:       true,
-				Tag:      tag,
 				Raw:      parsed,
 				Outbound: outbound,
 			})

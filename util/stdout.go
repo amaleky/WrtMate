@@ -74,11 +74,12 @@ func SaveResult(outputPath string, archivePath string, start time.Time, seenKeys
 	seenKeys.Range(func(key, value interface{}) bool {
 		linesCount++
 		entry := value.(SeenKeyType)
+		tag := key.(string)
 		if entry.Ok == true {
 			foundCount++
 			rawConfigs = append(rawConfigs, entry.Raw)
 			if outputIsJSON && len(jsonOutbounds) < 50 {
-				tags = append(tags, entry.Tag)
+				tags = append(tags, tag)
 				jsonOutbounds = append(jsonOutbounds, entry.Outbound)
 			}
 		}
