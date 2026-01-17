@@ -32,7 +32,6 @@ var SUBSCRIPTIONS = []string{
 	"https://raw.githubusercontent.com/barry-far/V2ray-Config/main/All_Configs_Sub.txt",
 	"https://raw.githubusercontent.com/SoliSpirit/v2ray-configs/main/all_configs.txt",
 	"https://raw.githubusercontent.com/Epodonios/v2ray-CONFIGs/main/All_Configs_Sub.txt",
-	"https://raw.githubusercontent.com/liMilCo/v2r/main/all_configs.txt",
 	"https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/Eternity",
 	"https://raw.githubusercontent.com/peasoft/NoMoreWalls/master/list.txt",
 	"https://raw.githubusercontent.com/Surfboardv2ray/TGParse/main/splitted/mixed",

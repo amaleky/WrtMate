@@ -416,7 +416,7 @@ func ss(u *url.URL) (OutboundType, error) {
 	if !ok {
 		decrypted, err := DecodeBase64IfNeeded(method)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to decode base64: %w", err)
 		}
 		decrypted_arr := strings.Split(decrypted, ":")
 		if len(decrypted_arr) > 1 {
@@ -426,8 +426,12 @@ func ss(u *url.URL) (OutboundType, error) {
 				return nil, errors.New("Missing shadowsocks password")
 			}
 		} else {
-			return nil, errors.New("Unsupported shadowsocks")
+			return nil, errors.New("Unsupported shadowsocks format")
 		}
+	}
+
+	if method == "chacha20" {
+		method = "chacha20-ietf-poly1305"
 	}
 
 	tag := "shadowsocks" + "|" + host + "|" + strconv.Itoa(port)
@@ -466,9 +470,11 @@ func ss(u *url.URL) (OutboundType, error) {
 	}
 
 	if ss["plugin_opts"] != nil {
-		_, err := strconv.Atoi(ss["plugin_opts"].(string))
-		if err != nil {
-			return nil, errors.New("Unable to parse mux value")
+		if pluginOpts, ok := ss["plugin_opts"].(string); ok && len(pluginOpts) > 0 {
+			_, err := strconv.Atoi(pluginOpts)
+			if err != nil {
+				return nil, fmt.Errorf("unable to parse mux value '%s': %w", pluginOpts, err)
+			}
 		}
 	}
 
