@@ -75,9 +75,7 @@ func URLTest(ctx context.Context, link string, detour network.Dialer) error {
 	return nil
 }
 
-func StartOutbound(outbound OutboundType) (context.Context, *box.Box, error) {
-	outbounds := make([]OutboundType, 0, 1)
-	outbounds = append(outbounds, outbound)
+func StartOutbound(outbounds []OutboundType) (context.Context, *box.Box, error) {
 	config := map[string]interface{}{
 		"log": map[string]interface{}{
 			"disabled": true,
