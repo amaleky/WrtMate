@@ -430,7 +430,7 @@ func ss(u *url.URL) (OutboundType, error) {
 		}
 	}
 
-	if method == "chacha20" {
+	if isInList([]string{"chacha20-poly1305", "chacha20"}, method) {
 		method = "chacha20-ietf-poly1305"
 	}
 

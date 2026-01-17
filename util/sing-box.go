@@ -9,6 +9,8 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strconv"
+	"strings"
 
 	"github.com/sagernet/sing-box"
 	"github.com/sagernet/sing-box/adapter"
@@ -75,6 +77,22 @@ func URLTest(ctx context.Context, link string, detour network.Dialer) error {
 	return nil
 }
 
+func invalidOutboundKey(err error) int {
+	msg := err.Error()
+	start := strings.Index(msg, "[")
+	end := strings.Index(msg, "]")
+	if start == -1 || end == -1 || end <= start+1 {
+		fmt.Printf("Index not found in error message: %s\n", msg)
+		return -1
+	}
+	numStr := msg[start+1 : end]
+	index, errParse := strconv.Atoi(numStr)
+	if errParse != nil {
+		return -1
+	}
+	return index
+}
+
 func StartOutbound(outbounds []OutboundType) (context.Context, *box.Box, error) {
 	config := map[string]interface{}{
 		"log": map[string]interface{}{
@@ -96,7 +114,13 @@ func StartOutbound(outbounds []OutboundType) (context.Context, *box.Box, error) 
 		Options: opts,
 	})
 	if err != nil {
-		return nil, nil, err
+		idx := invalidOutboundKey(err)
+		if err != nil && idx >= 0 && idx < len(outbounds) && len(outbounds) > 1 {
+			fmt.Printf("# Skipping outbound %d because of error: %v\n", idx, err)
+			outbounds = append(outbounds[:idx], outbounds[idx+1:]...)
+			return StartOutbound(outbounds)
+		}
+		return ctx, instance, err
 	}
 	err = instance.Start()
 	if err != nil {
