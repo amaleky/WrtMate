@@ -57,13 +57,6 @@ func WriteRawOutput(outputPath string, rawConfigs []string) error {
 }
 
 func SaveResult(outputPath string, archivePath string, start time.Time, seenKeys *sync.Map, truncateArchives bool) {
-	if truncateArchives {
-		err := os.Truncate(archivePath, 0)
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
-
 	linesCount := 0
 	foundCount := 0
 	var rawConfigs []string
@@ -86,8 +79,17 @@ func SaveResult(outputPath string, archivePath string, start time.Time, seenKeys
 		return true
 	})
 
+	fmt.Printf("# Found %d configurations from %d lines in %.2fs\n", foundCount, linesCount, time.Since(start).Seconds())
+
 	if foundCount < 1 {
 		return
+	}
+
+	if truncateArchives {
+		err := os.Truncate(archivePath, 0)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 
 	if outputIsJSON {
@@ -96,8 +98,6 @@ func SaveResult(outputPath string, archivePath string, start time.Time, seenKeys
 		WriteRawOutput(outputPath, rawConfigs)
 	}
 	WriteRawOutput(archivePath, rawConfigs)
-
-	fmt.Printf("# Found %d configurations from %d lines in %.2fs\n", foundCount, linesCount, time.Since(start).Seconds())
 }
 
 func GeneratePaths(output *string, urlTestURL *string) (string, string, string, []string, bool) {

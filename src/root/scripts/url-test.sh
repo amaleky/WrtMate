@@ -10,13 +10,6 @@ set_retry_count() {
   echo "$(($(get_retry_count "$1") + 1))" >"$FILE"
 }
 
-test_connection() {
-  while ! ping -c 1 -W 2 "217.218.127.127" >/dev/null 2>&1; do
-    echo "❌ Connectivity test failed."
-    sleep 2
-  done
-}
-
 test_socks_port() {
   SOCKS_PORT=$1
   URL=$2
@@ -84,7 +77,6 @@ test_service() {
 }
 
 main() {
-  test_connection
   test_service "ghost" "Ghost" 9802 "false"
   test_service "warp-plus" "WarpPlus" 9803 "true"
   test_service "psiphon" "Psiphon" 9804 "true"
