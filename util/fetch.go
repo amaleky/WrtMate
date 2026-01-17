@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 )
 
@@ -12,6 +13,22 @@ func FetchURL(rawURL, outputDir string, timeout int) string {
 	client := &http.Client{Timeout: time.Duration(timeout) * time.Second}
 	fileName := hashAsFileName(rawURL)
 	filePath := filepath.Join(outputDir, fileName)
+	fi, err := os.Stat(filePath)
+	if err == nil && !fi.IsDir() {
+		headReq, _ := http.NewRequest(http.MethodHead, rawURL, nil)
+		headResp, err := client.Do(headReq)
+		if err != nil || headResp.StatusCode != http.StatusOK {
+			return filePath
+		}
+		defer headResp.Body.Close()
+		remoteSizeStr := headResp.Header.Get("Content-Length")
+		if remoteSizeStr != "" {
+			remoteSize, err := strconv.ParseInt(remoteSizeStr, 10, 64)
+			if err == nil && remoteSize == fi.Size() {
+				return filePath
+			}
+		}
+	}
 	resp, err := client.Get(rawURL)
 	if err != nil {
 		return filePath
