@@ -86,6 +86,10 @@ func SaveResult(outputPath string, archivePath string, start time.Time, seenKeys
 		return true
 	})
 
+	if foundCount < 1 {
+		return
+	}
+
 	if outputIsJSON {
 		WriteJSONOutput(outputPath, jsonOutbounds, tags)
 	} else if outputPath != "" {
