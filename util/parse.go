@@ -19,10 +19,12 @@ func ParseLink(uri string) (*url.URL, error) {
 		}
 
 		params := u.Query()
-		delete(params, "remark")
-		delete(params, "spx")
-		u.Fragment = ""
-		u.RawQuery = params.Encode()
+		if u != nil {
+			delete(params, "remark")
+			delete(params, "spx")
+			u.Fragment = ""
+			u.RawQuery = params.Encode()
+		}
 		return u, err
 	}
 	return nil, err
