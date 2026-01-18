@@ -3,13 +3,33 @@
 main() {
   local DETECTED_OS SYSTEM_ARCH DETECTED_ARCH
 
-  DETECTED_OS="$(uname -s)"
-  case "$DETECTED_OS" in
-    Darwin) DETECTED_OS="darwin" ;;
-    *) DETECTED_OS="linux" ;;
-  esac
+  if [ "${PREFIX:-}" = "/data/data/com.termux/files/usr" ] || [ -d "/data/data/com.termux/files/usr" ]; then
+    DETECTED_OS="android"
+  else
+    case "$(uname -s)" in
+      Darwin) DETECTED_OS="darwin" ;;
+      *)      DETECTED_OS="linux" ;;
+    esac
+  fi
 
-  if [ -f "/etc/openwrt_release" ]; then
+  if [ "$DETECTED_OS" = "android" ]; then
+    SYSTEM_ARCH="$(uname -m)"
+    case "$SYSTEM_ARCH" in
+      aarch64|arm64)
+        DETECTED_ARCH="arm64"
+        ;;
+      armv7*|armhf|arm)
+        DETECTED_ARCH="armv7"
+        ;;
+      x86_64)
+        DETECTED_ARCH="amd64"
+        ;;
+      *)
+        echo "Unsupported Android architecture: $SYSTEM_ARCH" >&2
+        exit 1
+        ;;
+    esac
+  elif [ -f "/etc/openwrt_release" ]; then
     SYSTEM_ARCH="$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2 || true)"
     case "$SYSTEM_ARCH" in
       mipsel_24kc|mipsel*)
@@ -24,7 +44,7 @@ main() {
       mips*)
         DETECTED_ARCH="mips-softfloat"
         ;;
-      aSYSTEM_ARCH64*|arm64*|armv8*)
+      aarch64*|arm64*|armv8*)
         DETECTED_ARCH="arm64"
         ;;
       arm*)
@@ -47,7 +67,7 @@ main() {
       x86_64)
         DETECTED_ARCH="amd64"
         ;;
-      aSYSTEM_ARCH64|arm64)
+      aarch64|arm64)
         DETECTED_ARCH="arm64"
         ;;
       armv7*|armhf|arm)
@@ -76,13 +96,18 @@ main() {
   fi
 
   if [ "$DETECTED_OS" = "darwin" ]; then
-    curl -L -o "$HOME/scanner" "https://github.com/amaleky/WrtMate/releases/latest/download/scanner_${DETECTED_OS}-${DETECTED_ARCH}" || echo "Failed to download scanner."
-    xattr -d com.apple.quarantine "$HOME/scanner"
-    chmod +x "$HOME/scanner"
+    INSTALL_PATH="$HOME/scanner"
+  elif [ "$DETECTED_OS" = "android" ]; then
+    INSTALL_PATH="${PREFIX:-$HOME/.local}/bin/scanner"
+    mkdir -p "$(dirname "$INSTALL_PATH")"
   else
-    curl -L -o "/usr/bin/scanner" "https://github.com/amaleky/WrtMate/releases/latest/download/scanner_${DETECTED_OS}-${DETECTED_ARCH}" || echo "Failed to download scanner."
-    chmod +x "/usr/bin/scanner"
+    INSTALL_PATH="/usr/bin/scanner"
   fi
+
+  curl -fL -o "$INSTALL_PATH" "https://github.com/amaleky/WrtMate/releases/latest/download/scanner_${DETECTED_OS}-${DETECTED_ARCH}" || { echo "Failed to download scanner." >&2; exit 1; }
+
+  [ "$DETECTED_OS" = "darwin" ] && xattr -d com.apple.quarantine "$INSTALL_PATH" 2>/dev/null || true
+  chmod +x "$INSTALL_PATH"
 }
 
 main "$@"
