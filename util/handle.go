@@ -37,17 +37,17 @@ func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 			continue
 		}
 
-		outbound, err := GetOutbound(line)
+		outbound, parsed, err := GetOutbound(line)
 		if err != nil {
 			if verbose {
-				fmt.Printf("# Failed to get outbound: %s => %v\n", line, err)
+				fmt.Printf("# Failed to get outbound: %s => %v\n", parsed, err)
 			}
 			continue
 		}
 
 		entry := SeenKeyType{
 			Ok:       false,
-			Raw:      line,
+			Raw:      parsed,
 			Outbound: outbound,
 		}
 

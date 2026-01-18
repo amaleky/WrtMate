@@ -10,30 +10,34 @@ import (
 	"strings"
 )
 
-func GetOutbound(line string) (OutboundType, error) {
+func GetOutbound(line string) (OutboundType, string, error) {
+	var outbound OutboundType
 	uri, err := ParseLink(line)
 	if err != nil || uri == nil {
-		return nil, err
+		return nil, "", err
 	}
 	switch uri.Scheme {
 	case "vmess":
-		return vmess(uri)
+		outbound, err = vmess(uri)
 	case "vless":
-		return vless(uri)
+		outbound, err = vless(uri)
 	case "trojan":
-		return trojan(uri)
+		outbound, err = trojan(uri)
 	case "hy", "hysteria":
-		return hy(uri)
+		outbound, err = hy(uri)
 	case "hy2", "hysteria2":
-		return hy2(uri)
+		outbound, err = hy2(uri)
 	case "anytls":
-		return anytls(uri)
+		outbound, err = anytls(uri)
 	case "tuic":
-		return tuic(uri)
+		outbound, err = tuic(uri)
 	case "ss", "shadowsocks":
-		return ss(uri)
+		outbound, err = ss(uri)
 	}
-	return nil, errors.New("Unsupported protocol scheme: " + uri.Scheme)
+	if err == nil && outbound != nil {
+		return outbound, uri.String(), err
+	}
+	return nil, "", errors.New("Unsupported protocol scheme: " + uri.Scheme)
 }
 
 func isInList(list []string, method string) bool {
