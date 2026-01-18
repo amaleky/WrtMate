@@ -37,12 +37,15 @@ jobs:
           - goos: darwin
             goarch: arm64
           - goos: android
+            goarch: amd64
+            cgo: true
+          - goos: android
             goarch: arm64
+            cgo: false
           - goos: android
             goarch: arm
             goarm: 7
-          - goos: android
-            goarch: amd64
+            cgo: false
 
     runs-on: ${{ matrix.goos == 'darwin' && 'macos-latest' || 'ubuntu-latest' }}
 
@@ -51,7 +54,7 @@ jobs:
       GOARCH: ${{ matrix.goarch }}
       GOARM: ${{ matrix.goarm }}
       GOMIPS: ${{ matrix.gomips }}
-      CGO_ENABLED: 0
+      CGO_ENABLED: ${{ matrix.cgo && 1 || 0 }}
       ASSET_NAME: ${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goarm && format('v{0}', matrix.goarm) || '' }}${{ matrix.gomips && format('-{0}', matrix.gomips) || '' }}
 
     steps:
@@ -80,6 +83,18 @@ jobs:
           file: psiphon_${{ env.ASSET_NAME }}
           tag: ${{ github.ref }}
           overwrite: true
+
+      - name: Set up Android NDK
+        if: matrix.goos == 'android' && matrix.cgo
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r26d
+
+      - name: Configure Android toolchain
+        if: matrix.goos == 'android' && matrix.goarch == 'amd64' && matrix.cgo
+        run: |
+          echo "CC=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android21-clang" >> "$GITHUB_ENV"
+          echo "CXX=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android21-clang++" >> "$GITHUB_ENV"
 
       - name: Build Scanner
         run: |
