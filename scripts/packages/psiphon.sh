@@ -24,7 +24,7 @@ main() {
       mips*)
         DETECTED_ARCH="mips-softfloat"
         ;;
-      aSYSTEM_ARCH64*|arm64*|armv8*)
+      aarch64*|arm64*|armv8*)
         DETECTED_ARCH="arm64"
         ;;
       arm*)
