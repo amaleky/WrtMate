@@ -88,7 +88,7 @@ func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 
 		var testErr error
 		for _, testURL := range urlTestURLs {
-			testCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+			testCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 			testErr = URLTest(testCtx, testURL, out)
 			cancel()
 			if testErr != nil {
