@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -24,13 +25,16 @@ func FetchURL(rawURL, outputDir string, timeout int) string {
 		remoteSizeStr := headResp.Header.Get("Content-Length")
 		if remoteSizeStr != "" {
 			remoteSize, err := strconv.ParseInt(remoteSizeStr, 10, 64)
-			if err == nil && remoteSize == fi.Size() {
+			if err != nil {
+				fmt.Println(err)
+			} else if remoteSize == fi.Size() {
 				return filePath
 			}
 		}
 	}
 	resp, err := client.Get(rawURL)
 	if err != nil {
+		fmt.Println(err)
 		return filePath
 	}
 	defer resp.Body.Close()
@@ -38,9 +42,10 @@ func FetchURL(rawURL, outputDir string, timeout int) string {
 		data, err := io.ReadAll(resp.Body)
 		if err == nil {
 			decodedData, err := DecodeBase64IfNeeded(string(data))
-			if err != nil {
+			if err == nil {
 				data = []byte(decodedData)
 			}
+			fmt.Println("# Downloaded subscription:", fileName)
 			_ = os.WriteFile(filePath, data, 0o644)
 		}
 	}
