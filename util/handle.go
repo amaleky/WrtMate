@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, seenKeys *sync.Map, printResults bool) {
+func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, seenKeys *sync.Map, timeout int, printResults bool) {
 	if jobs < 1 {
 		jobs = 1
 	}
@@ -88,7 +88,7 @@ func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 
 		var testErr error
 		for _, testURL := range urlTestURLs {
-			testCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+			testCtx, cancel := context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
 			testErr = URLTest(testCtx, testURL, out)
 			cancel()
 			if testErr != nil {
