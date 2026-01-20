@@ -1,10 +1,10 @@
 package util
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net"
 	"net/url"
 	"strconv"
 	"strings"
@@ -35,7 +35,7 @@ func GetOutbound(line string) (OutboundType, string, error) {
 		outbound, err = ss(uri)
 	}
 	if err == nil && outbound != nil {
-		return outbound, uri.String(), err
+		return outbound, uri.String(), nil
 	}
 	return nil, "", errors.New("Unsupported protocol scheme: " + uri.Scheme)
 }
@@ -47,6 +47,17 @@ func isInList(list []string, method string) bool {
 		}
 	}
 	return false
+}
+
+func getHostPort(u *url.URL) (string, int) {
+	host := u.Hostname()
+	port := 443
+	if ps := u.Port(); len(ps) > 0 {
+		if p, err := strconv.Atoi(ps); err == nil && p > 0 {
+			port = p
+		}
+	}
+	return host, port
 }
 
 func vmess(u *url.URL) (OutboundType, error) {
@@ -144,11 +155,15 @@ func vmess(u *url.URL) (OutboundType, error) {
 	default:
 		return nil, fmt.Errorf("unsupported port type: %T", v)
 	}
-	tag := "vmess" + "|" + dataJson["add"].(string) + "|" + strconv.Itoa(serverPort)
+	add, ok := dataJson["add"].(string)
+	if !ok || len(add) == 0 {
+		return nil, errors.New("Invalid vmess: missing add")
+	}
+	tag := "vmess" + "|" + add + "|" + strconv.Itoa(serverPort)
 	vmess := OutboundType{
 		"type":        "vmess",
 		"tag":         tag,
-		"server":      dataJson["add"],
+		"server":      add,
 		"server_port": serverPort,
 		"uuid":        dataJson["id"],
 		"security":    "auto",
@@ -156,19 +171,20 @@ func vmess(u *url.URL) (OutboundType, error) {
 		"tls":         tls,
 		"transport":   transport,
 	}
-	return vmess, err
+	return vmess, nil
 }
 
 func vless(u *url.URL) (OutboundType, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	security := query.Get("security")
-	host, portStr, _ := net.SplitHostPort(u.Host)
+	host := u.Hostname()
 	port := 80
-	if len(portStr) > 0 {
-		port, _ = strconv.Atoi(portStr)
-	} else {
-		if security == "tls" || security == "reality" {
-			port = 443
+	if security == "tls" || security == "reality" {
+		port = 443
+	}
+	if ps := u.Port(); len(ps) > 0 {
+		if p, err := strconv.Atoi(ps); err == nil && p > 0 {
+			port = p
 		}
 	}
 	tp_type := query.Get("type")
@@ -177,8 +193,7 @@ func vless(u *url.URL) (OutboundType, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	flow := query.Get("flow")
+	flow := strings.TrimSpace(query.Get("flow"))
 	if flow == "xtls-rprx-vision-udp443" {
 		flow = "xtls-rprx-vision"
 	}
@@ -202,13 +217,14 @@ func vless(u *url.URL) (OutboundType, error) {
 func trojan(u *url.URL) (OutboundType, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
 	security := query.Get("security")
-	host, portStr, _ := net.SplitHostPort(u.Host)
+	host := u.Hostname()
 	port := 80
-	if len(portStr) > 0 {
-		port, _ = strconv.Atoi(portStr)
-	} else {
-		if security == "tls" || security == "reality" {
-			port = 443
+	if security == "tls" || security == "reality" {
+		port = 443
+	}
+	if ps := u.Port(); len(ps) > 0 {
+		if p, err := strconv.Atoi(ps); err == nil && p > 0 {
+			port = p
 		}
 	}
 	tp_type := query.Get("type")
@@ -231,12 +247,7 @@ func trojan(u *url.URL) (OutboundType, error) {
 
 func hy(u *url.URL) (OutboundType, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
-	host, portStr, _ := net.SplitHostPort(u.Host)
-	port := 443
-	if len(portStr) > 0 {
-		port, _ = strconv.Atoi(portStr)
-	}
-
+	host, port := getHostPort(u)
 	tls := map[string]interface{}{
 		"enabled":     true,
 		"server_name": query.Get("peer"),
@@ -249,7 +260,6 @@ func hy(u *url.URL) (OutboundType, error) {
 	if insecure == "1" || insecure == "true" {
 		tls["insecure"] = true
 	}
-
 	tag := "hysteria" + "|" + host + "|" + strconv.Itoa(port)
 	hy := OutboundType{
 		"type":        "hysteria",
@@ -281,12 +291,7 @@ func hy(u *url.URL) (OutboundType, error) {
 
 func hy2(u *url.URL) (OutboundType, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
-	host, portStr, _ := net.SplitHostPort(u.Host)
-	port := 443
-	if len(portStr) > 0 {
-		port, _ = strconv.Atoi(portStr)
-	}
-
+	host, port := getHostPort(u)
 	tls := map[string]interface{}{
 		"enabled":     true,
 		"server_name": query.Get("sni"),
@@ -299,7 +304,6 @@ func hy2(u *url.URL) (OutboundType, error) {
 	if insecure == "1" || insecure == "true" {
 		tls["insecure"] = true
 	}
-
 	tag := "hysteria2" + "|" + host + "|" + strconv.Itoa(port)
 	hy2 := OutboundType{
 		"type":        "hysteria2",
@@ -324,7 +328,7 @@ func hy2(u *url.URL) (OutboundType, error) {
 			"password": query.Get("obfs-password"),
 		}
 		if len(query.Get("obfs-password")) == 0 {
-			return nil, errors.New("Missing shadowsocks password")
+			return nil, errors.New("Missing hysteria2 obfs password")
 		}
 	}
 	return hy2, nil
@@ -332,12 +336,7 @@ func hy2(u *url.URL) (OutboundType, error) {
 
 func anytls(u *url.URL) (OutboundType, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
-	host, portStr, _ := net.SplitHostPort(u.Host)
-	port := 443
-	if len(portStr) > 0 {
-		port, _ = strconv.Atoi(portStr)
-	}
-
+	host, port := getHostPort(u)
 	tls := map[string]interface{}{
 		"enabled":     true,
 		"server_name": query.Get("sni"),
@@ -350,7 +349,6 @@ func anytls(u *url.URL) (OutboundType, error) {
 	if insecure == "1" || insecure == "true" {
 		tls["insecure"] = true
 	}
-
 	tag := "anytls" + "|" + host + "|" + strconv.Itoa(port)
 	anytls := OutboundType{
 		"type":        "anytls",
@@ -365,12 +363,7 @@ func anytls(u *url.URL) (OutboundType, error) {
 
 func tuic(u *url.URL) (OutboundType, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
-	host, portStr, _ := net.SplitHostPort(u.Host)
-	port := 443
-	if len(portStr) > 0 {
-		port, _ = strconv.Atoi(portStr)
-	}
-
+	host, port := getHostPort(u)
 	tls := map[string]interface{}{
 		"enabled":     true,
 		"server_name": query.Get("sni"),
@@ -387,7 +380,6 @@ func tuic(u *url.URL) (OutboundType, error) {
 	if disable_sni == "1" || disable_sni == "true" {
 		tls["disable_sni"] = true
 	}
-
 	tag := "tuic" + "|" + host + "|" + strconv.Itoa(port)
 	password, _ := u.User.Password()
 	tuic := OutboundType{
@@ -406,16 +398,8 @@ func tuic(u *url.URL) (OutboundType, error) {
 
 func ss(u *url.URL) (OutboundType, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
-	security := query.Get("security")
-	if security != "" {
-		return vless(u)
-	}
-	host, portStr, _ := net.SplitHostPort(u.Host)
-	port := 443
-	if len(portStr) > 0 {
-		port, _ = strconv.Atoi(portStr)
-	}
-	method := u.User.Username()
+	host, port := getHostPort(u)
+	method := strings.TrimSpace(u.User.Username())
 	password, ok := u.User.Password()
 	if !ok {
 		decrypted, err := DecodeBase64IfNeeded(method)
@@ -424,7 +408,7 @@ func ss(u *url.URL) (OutboundType, error) {
 		}
 		decrypted_arr := strings.Split(decrypted, ":")
 		if len(decrypted_arr) > 1 {
-			method = decrypted_arr[0]
+			method = strings.TrimSpace(decrypted_arr[0])
 			password = strings.Join(decrypted_arr[1:], ":")
 			if len(password) == 0 {
 				return nil, errors.New("Missing shadowsocks password")
@@ -433,11 +417,10 @@ func ss(u *url.URL) (OutboundType, error) {
 			return nil, errors.New("Unsupported shadowsocks format")
 		}
 	}
-
+	method = strings.ToLower(strings.TrimSpace(method))
 	if isInList([]string{"chacha20-poly1305", "chacha20"}, method) {
 		method = "chacha20-ietf-poly1305"
 	}
-
 	tag := "shadowsocks" + "|" + host + "|" + strconv.Itoa(port)
 	ss := OutboundType{
 		"type":        "shadowsocks",
@@ -508,8 +491,17 @@ func getTransport(tp_type string, q *url.Values) map[string]interface{} {
 		transport["type"] = "ws"
 		transport["path"] = tp_path
 		if len(tp_host) > 0 {
-			transport["headers"] = map[string]interface{}{
-				"Host": tp_host,
+			transport["headers"] = map[string]interface{}{"Host": tp_host}
+		}
+		eh := q.Get("eh")
+		if len(eh) == 0 {
+			eh = "Sec-WebSocket-Protocol"
+		}
+		ed := q.Get("ed")
+		if len(ed) > 0 {
+			if n, err := strconv.Atoi(ed); err == nil && n > 0 {
+				transport["max_early_data"] = n
+				transport["early_data_header_name"] = eh
 			}
 		}
 	case "quic":
@@ -536,16 +528,24 @@ func getTls(security string, q *url.Values) (map[string]interface{}, error) {
 	case "tls":
 		tls["enabled"] = true
 	case "reality":
+		pbk := strings.TrimSpace(q.Get("pbk"))
+		sid := strings.TrimSpace(q.Get("sid"))
+		if len(pbk) == 0 {
+			return nil, errors.New("reality requires public_key")
+		}
+		if len(sid) > 0 {
+			if len(sid)%2 != 0 {
+				return nil, errors.New("reality short_id must be even-length hex")
+			}
+			if _, err := hex.DecodeString(sid); err != nil {
+				return nil, errors.New("reality short_id must be hex")
+			}
+		}
 		tls["enabled"] = true
 		tls["reality"] = map[string]interface{}{
 			"enabled":    true,
-			"public_key": strings.TrimSpace(q.Get("pbk")),
-			"short_id":   strings.TrimSpace(q.Get("sid")),
-		}
-	}
-	if security == "reality" {
-		if len(q.Get("pbk")) == 0 {
-			return nil, errors.New("reality requires public_key")
+			"public_key": pbk,
+			"short_id":   sid,
 		}
 	}
 	if len(tls_sni) > 0 {
