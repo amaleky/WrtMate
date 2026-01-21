@@ -30,5 +30,11 @@ var SUBSCRIPTIONS = []string{
 	"https://raw.githubusercontent.com/SoliSpirit/v2ray-configs/main/all_configs.txt",
 	"https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt",
 	"https://raw.githubusercontent.com/liMilCo/v2r/main/all_configs.txt",
+	"https://raw.githubusercontent.com/F0rc3Run/F0rc3Run/main/Best-Results/proxies.txt",
+	"https://raw.githubusercontent.com/ShatakVPN/ConfigForge-V2Ray/main/configs/all.txt",
+	"https://raw.githubusercontent.com/crackbest/V2ray-Config/main/config.txt",
+	"https://raw.githubusercontent.com/roosterkid/openproxylist/main/V2RAY_RAW.txt",
+	"https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/sub/sub_merge.txt",
+	"https://raw.githubusercontent.com/hamedp-71/Sub_Checker_Creator/main/final.txt",
 	"https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/all_extracted_configs.txt",
 }
