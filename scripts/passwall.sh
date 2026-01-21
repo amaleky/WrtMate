@@ -5,6 +5,7 @@ MIN_RAM_MB=400
 TOTAL_RAM=$(($(grep MemTotal /proc/meminfo | awk '{print $2}') / 1024))
 
 if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
+if [ ! -d /root/.cache/ ]; then mkdir /root/.cache/; fi
 
 ghost() {
   info "ghost"
@@ -14,7 +15,7 @@ ghost() {
   fi
 
   REMOTE_VERSION="$(curl -s -L "https://api.github.com/repos/amaleky/WrtMate/releases/latest" | jq -r '.tag_name')"
-  LOCAL_VERSION="$(cat "/root/.scanner_version" 2>/dev/null || echo 'none')"
+  LOCAL_VERSION="$(cat "/root/.cache/.scanner_version" 2>/dev/null || echo 'none')"
 
   if [[ -f "/etc/init.d/scanner" ]] && /etc/init.d/scanner running; then
     /etc/init.d/scanner stop
@@ -23,7 +24,7 @@ ghost() {
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
     source <(wget -qO- "${REPO_URL}/scripts/packages/scanner.sh")
     if [ -n "$REMOTE_VERSION" ]; then
-      echo "$REMOTE_VERSION" >"/root/.scanner_version"
+      echo "$REMOTE_VERSION" >"/root/.cache/.scanner_version"
     fi
   fi
 
@@ -67,11 +68,11 @@ warp() {
   fi
 
   REMOTE_VERSION="$(curl -s -L "https://api.github.com/repos/bepass-org/warp-plus/releases/latest" | jq -r '.tag_name')"
-  LOCAL_VERSION="$(cat "/root/.vwarp_version" 2>/dev/null || echo 'none')"
+  LOCAL_VERSION="$(cat "/root/.cache/.vwarp_version" 2>/dev/null || echo 'none')"
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
     source <(wget -qO- "${REPO_URL}/scripts/packages/warp.sh")
     if [ -n "$REMOTE_VERSION" ]; then
-      echo "$REMOTE_VERSION" >"/root/.vwarp_version"
+      echo "$REMOTE_VERSION" >"/root/.cache/.vwarp_version"
     fi
   fi
 
@@ -89,7 +90,7 @@ psiphon() {
   if [ ! -d /root/psiphon/ ]; then mkdir /root/psiphon/; fi
 
   REMOTE_VERSION="$(curl -s -L "https://api.github.com/repos/amaleky/WrtMate/releases/latest" | jq -r '.tag_name')"
-  LOCAL_VERSION="$(cat "/root/.psiphon_version" 2>/dev/null || echo 'none')"
+  LOCAL_VERSION="$(cat "/root/.cache/.psiphon_version" 2>/dev/null || echo 'none')"
 
   if [[ -f "/etc/init.d/psiphon" ]] && /etc/init.d/psiphon running; then
     /etc/init.d/psiphon stop
@@ -98,7 +99,7 @@ psiphon() {
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
     source <(wget -qO- "${REPO_URL}/scripts/packages/psiphon.sh")
     if [ -n "$REMOTE_VERSION" ]; then
-      echo "$REMOTE_VERSION" >"/root/.psiphon_version"
+      echo "$REMOTE_VERSION" >"/root/.cache/.psiphon_version"
     fi
   fi
 
@@ -117,7 +118,7 @@ lantern() {
   info "lantern"
 
   REMOTE_VERSION="$(curl -s -L "https://api.github.com/repos/amaleky/WrtMate/releases/latest" | jq -r '.tag_name')"
-  LOCAL_VERSION="$(cat "/root/.lantern_version" 2>/dev/null || echo 'none')"
+  LOCAL_VERSION="$(cat "/root/.cache/.lantern_version" 2>/dev/null || echo 'none')"
 
   if [[ -f "/etc/init.d/lantern" ]] && /etc/init.d/lantern running; then
     /etc/init.d/lantern stop
@@ -126,7 +127,7 @@ lantern() {
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
     source <(wget -qO- "${REPO_URL}/scripts/packages/lantern.sh")
     if [ -n "$REMOTE_VERSION" ]; then
-      echo "$REMOTE_VERSION" >"/root/.lantern_version"
+      echo "$REMOTE_VERSION" >"/root/.cache/.lantern_version"
     fi
   fi
 
@@ -244,7 +245,7 @@ passwall() {
   info "passwall"
   RELEASES="$(curl -s -L "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases")"
   REMOTE_VERSION="$(echo "$RELEASES" | jq -r '.[0].tag_name')"
-  LOCAL_VERSION="$(cat "/root/.passwall_version" 2>/dev/null || echo 'none')"
+  LOCAL_VERSION="$(cat "/root/.cache/.passwall_version" 2>/dev/null || echo 'none')"
 
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
     opkg remove --autoremove dnsmasq luci-app-passwall
@@ -258,7 +259,7 @@ passwall() {
     opkg install /tmp/passwall.ipk || error "Failed to install Passwall."
 
     if [ -n "$REMOTE_VERSION" ]; then
-      echo "$REMOTE_VERSION" >"/root/.passwall_version"
+      echo "$REMOTE_VERSION" >"/root/.cache/.passwall_version"
     fi
   fi
 
@@ -306,7 +307,7 @@ cleanup() {
       rm -rfv "/etc/init.d/${SERVICE}"
     fi
   done
-  rm -rfv "/root/warp" "/root/scripts/scanner.sh" "/root/ghost/run.sh" "/usr/bin/hiddify-cli" "/usr/bin/hiddify" "/usr/bin/sing-box-plus" "/root/scripts/scanner.sh" "/root/ghost/configs.conf" "/root/ghost/configs.backup" "/root/ghost/run.sh" "/root/.cache/subscriptions" "/root/.hiddify_version" "/root/.sing_box_plus_version" "/etc/init.d/balancer" "/root/balancer"
+  rm -rfv "/root/warp" "/root/scripts/scanner.sh" "/root/ghost/run.sh" "/usr/bin/hiddify-cli" "/usr/bin/hiddify" "/usr/bin/sing-box-plus" "/root/scripts/scanner.sh" "/root/ghost/configs.conf" "/root/ghost/configs.backup" "/root/ghost/run.sh" "/root/.cache/subscriptions" "/root/.hiddify_version" "/root/.sing_box_plus_version" "/etc/init.d/balancer" "/root/balancer" /root/.*_version
 }
 
 main() {
