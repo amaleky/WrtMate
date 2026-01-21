@@ -8,6 +8,10 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+
+	"github.com/sagernet/sing-shadowsocks2/shadowaead"
+	"github.com/sagernet/sing-shadowsocks2/shadowaead_2022"
+	"github.com/sagernet/sing-shadowsocks2/shadowstream"
 )
 
 func GetOutbound(line string) (OutboundType, string, error) {
@@ -420,6 +424,9 @@ func ss(u *url.URL) (OutboundType, error) {
 	method = strings.ToLower(strings.TrimSpace(method))
 	if isInList([]string{"chacha20-poly1305", "chacha20"}, method) {
 		method = "chacha20-ietf-poly1305"
+	}
+	if !isInList(shadowaead.MethodList, method) && !isInList(shadowstream.MethodList, method) && !isInList(shadowaead_2022.MethodList, method) {
+		return nil, errors.New("Unsupported shadowsocks method")
 	}
 	tag := "shadowsocks" + "|" + host + "|" + strconv.Itoa(port)
 	ss := OutboundType{
