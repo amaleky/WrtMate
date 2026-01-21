@@ -1,6 +1,7 @@
 package util
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -539,6 +540,10 @@ func getTls(security string, q *url.Values) (map[string]interface{}, error) {
 		sid := strings.TrimSpace(q.Get("sid"))
 		if len(pbk) == 0 {
 			return nil, errors.New("reality requires public_key")
+		}
+		pkBytes, err := base64.RawURLEncoding.DecodeString(pbk)
+		if err != nil || len(pkBytes) != 32 {
+			return nil, errors.New("reality public_key (pbk) must be base64url")
 		}
 		if len(sid) > 0 {
 			if len(sid)%2 != 0 {
