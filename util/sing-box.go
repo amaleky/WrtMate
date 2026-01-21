@@ -116,7 +116,7 @@ func StartOutbound(outbounds []OutboundType) (context.Context, *box.Box, error) 
 	if err != nil {
 		idx := invalidOutboundKey(err)
 		if err != nil && idx >= 0 && idx < len(outbounds) && len(outbounds) > 1 {
-			fmt.Printf("# Skipping outbound %d because of error: %v\n", idx, err)
+			fmt.Printf("# Skipping outbound %d because of error: %v %v\n", idx, err, outbounds[idx])
 			outbounds = append(outbounds[:idx], outbounds[idx+1:]...)
 			return StartOutbound(outbounds)
 		}
