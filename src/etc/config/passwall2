@@ -8,7 +8,7 @@ config nodes 'Splitter'
 	option Direct '_direct'
 
 config socks 'Auto'
-	option enabled '1'
+	option enabled '0'
 	option port '9801'
 	option http_port '0'
 	option node 'Ghost'
@@ -102,8 +102,9 @@ config global
 	option node_socks_port '9800'
 	option localhost_proxy '0'
 	option client_proxy '1'
-	option socks_enabled '1'
+	option socks_enabled '0'
 	option acl_enable '0'
+	option node 'Splitter'
 	option direct_dns_protocol 'auto'
 	option direct_dns_query_strategy 'UseIPv4'
 	option remote_dns_protocol 'tcp'
@@ -143,7 +144,6 @@ doh.libredns.gr 88.198.92.222'
 	option remote_dns_detour 'remote'
 	option remote_fakedns '0'
 	option dns_redirect '0'
-	option node 'Splitter'
 	option node_socks_bind_local '0'
 
 config global_haproxy
@@ -159,7 +159,7 @@ config global_forwarding
 	option tcp_redir_ports '21,22,25,53,143,465,587,853,993,995,80,443,9339'
 	option udp_redir_ports '53,80,443'
 	option accept_icmp '0'
-	option use_nft '1'
+	option prefer_nft '1'
 	option tcp_proxy_way 'redirect'
 	option ipv6_tproxy '0'
 
@@ -171,17 +171,19 @@ config global_xray
 config global_other
 	option auto_detection_time 'tcping'
 	option show_node_info '1'
+	option url_test_url 'https://www.gstatic.com/generate_204'
 
 config global_rules
 	option auto_update '0'
 	option geosite_update '1'
 	option geoip_update '1'
 	option v2ray_location_asset '/usr/share/v2ray/'
-	option enable_geoview '1'
 	option geoip_url 'https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geoip-lite.dat'
 	option geosite_url 'https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geosite-lite.dat'
+	option enable_geoview '1'
 
 config global_app
+	option geoview_file '/usr/bin/geoview'
 	option xray_file '/usr/bin/xray'
 	option hysteria_file '/usr/bin/hysteria'
 	option sing_box_file '/usr/bin/sing-box'
@@ -217,3 +219,30 @@ config shunt_rules 'Direct'
 	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-direct.srs'
 	option ip_list 'rule-set:local:/usr/share/singbox/rule-set/geoip-ir.srs
 rule-set:local:/usr/share/singbox/rule-set/geoip-private.srs'
+
+config shunt_rules 'Proxy'
+	option remarks 'Proxy'
+	option network 'tcp,udp'
+	option port '53,443'
+	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-sanction.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-category-anticensorship.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-category-communication.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-category-entertainment.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-category-media.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-category-porn.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-category-forums.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-category-social.srs'
+	option ip_list '91.108.56.0/22
+91.108.4.0/22
+91.108.8.0/22
+91.108.16.0/22
+91.108.12.0/22
+149.154.160.0/20
+91.105.192.0/23
+91.108.20.0/22
+185.76.151.0/24
+2001:b28:f23d::/48
+2001:b28:f23f::/48
+2001:67c:4e8::/48
+2001:b28:f23c::/48
+2a0a:f280::/32'
