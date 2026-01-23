@@ -19,28 +19,24 @@ func hashAsFileName(url string) string {
 
 func WriteJSONOutput(outputPath string, outbounds []OutboundType, tags []string) error {
 	configJSON, err := json.MarshalIndent(map[string]interface{}{
-		"dns": map[string]interface{}{
-			"servers": []map[string]interface{}{
-				{
-					"tag":    "remote",
-					"type":   "tcp",
-					"server": "1.1.1.1",
-				},
-			},
-			"strategy": "ipv4_only",
-		},
 		"log": map[string]interface{}{
 			"level": "warning",
 		},
 		"inbounds": []map[string]interface{}{
 			{
-				"type":       "tun",
-				"address":    "172.19.0.1/30",
-				"auto_route": true,
+				"address": []string{
+					"172.19.0.1/30",
+					"fdfe:dcba:9876::1/126",
+				},
+				"auto_route":               true,
+				"endpoint_independent_nat": false,
+				"mtu":                      9000,
+				"stack":                    "system",
+				"strict_route":             false,
+				"type":                     "tun",
 			},
 			{
 				"type":        "mixed",
-				"tag":         "mixed-in",
 				"listen":      "0.0.0.0",
 				"listen_port": 9802,
 			},
@@ -61,13 +57,8 @@ func WriteJSONOutput(outputPath string, outbounds []OutboundType, tags []string)
 				{
 					"action": "sniff",
 				},
-				{
-					"protocol": "dns",
-					"action":   "hijack-dns",
-				},
 			},
-			"final":                   "Auto",
-			"default_domain_resolver": "remote",
+			"final": "Auto",
 		},
 	}, "", "  ")
 	if err != nil {
