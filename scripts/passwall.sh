@@ -268,6 +268,7 @@ passwall() {
     uci get passwall2.@subscribe_list[0].remark > "/tmp/passwall2_subscribe_list_remark"
   fi
 
+  curl -s -L -o "/usr/lib/lua/luci/view/passwall2/global/status.htm" "${REPO_URL}/src/usr/lib/lua/luci/view/passwall2/global/status.htm" || error "Failed to download passwall status header."
   curl -s -L -o "/etc/config/passwall2" "${REPO_URL}/src/etc/config/passwall2" || error "Failed to download passwall config."
   uci commit passwall2
 
