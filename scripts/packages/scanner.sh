@@ -90,19 +90,34 @@ main() {
     esac
   fi
 
-  if [ "$DETECTED_OS" = "darwin" ]; then
-    INSTALL_PATH="$HOME/scanner"
-  elif [ "$DETECTED_OS" = "android" ]; then
+  if [ -f "/etc/openwrt_release" ]; then
+      INSTALL_PATH="/usr/bin/scanner"
+  else
     INSTALL_PATH="${PREFIX:-$HOME/.local}/bin/scanner"
     mkdir -p "$(dirname "$INSTALL_PATH")"
-  else
-    INSTALL_PATH="/usr/bin/scanner"
+    if [ -f "/usr/bin/scanner" ]; then
+      sudo rm -rfv /usr/bin/scanner
+    fi
   fi
 
   curl -fL -o "$INSTALL_PATH" "https://github.com/amaleky/WrtMate/releases/latest/download/scanner_${DETECTED_OS}-${DETECTED_ARCH}" || { echo "Failed to download scanner." >&2; exit 1; }
 
   [ "$DETECTED_OS" = "darwin" ] && xattr -d com.apple.quarantine "$INSTALL_PATH" 2>/dev/null || true
   chmod +x "$INSTALL_PATH"
+
+  LINE='export PATH="$HOME/.local/bin:$PATH"'
+  if [ -f ~/.zshrc ]; then
+    if ! grep -qxF "$LINE" ~/.zshrc; then
+      echo "$LINE" >> ~/.zshrc
+      source ~/.zshrc
+    fi
+  fi
+  if [ -f ~/.bashrc ]; then
+    if ! grep -qxF "$LINE" ~/.bashrc; then
+      echo "$LINE" >> ~/.bashrc
+      source ~/.bashrc
+    fi
+  fi
 }
 
 main "$@"
