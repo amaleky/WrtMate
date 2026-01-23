@@ -25,7 +25,7 @@ func WriteJSONOutput(outputPath string, outbounds []OutboundType, tags []string)
 		"inbounds": []map[string]interface{}{
 			{
 				"type":    "tun",
-				"address": []string{"172.19.0.1/30"},
+				"address": "172.19.0.1/30",
 			},
 			{
 				"type":        "mixed",
@@ -54,13 +54,8 @@ func WriteJSONOutput(outputPath string, outbounds []OutboundType, tags []string)
 					"protocol": "dns",
 					"action":   "hijack-dns",
 				},
-				{
-					"ip_is_private": true,
-					"outbound":      "direct",
-				},
 			},
-			"auto_detect_interface": true,
-			"final":                 "Auto",
+			"final": "Auto",
 		},
 	}, "", "  ")
 	if err != nil {
