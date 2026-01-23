@@ -34,7 +34,7 @@ func WriteJSONOutput(outputPath string, outbounds []OutboundType, tags []string)
 				"type":                        "urltest",
 				"tag":                         "Auto",
 				"outbounds":                   tags,
-				"url":                         DEFAULT_URL_TEST,
+				"url":                         "https://1.1.1.1/cdn-cgi/trace/",
 				"interval":                    "10m",
 				"tolerance":                   50,
 				"interrupt_exist_connections": false,
