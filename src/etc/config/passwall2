@@ -219,30 +219,3 @@ config shunt_rules 'Direct'
 	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-direct.srs'
 	option ip_list 'rule-set:local:/usr/share/singbox/rule-set/geoip-ir.srs
 rule-set:local:/usr/share/singbox/rule-set/geoip-private.srs'
-
-config shunt_rules 'Proxy'
-	option remarks 'Proxy'
-	option network 'tcp,udp'
-	option port '53,443'
-	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-sanction.srs
-rule-set:local:/usr/share/singbox/rule-set/geosite-category-anticensorship.srs
-rule-set:local:/usr/share/singbox/rule-set/geosite-category-communication.srs
-rule-set:local:/usr/share/singbox/rule-set/geosite-category-entertainment.srs
-rule-set:local:/usr/share/singbox/rule-set/geosite-category-media.srs
-rule-set:local:/usr/share/singbox/rule-set/geosite-category-porn.srs
-rule-set:local:/usr/share/singbox/rule-set/geosite-category-forums.srs
-rule-set:local:/usr/share/singbox/rule-set/geosite-category-social.srs'
-	option ip_list '91.108.56.0/22
-91.108.4.0/22
-91.108.8.0/22
-91.108.16.0/22
-91.108.12.0/22
-149.154.160.0/20
-91.105.192.0/23
-91.108.20.0/22
-185.76.151.0/24
-2001:b28:f23d::/48
-2001:b28:f23f::/48
-2001:67c:4e8::/48
-2001:b28:f23c::/48
-2a0a:f280::/32'
