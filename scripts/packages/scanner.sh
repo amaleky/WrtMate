@@ -5,6 +5,7 @@ main() {
 
   if [ "${PREFIX:-}" = "/data/data/com.termux/files/usr" ] || [ -d "/data/data/com.termux/files/usr" ]; then
     DETECTED_OS="android"
+    termux-setup-storage
   else
     case "$(uname -s)" in
       Darwin) DETECTED_OS="darwin" ;;
