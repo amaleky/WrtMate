@@ -209,7 +209,7 @@ server_less() {
   if [ ! -d /root/xray/ ]; then mkdir /root/xray/; fi
 
   if [[ -f "/etc/init.d/serverless" ]] && /etc/init.d/serverless running; then
-    /etc/init.d/ssh-proxy stop
+    /etc/init.d/serverless stop
   fi
 
   curl -s -L -o "/etc/init.d/serverless" "${REPO_URL}/src/etc/init.d/serverless" || error "Failed to download serverless init script."
