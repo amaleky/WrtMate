@@ -243,7 +243,7 @@ geo_update() {
 
 passwall() {
   info "passwall"
-  RELEASES="$(curl -s -L "https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases")"
+  RELEASES="$(curl -s -L "https://api.github.com/repos/Openwrt-Passwall/openwrt-passwall2/releases")"
   REMOTE_VERSION="$(echo "$RELEASES" | jq -r '.[0].tag_name')"
   LOCAL_VERSION="$(cat "/root/.cache/.passwall_version" 2>/dev/null || echo 'none')"
 
