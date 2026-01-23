@@ -24,8 +24,9 @@ func WriteJSONOutput(outputPath string, outbounds []OutboundType, tags []string)
 		},
 		"inbounds": []map[string]interface{}{
 			{
-				"type":    "tun",
-				"address": "172.19.0.1/30",
+				"type":       "tun",
+				"address":    "172.19.0.1/30",
+				"auto_route": true,
 			},
 			{
 				"type":        "mixed",
