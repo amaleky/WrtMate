@@ -90,13 +90,11 @@ main() {
     esac
   fi
 
-  if [ "$DETECTED_OS" = "darwin" ]; then
-    INSTALL_PATH="$HOME/scanner"
-  elif [ "$DETECTED_OS" = "android" ]; then
+  if [ -f "/etc/openwrt_release" ]; then
+    INSTALL_PATH="/usr/bin/scanner"
+  else
     INSTALL_PATH="${PREFIX:-$HOME/.local}/bin/scanner"
     mkdir -p "$(dirname "$INSTALL_PATH")"
-  else
-    INSTALL_PATH="/usr/bin/scanner"
   fi
 
   curl -fL -o "$INSTALL_PATH" "https://github.com/amaleky/WrtMate/releases/latest/download/scanner_${DETECTED_OS}-${DETECTED_ARCH}" || { echo "Failed to download scanner." >&2; exit 1; }
