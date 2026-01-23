@@ -25,7 +25,6 @@ func WriteJSONOutput(outputPath string, outbounds []OutboundType, tags []string)
 		"inbounds": []map[string]interface{}{
 			{
 				"type":        "mixed",
-				"tag":         "mixed-in",
 				"listen":      "0.0.0.0",
 				"listen_port": 9802,
 			},
@@ -40,8 +39,21 @@ func WriteJSONOutput(outputPath string, outbounds []OutboundType, tags []string)
 				"tolerance":                   50,
 				"interrupt_exist_connections": false,
 			},
+			{
+				"tag":  "direct",
+				"type": "direct",
+			},
 		}, outbounds...),
 		"route": map[string]interface{}{
+			"rules": []map[string]interface{}{
+				{
+					"action": "sniff",
+				},
+				{
+					"ip_is_private": true,
+					"outbound":      "direct",
+				},
+			},
 			"final": "Auto",
 		},
 	}, "", "  ")
