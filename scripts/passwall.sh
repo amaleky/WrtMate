@@ -7,21 +7,17 @@ TOTAL_RAM=$(($(grep MemTotal /proc/meminfo | awk '{print $2}') / 1024))
 if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
 if [ ! -d /root/.cache/ ]; then mkdir /root/.cache/; fi
 
-ghost() {
-  info "ghost"
+scanner() {
+  info "scanner"
 
-  if [[ -f "/etc/init.d/scanner" ]] && /etc/init.d/scanner running; then
-    /etc/init.d/scanner stop
-  fi
 
   REMOTE_VERSION="$(curl -s -L "https://api.github.com/repos/amaleky/WrtMate/releases/latest" | jq -r '.tag_name')"
   LOCAL_VERSION="$(cat "/root/.cache/.scanner_version" 2>/dev/null || echo 'none')"
 
-  if [[ -f "/etc/init.d/scanner" ]] && /etc/init.d/scanner running; then
-    /etc/init.d/scanner stop
-  fi
-
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
+    if [[ -f "/etc/init.d/scanner" ]] && /etc/init.d/scanner running; then
+      /etc/init.d/scanner stop
+    fi
     source <(wget -qO- "${REPO_URL}/scripts/packages/scanner.sh")
     if [ -n "$REMOTE_VERSION" ]; then
       echo "$REMOTE_VERSION" >"/root/.cache/.scanner_version"
@@ -31,45 +27,19 @@ ghost() {
   curl -s -L -o "/etc/init.d/scanner" "${REPO_URL}/src/etc/init.d/scanner" || error "Failed to download scanner init script."
   chmod +x /etc/init.d/scanner
 
-  /etc/init.d/scanner disable
-
-  if [ "$TOTAL_RAM" -ge "$MIN_RAM_MB" ]; then
-    if [ ! -f "/root/ghost/configs.json" ] || [ "$(wc -l <"/root/ghost/configs.json")" -eq 0 ]; then
-      touch "/root/ghost/configs.json"
-      /etc/init.d/scanner start
-    fi
-  fi
-
-  add_cron_job "0 * * * * /etc/init.d/scanner start"
-
-  if [[ -f "/etc/init.d/ghost" ]] && /etc/init.d/ghost running; then
-    /etc/init.d/ghost stop
-  fi
-
-  curl -s -L -o "/etc/init.d/ghost" "${REPO_URL}/src/etc/init.d/ghost" || error "Failed to download ghost init script."
-  chmod +x /etc/init.d/ghost
-
-  curl -s -L -o "/root/scripts/logwatch.sh" "${REPO_URL}/src/root/scripts/logwatch.sh" || error "Failed to download logwatch.sh."
-  chmod +x /root/scripts/logwatch.sh
-  curl -s -L -o "/etc/init.d/logwatch" "${REPO_URL}/src/etc/init.d/logwatch" || error "Failed to download logwatch init script."
-  chmod +x /etc/init.d/logwatch
-
-  /etc/init.d/logwatch enable
-  /etc/init.d/logwatch restart
-  /etc/init.d/ghost enable
-  /etc/init.d/ghost start
+  /etc/init.d/scanner enable
+  /etc/init.d/scanner start
 }
 
 warp() {
   info "warp"
 
-  if [[ -f "/etc/init.d/warp-plus" ]] && /etc/init.d/warp-plus running; then
-    /etc/init.d/warp-plus stop
-  fi
-
   REMOTE_VERSION="$(curl -s -L "https://api.github.com/repos/bepass-org/warp-plus/releases/latest" | jq -r '.tag_name')"
   LOCAL_VERSION="$(cat "/root/.cache/.vwarp_version" 2>/dev/null || echo 'none')"
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
+    if [[ -f "/etc/init.d/warp-plus" ]] && /etc/init.d/warp-plus running; then
+      /etc/init.d/warp-plus stop
+    fi
     source <(wget -qO- "${REPO_URL}/scripts/packages/warp.sh")
     if [ -n "$REMOTE_VERSION" ]; then
       echo "$REMOTE_VERSION" >"/root/.cache/.vwarp_version"
@@ -92,11 +62,10 @@ psiphon() {
   REMOTE_VERSION="$(curl -s -L "https://api.github.com/repos/amaleky/WrtMate/releases/latest" | jq -r '.tag_name')"
   LOCAL_VERSION="$(cat "/root/.cache/.psiphon_version" 2>/dev/null || echo 'none')"
 
-  if [[ -f "/etc/init.d/psiphon" ]] && /etc/init.d/psiphon running; then
-    /etc/init.d/psiphon stop
-  fi
-
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
+    if [[ -f "/etc/init.d/psiphon" ]] && /etc/init.d/psiphon running; then
+      /etc/init.d/psiphon stop
+    fi
     source <(wget -qO- "${REPO_URL}/scripts/packages/psiphon.sh")
     if [ -n "$REMOTE_VERSION" ]; then
       echo "$REMOTE_VERSION" >"/root/.cache/.psiphon_version"
@@ -120,11 +89,10 @@ lantern() {
   REMOTE_VERSION="$(curl -s -L "https://api.github.com/repos/amaleky/WrtMate/releases/latest" | jq -r '.tag_name')"
   LOCAL_VERSION="$(cat "/root/.cache/.lantern_version" 2>/dev/null || echo 'none')"
 
-  if [[ -f "/etc/init.d/lantern" ]] && /etc/init.d/lantern running; then
-    /etc/init.d/lantern stop
-  fi
-
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
+    if [[ -f "/etc/init.d/lantern" ]] && /etc/init.d/lantern running; then
+      /etc/init.d/lantern stop
+    fi
     source <(wget -qO- "${REPO_URL}/scripts/packages/lantern.sh")
     if [ -n "$REMOTE_VERSION" ]; then
       echo "$REMOTE_VERSION" >"/root/.cache/.lantern_version"
@@ -175,10 +143,6 @@ ssh_proxy() {
   read -r -p "Enter SSH host: " -e -i "$SSH_HOST" NEW_SSH_HOST
   read -r -p "Enter SSH port: " -e -i "$SSH_PORT" NEW_SSH_PORT
 
-  if [[ -f "/etc/init.d/ssh-proxy" ]] && /etc/init.d/ssh-proxy running; then
-    /etc/init.d/ssh-proxy stop
-  fi
-
   curl -s -L -o "/etc/init.d/ssh-proxy" "${REPO_URL}/src/etc/init.d/ssh-proxy" || error "Failed to download ssh-proxy init script."
   chmod +x "/etc/init.d/ssh-proxy"
 
@@ -207,10 +171,6 @@ ssh_proxy() {
 server_less() {
   info "server_less"
   if [ ! -d /root/xray/ ]; then mkdir /root/xray/; fi
-
-  if [[ -f "/etc/init.d/serverless" ]] && /etc/init.d/serverless running; then
-    /etc/init.d/serverless stop
-  fi
 
   curl -s -L -o "/etc/init.d/serverless" "${REPO_URL}/src/etc/init.d/serverless" || error "Failed to download serverless init script."
   chmod +x /etc/init.d/serverless
@@ -301,14 +261,15 @@ passwall() {
 }
 
 cleanup() {
-  for SERVICE in "hiddify" "hiddify-cli" "balancer"; do
+  for SERVICE in "hiddify" "hiddify-cli" "balancer" "ghost" "logwatch"; do
     if [ -f "/etc/init.d/${SERVICE}" ]; then
       /etc/init.d/${SERVICE} disable
       /etc/init.d/${SERVICE} stop
       rm -rfv "/etc/init.d/${SERVICE}"
     fi
   done
-  rm -rfv "/root/warp" "/root/scripts/scanner.sh" "/root/ghost/run.sh" "/usr/bin/hiddify-cli" "/usr/bin/hiddify" "/usr/bin/sing-box-plus" "/root/scripts/scanner.sh" "/root/ghost/configs.conf" "/root/ghost/configs.backup" "/root/ghost/run.sh" "/root/.cache/subscriptions" "/root/.hiddify_version" "/root/.sing_box_plus_version" "/etc/init.d/balancer" "/root/balancer" /root/.*_version
+  rm -rfv "/root/warp" "/root/scripts/scanner.sh" "/root/ghost" "/usr/bin/hiddify-cli" "/usr/bin/hiddify" "/usr/bin/sing-box-plus" "/root/scripts/scanner.sh" "/root/.cache/subscriptions" "/root/.hiddify_version" "/root/.sing_box_plus_version" "/etc/init.d/balancer" "/root/balancer" "/root/scripts/logwatch.sh" /root/.*_version
+  del_cron_job "/etc/init.d/scanner start"
 }
 
 main() {
@@ -316,7 +277,7 @@ main() {
     "$1"
   else
     check_min_requirements 200 500 2
-    ghost
+    scanner
     warp
     psiphon
     lantern

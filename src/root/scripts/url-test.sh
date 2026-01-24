@@ -56,11 +56,10 @@ test_service() {
     if ! test_socks_port "$PORT" "https://1.1.1.1/cdn-cgi/trace/"; then
       echo "❌ $NODE connectivity test failed"
       case "$SERVICE" in
-        ghost) /etc/init.d/scanner start ;;
         warp-plus) rm -rfv /.cache/vwarp/ ;;
         ssh-proxy) rm -fv /root/.ssh/known_hosts ;;
       esac
-      if [ "$SERVICE" != "ghost" ]; then
+      if [ "$SERVICE" != "scanner" ]; then
         set_retry_count "$SERVICE"
       fi
       /etc/init.d/"$SERVICE" restart
@@ -77,7 +76,7 @@ test_service() {
 }
 
 main() {
-  test_service "ghost" "Ghost" 9802 "false"
+  test_service "scanner" "Scanner" 9802 "false"
   test_service "warp-plus" "WarpPlus" 9803 "true"
   test_service "psiphon" "Psiphon" 9804 "true"
   test_service "tor" "Tor" 9805 "true"

@@ -87,6 +87,14 @@ add_cron_job() {
   /etc/init.d/cron enable
 }
 
+del_cron_job() {
+  local script_path="$1"
+  if [[ -f "/etc/crontabs/root" ]]; then
+    sed -i "\| $script_path|d" /etc/crontabs/root
+  fi
+  /etc/init.d/cron restart
+}
+
 check_min_requirements() {
   local min_ram_mb="$1"
   local min_storage_mb="$2"
