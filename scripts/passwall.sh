@@ -114,7 +114,7 @@ tor() {
   ensure_packages "tor tor-geoip obfs4proxy"
 
   grep '^Bridge' /etc/tor/torrc >/etc/tor/torrc.back
-  curl -s -L -o "/etc/tor/torrc" "${REPO_URL}/src/etc/tor/torrc" || error "Failed to download tor config."
+  curl -s -L -o "/etc/tor/torrc" "${REPO_URL}/src/etc/tor/torrc"
   cat /etc/tor/torrc.back >>/etc/tor/torrc
 
   if ! grep -q '^Bridge' /etc/tor/torrc; then
@@ -285,9 +285,9 @@ main() {
     url_test
     geo_update
     passwall
-    tor
     ssh_proxy
     cleanup
+    tor
   fi
 
   success "PassWall configuration completed successfully"
