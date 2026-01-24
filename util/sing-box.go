@@ -93,13 +93,7 @@ func invalidOutboundKey(err error) int {
 	return index
 }
 
-func StartOutbound(outbounds []OutboundType) (context.Context, *box.Box, error) {
-	config := map[string]interface{}{
-		"log": map[string]interface{}{
-			"disabled": true,
-		},
-		"outbounds": outbounds,
-	}
+func StartSinBox(outbounds []OutboundType, config map[string]interface{}) (context.Context, *box.Box, error) {
 	configJSON, err := json.Marshal(config)
 	if err != nil {
 		return nil, nil, err
@@ -118,7 +112,7 @@ func StartOutbound(outbounds []OutboundType) (context.Context, *box.Box, error) 
 		if err != nil && idx >= 0 && idx < len(outbounds) && len(outbounds) > 1 {
 			fmt.Printf("# Skipping outbound %d because of error: %v %v\n", idx, err, outbounds[idx])
 			outbounds = append(outbounds[:idx], outbounds[idx+1:]...)
-			return StartOutbound(outbounds)
+			return StartSinBox(outbounds, config)
 		}
 		return ctx, instance, err
 	}
@@ -127,4 +121,46 @@ func StartOutbound(outbounds []OutboundType) (context.Context, *box.Box, error) 
 		return nil, nil, err
 	}
 	return ctx, instance, nil
+}
+
+func GetSingBoxConf(tags []string, outbounds []OutboundType, socks int) map[string]interface{} {
+	return map[string]interface{}{
+		"log": map[string]interface{}{
+			"level": "warning",
+		},
+		"inbounds": []map[string]interface{}{
+			{
+				"type":        "mixed",
+				"listen":      "0.0.0.0",
+				"listen_port": socks,
+			},
+		},
+		"outbounds": append([]OutboundType{
+			{
+				"type":                        "urltest",
+				"tag":                         "Auto",
+				"outbounds":                   tags,
+				"url":                         "https://1.1.1.1/cdn-cgi/trace/",
+				"interval":                    "10m",
+				"tolerance":                   50,
+				"interrupt_exist_connections": false,
+			},
+			{
+				"tag":  "direct",
+				"type": "direct",
+			},
+		}, outbounds...),
+		"route": map[string]interface{}{
+			"rules": []map[string]interface{}{
+				{
+					"action": "sniff",
+				},
+				{
+					"ip_is_private": true,
+					"outbound":      "direct",
+				},
+			},
+			"final": "Auto",
+		},
+	}
 }

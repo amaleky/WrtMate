@@ -10,6 +10,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	box "github.com/sagernet/sing-box"
 )
 
 func hashAsFileName(url string) string {
@@ -17,46 +19,8 @@ func hashAsFileName(url string) string {
 	return hex.EncodeToString(sum[:]) + ".txt"
 }
 
-func WriteJSONOutput(outputPath string, outbounds []OutboundType, tags []string) error {
-	configJSON, err := json.MarshalIndent(map[string]interface{}{
-		"log": map[string]interface{}{
-			"level": "warning",
-		},
-		"inbounds": []map[string]interface{}{
-			{
-				"type":        "mixed",
-				"listen":      "0.0.0.0",
-				"listen_port": 9802,
-			},
-		},
-		"outbounds": append([]OutboundType{
-			{
-				"type":                        "urltest",
-				"tag":                         "Auto",
-				"outbounds":                   tags,
-				"url":                         "https://1.1.1.1/cdn-cgi/trace/",
-				"interval":                    "10m",
-				"tolerance":                   50,
-				"interrupt_exist_connections": false,
-			},
-			{
-				"tag":  "direct",
-				"type": "direct",
-			},
-		}, outbounds...),
-		"route": map[string]interface{}{
-			"rules": []map[string]interface{}{
-				{
-					"action": "sniff",
-				},
-				{
-					"ip_is_private": true,
-					"outbound":      "direct",
-				},
-			},
-			"final": "Auto",
-		},
-	}, "", "  ")
+func WriteJSONOutput(outputPath string, config map[string]interface{}) error {
+	configJSON, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		return err
 	}
@@ -68,12 +32,15 @@ func WriteRawOutput(outputPath string, rawConfigs []string) error {
 	return os.WriteFile(outputPath, []byte(strings.Join(rawConfigs, "\n")), 0o644)
 }
 
-func SaveResult(outputPath string, archivePath string, start time.Time, seenKeys *sync.Map, truncateArchives bool) {
+var previousInstance *box.Box = nil
+var previousOutboundCount = 0
+
+func SaveResult(outputPath string, archivePath string, start time.Time, seenKeys *sync.Map, truncateArchives bool, socks int) {
 	linesCount := 0
 	foundCount := 0
 	var rawConfigs []string
 	tags := make([]string, 0, 50)
-	jsonOutbounds := make([]OutboundType, 0, 50)
+	outbounds := make([]OutboundType, 0, 50)
 	outputIsJSON := strings.HasSuffix(strings.ToLower(outputPath), ".json")
 
 	seenKeys.Range(func(key, value interface{}) bool {
@@ -83,9 +50,9 @@ func SaveResult(outputPath string, archivePath string, start time.Time, seenKeys
 		if entry.Ok == true {
 			foundCount++
 			rawConfigs = append(rawConfigs, entry.Raw)
-			if outputIsJSON && len(jsonOutbounds) < 50 {
+			if len(outbounds) < 50 {
 				tags = append(tags, tag)
-				jsonOutbounds = append(jsonOutbounds, entry.Outbound)
+				outbounds = append(outbounds, entry.Outbound)
 			}
 		}
 		return true
@@ -104,8 +71,23 @@ func SaveResult(outputPath string, archivePath string, start time.Time, seenKeys
 		}
 	}
 
+	config := GetSingBoxConf(tags, outbounds, socks)
+
+	if socks > 0 && len(outbounds) != previousOutboundCount {
+		if previousInstance != nil {
+			previousInstance.Close()
+		}
+		previousOutboundCount = len(outbounds)
+		_, instance, err := StartSinBox(outbounds, config)
+		if err != nil {
+			fmt.Println("# Failed to start service: ", err, config)
+		} else {
+			previousInstance = instance
+		}
+	}
+
 	if outputIsJSON {
-		WriteJSONOutput(outputPath, jsonOutbounds, tags)
+		WriteJSONOutput(outputPath, config)
 	} else if outputPath != "" {
 		WriteRawOutput(outputPath, rawConfigs)
 	}

@@ -68,7 +68,14 @@ func ProcessFile(filePath string, jobs int, urlTestURLs []string, verbose bool, 
 		return
 	}
 
-	ctx, instance, err := StartOutbound(outbounds)
+	config := map[string]interface{}{
+		"log": map[string]interface{}{
+			"disabled": true,
+		},
+		"outbounds": outbounds,
+	}
+
+	ctx, instance, err := StartSinBox(outbounds, config)
 	if err != nil {
 		fmt.Println("# Failed to start service: ", err)
 		return
