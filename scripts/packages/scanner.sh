@@ -100,24 +100,22 @@ main() {
     fi
   fi
 
-  curl -fL -o "$INSTALL_PATH" "https://github.com/amaleky/WrtMate/releases/latest/download/scanner_${DETECTED_OS}-${DETECTED_ARCH}" || { echo "Failed to download scanner." >&2; exit 1; }
-
-  [ "$DETECTED_OS" = "darwin" ] && xattr -d com.apple.quarantine "$INSTALL_PATH" 2>/dev/null || true
-  chmod +x "$INSTALL_PATH"
-
   LINE='export PATH="$HOME/.local/bin:$PATH"'
-  if [ -f ~/.zshrc ]; then
-    if ! grep -qxF "$LINE" ~/.zshrc; then
-      echo "$LINE" >> ~/.zshrc
-      source ~/.zshrc
-    fi
-  fi
   if [ -f ~/.bashrc ]; then
     if ! grep -qxF "$LINE" ~/.bashrc; then
       echo "$LINE" >> ~/.bashrc
       source ~/.bashrc
     fi
   fi
+  if [ -f ~/.zshrc ]; then
+    if ! grep -qxF "$LINE" ~/.zshrc; then
+      echo "$LINE" >> ~/.zshrc
+      source ~/.zshrc
+    fi
+  fi
+
+  wget "https://github.com/amaleky/WrtMate/releases/latest/download/scanner_${DETECTED_OS}-${DETECTED_ARCH}" -O "$INSTALL_PATH"
+  chmod +x "$INSTALL_PATH"
 }
 
 main "$@"
