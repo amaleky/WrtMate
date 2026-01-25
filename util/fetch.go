@@ -11,11 +11,11 @@ import (
 )
 
 func FetchURL(rawURL, outputDir string, timeout int) string {
-	client := &http.Client{Timeout: time.Duration(timeout) * time.Second}
 	fileName := hashAsFileName(rawURL)
 	filePath := filepath.Join(outputDir, fileName)
 	fi, err := os.Stat(filePath)
 	if err == nil && !fi.IsDir() {
+		client := &http.Client{Timeout: time.Duration(2) * time.Second}
 		headReq, _ := http.NewRequest(http.MethodHead, rawURL, nil)
 		headResp, err := client.Do(headReq)
 		if err != nil || headResp.StatusCode != http.StatusOK {
@@ -32,6 +32,7 @@ func FetchURL(rawURL, outputDir string, timeout int) string {
 			}
 		}
 	}
+	client := &http.Client{Timeout: time.Duration(timeout) * time.Second}
 	resp, err := client.Get(rawURL)
 	if err != nil {
 		fmt.Println(err)

@@ -14,7 +14,7 @@ func main() {
 	jobs := flag.Int("jobs", runtime.NumCPU(), "number of parallel jobs")
 	urlTestURL := flag.String("urltest", util.DEFAULT_URL_TEST, "comma-separated list of URLs to use for urltest")
 	output := flag.String("output", "", "path to write output (default stdout)")
-	timeout := flag.Int("timeout", 15, "network timeout in seconds")
+	timeout := flag.Int("timeout", 5, "network timeout in seconds")
 	socks := flag.Int("socks", 0, "socks proxy port")
 	verbose := flag.Bool("verbose", false, "print extra output")
 	flag.Parse()
