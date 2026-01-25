@@ -3,42 +3,70 @@ package main
 import (
 	"flag"
 	"fmt"
-	"runtime"
 	"scanner/util"
 	"sync"
 	"time"
+
+	box "github.com/sagernet/sing-box"
 )
 
 func main() {
 	start := time.Now()
-	jobs := flag.Int("jobs", runtime.NumCPU(), "number of parallel jobs")
-	urlTestURL := flag.String("urltest", util.DEFAULT_URL_TEST, "comma-separated list of URLs to use for urltest")
+	jobs := flag.Int("jobs", 1000, "number of parallel jobs")
+	urlTest := flag.String("urltest", util.DEFAULT_URL_TEST, "comma-separated list of URLs to use for urltest")
 	output := flag.String("output", "", "path to write output (default stdout)")
-	timeout := flag.Int("timeout", 5, "network timeout in seconds")
-	socks := flag.Int("socks", 0, "socks proxy port")
-	verbose := flag.Bool("verbose", false, "print extra output")
+	timeout := flag.Int("timeout", 15, "network timeout in seconds")
+	socks := flag.Int("socks", util.DEFAULT_SOCKS_PORT, "socks proxy port")
 	flag.Parse()
 
+	interval := 10
 	seenKeys := &sync.Map{}
-	outputDir, outputPath, archivePath, urlTestURLs, ok := util.GeneratePaths(output, urlTestURL)
-	if !ok {
+	outputDir, outputPath, archivePath, err := util.GeneratePaths(output)
+	if err != nil {
+		fmt.Println(err)
 		return
 	}
 
-	util.ProcessFile(archivePath, *jobs, urlTestURLs, *verbose, seenKeys, *timeout, *output == "" && *socks == 0)
-	util.SaveResult(outputPath, archivePath, start, seenKeys, true, *socks)
+	paths := util.GetSubscriptions(outputDir, timeout)
+	paths = append(paths, archivePath)
+	util.ParseFiles(paths, seenKeys)
 
 	if *socks > 0 {
 		fmt.Printf("\033[32mRunning SOCKS proxy: socks://127.0.0.1:%d\033[0m\n", *socks)
 	}
 
-	for _, rawURL := range util.SUBSCRIPTIONS {
-		filePath := util.FetchURL(rawURL, outputDir, *timeout)
-		util.ProcessFile(filePath, *jobs, urlTestURLs, *verbose, seenKeys, *timeout, *output == "" && *socks == 0)
-		util.SaveResult(outputPath, archivePath, start, seenKeys, false, *socks)
+	ticker := time.NewTicker(time.Duration(interval) * time.Second)
+	prevCount := 0
+	var prevInstance *box.Box
+
+	tester := func() {
+		for range ticker.C {
+			outbounds, tags, rawConfigs, foundCount, linesCount := util.ParseOutbounds(seenKeys)
+			if foundCount < 1 || foundCount == prevCount {
+				continue
+			}
+			if prevInstance != nil {
+				prevInstance.Close()
+			}
+			prevCount = foundCount
+			util.SaveResult(outputPath, archivePath, rawConfigs)
+			_, instance, err := util.StartSinBox(outbounds, tags, *socks)
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				prevInstance = instance
+				fmt.Printf("# Found %d configs from %d in %.2fs\n", foundCount, linesCount, time.Since(start).Seconds())
+			}
+		}
 	}
 
-	if *socks > 0 {
+	go tester()
+
+	util.TestOutbounds(seenKeys, util.ParseURLTestURLs(*urlTest), *jobs, *timeout, *socks, *output == "" && *socks == 0)
+	fmt.Printf("\033[32mDone in %.2fs\n", time.Since(start).Seconds())
+	time.AfterFunc(time.Duration(interval)*time.Second, ticker.Stop)
+
+	if *socks > 0 && prevInstance != nil {
 		select {}
 	}
 }

@@ -7,10 +7,11 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"time"
 )
 
-func FetchURL(rawURL, outputDir string, timeout int) string {
+func fetchURL(rawURL, outputDir string, timeout int) string {
 	fileName := hashAsFileName(rawURL)
 	filePath := filepath.Join(outputDir, fileName)
 	fi, err := os.Stat(filePath)
@@ -51,4 +52,23 @@ func FetchURL(rawURL, outputDir string, timeout int) string {
 		}
 	}
 	return filePath
+}
+
+func GetSubscriptions(outputDir string, timeout *int) []string {
+	paths := make([]string, 0)
+	var wg sync.WaitGroup
+
+	worker := func(rawURL string) {
+		defer wg.Done()
+		path := fetchURL(rawURL, outputDir, *timeout)
+		paths = append(paths, path)
+	}
+
+	for _, rawURL := range SUBSCRIPTIONS {
+		wg.Add(1)
+		go worker(rawURL)
+	}
+	wg.Wait()
+
+	return paths
 }
