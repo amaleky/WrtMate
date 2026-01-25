@@ -1,3 +1,0 @@
-#!/bin/sh
-
-[ "$ACTION" = "ifup" ] && /root/scripts/url-test.sh

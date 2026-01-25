@@ -141,7 +141,7 @@ func GetSingBoxConf(tags []string, outbounds []OutboundType, socks int) map[stri
 				"tag":                         "Auto",
 				"outbounds":                   tags,
 				"url":                         "https://1.1.1.1/cdn-cgi/trace/",
-				"interval":                    "10m",
+				"interval":                    "1m",
 				"tolerance":                   50,
 				"interrupt_exist_connections": false,
 			},

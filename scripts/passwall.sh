@@ -187,10 +187,7 @@ url_test() {
   info "url_test"
   curl -s -L -o "/root/scripts/url-test.sh" "${REPO_URL}/src/root/scripts/url-test.sh" || error "Failed to download url-test.sh."
   chmod +x /root/scripts/url-test.sh
-  add_cron_job "*/5 * * * * /root/scripts/url-test.sh"
-
-  curl -s -L -o "/etc/hotplug.d/iface/99-url-test" "${REPO_URL}/src/etc/hotplug.d/iface/99-url-test" || error "Failed to download 99-url-test hotplug script."
-  chmod +x /etc/hotplug.d/iface/99-url-test
+  add_cron_job "*/10 * * * * /root/scripts/url-test.sh"
 }
 
 geo_update() {
@@ -268,7 +265,7 @@ cleanup() {
       rm -rfv "/etc/init.d/${SERVICE}"
     fi
   done
-  rm -rfv "/root/warp" "/root/scripts/scanner.sh" "/root/ghost" "/usr/bin/hiddify-cli" "/usr/bin/hiddify" "/usr/bin/sing-box-plus" "/root/scripts/scanner.sh" "/root/.cache/subscriptions" "/root/.hiddify_version" "/root/.sing_box_plus_version" "/etc/init.d/balancer" "/root/balancer" "/root/scripts/logwatch.sh" /root/.*_version
+  rm -rfv "/root/warp" "/root/scripts/scanner.sh" "/root/ghost" "/usr/bin/hiddify-cli" "/usr/bin/hiddify" "/usr/bin/sing-box-plus" "/root/scripts/scanner.sh" "/root/.cache/subscriptions" "/root/.hiddify_version" "/root/.sing_box_plus_version" "/etc/init.d/balancer" "/root/balancer" "/root/scripts/logwatch.sh" "/etc/hotplug.d/iface/99-url-test" /root/.*_version
   del_cron_job "/etc/init.d/scanner start"
 }
 
