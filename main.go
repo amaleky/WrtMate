@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"runtime"
 	"scanner/util"
 	"sync"
@@ -26,6 +27,10 @@ func main() {
 
 	util.ProcessFile(archivePath, *jobs, urlTestURLs, *verbose, seenKeys, *timeout, *output == "")
 	util.SaveResult(outputPath, archivePath, start, seenKeys, true, *socks)
+
+	if *socks > 0 {
+		fmt.Printf("\033[32mRunning SOCKS proxy: socks://127.0.0.1:%d\033[0m\n", *socks)
+	}
 
 	for _, rawURL := range util.SUBSCRIPTIONS {
 		filePath := util.FetchURL(rawURL, outputDir, *timeout)
