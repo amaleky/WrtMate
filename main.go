@@ -25,7 +25,7 @@ func main() {
 		return
 	}
 
-	util.ProcessFile(archivePath, *jobs, urlTestURLs, *verbose, seenKeys, *timeout, *output == "")
+	util.ProcessFile(archivePath, *jobs, urlTestURLs, *verbose, seenKeys, *timeout, *output == "" && *socks == 0)
 	util.SaveResult(outputPath, archivePath, start, seenKeys, true, *socks)
 
 	if *socks > 0 {
@@ -34,7 +34,7 @@ func main() {
 
 	for _, rawURL := range util.SUBSCRIPTIONS {
 		filePath := util.FetchURL(rawURL, outputDir, *timeout)
-		util.ProcessFile(filePath, *jobs, urlTestURLs, *verbose, seenKeys, *timeout, *output == "")
+		util.ProcessFile(filePath, *jobs, urlTestURLs, *verbose, seenKeys, *timeout, *output == "" && *socks == 0)
 		util.SaveResult(outputPath, archivePath, start, seenKeys, false, *socks)
 	}
 
