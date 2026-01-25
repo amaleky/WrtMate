@@ -159,6 +159,10 @@ func GetSingBoxConf(tags []string, outbounds []OutboundType, socks int) map[stri
 					"ip_is_private": true,
 					"outbound":      "direct",
 				},
+				{
+					"domain_suffix": []string{"ir"},
+					"outbound":      "direct",
+				},
 			},
 			"final": "Auto",
 		},
