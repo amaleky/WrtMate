@@ -85,7 +85,7 @@ func ParseFiles(paths []string, seenKeys *sync.Map) {
 
 			tag, _ := outbound["tag"].(string)
 
-			seenKeys.Store(tag, SeenKeyType{
+			seenKeys.LoadOrStore(tag, SeenKeyType{
 				Ok:       false,
 				Raw:      parsed,
 				Outbound: outbound,
