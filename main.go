@@ -45,7 +45,7 @@ func main() {
 			if foundCount == prevCount {
 				continue
 			}
-			util.SaveResult(outputPath, archivePath, rawConfigs)
+			util.SaveResult(outputPath, archivePath, rawConfigs, outbounds, *socks)
 			if *socks <= 0 {
 				continue
 			}

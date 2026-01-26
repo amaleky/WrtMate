@@ -3,6 +3,7 @@ package util
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,12 +15,23 @@ func hashAsFileName(url string) string {
 	return hex.EncodeToString(sum[:]) + ".txt"
 }
 
+func WriteJSONOutput(outputPath string, config map[string]interface{}) error {
+	configJSON, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return err
+	}
+	configJSON = append(configJSON, '\n')
+	return os.WriteFile(outputPath, configJSON, 0o644)
+}
+
 func WriteRawOutput(outputPath string, rawConfigs []string) error {
 	return os.WriteFile(outputPath, []byte(strings.Join(rawConfigs, "\n")), 0o644)
 }
 
-func SaveResult(outputPath string, archivePath string, rawConfigs []string) {
-	if outputPath != "" {
+func SaveResult(outputPath string, archivePath string, rawConfigs []string, outbounds []OutboundType, socks int) {
+	if strings.HasSuffix(strings.ToLower(outputPath), ".json") {
+		WriteJSONOutput(outputPath, GetSingBoxConf(outbounds, socks))
+	} else if outputPath != "" {
 		WriteRawOutput(outputPath, rawConfigs)
 	}
 	WriteRawOutput(archivePath, rawConfigs)
