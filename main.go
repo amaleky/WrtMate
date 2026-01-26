@@ -13,7 +13,7 @@ func main() {
 	jobs := flag.Int("jobs", 1000, "number of parallel jobs")
 	urlTest := flag.String("urltest", util.DEFAULT_URL_TEST, "comma-separated list of URLs to use for urltest")
 	output := flag.String("output", "", "path to write output (default stdout)")
-	timeout := flag.Int("timeout", 15, "network timeout in seconds")
+	timeout := flag.Int("timeout", 5, "network timeout in seconds")
 	socks := flag.Int("socks", 0, "socks proxy port")
 	flag.Parse()
 
@@ -24,7 +24,7 @@ func main() {
 		return
 	}
 
-	paths := util.GetSubscriptions(outputDir, timeout)
+	paths := util.GetSubscriptions(outputDir)
 	paths = append([]string{archivePath}, paths...)
 	util.ParseFiles(paths, seenKeys)
 	instance, StopInterval := util.StartProxy(socks, seenKeys, outputPath, archivePath, start)

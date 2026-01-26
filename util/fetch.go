@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func fetchURL(rawURL, outputDir string, timeout int) string {
+func fetchURL(rawURL, outputDir string) string {
 	fileName := hashAsFileName(rawURL)
 	filePath := filepath.Join(outputDir, fileName)
 	fi, err := os.Stat(filePath)
@@ -33,7 +33,7 @@ func fetchURL(rawURL, outputDir string, timeout int) string {
 			}
 		}
 	}
-	client := &http.Client{Timeout: time.Duration(timeout) * time.Second}
+	client := &http.Client{Timeout: time.Duration(15) * time.Second}
 	resp, err := client.Get(rawURL)
 	if err != nil {
 		fmt.Println(err)
@@ -54,13 +54,13 @@ func fetchURL(rawURL, outputDir string, timeout int) string {
 	return filePath
 }
 
-func GetSubscriptions(outputDir string, timeout *int) []string {
+func GetSubscriptions(outputDir string) []string {
 	paths := make([]string, 0)
 	var wg sync.WaitGroup
 
 	worker := func(rawURL string) {
 		defer wg.Done()
-		path := fetchURL(rawURL, outputDir, *timeout)
+		path := fetchURL(rawURL, outputDir)
 		paths = append(paths, path)
 	}
 
