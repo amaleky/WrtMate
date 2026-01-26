@@ -42,14 +42,17 @@ func main() {
 	tester := func() {
 		for range ticker.C {
 			outbounds, tags, rawConfigs, foundCount, linesCount := util.ParseOutbounds(seenKeys)
-			if foundCount < 1 || foundCount == prevCount {
+			if foundCount == prevCount {
+				continue
+			}
+			util.SaveResult(outputPath, archivePath, rawConfigs)
+			if *socks <= 0 {
 				continue
 			}
 			if prevInstance != nil {
 				prevInstance.Close()
 			}
 			prevCount = foundCount
-			util.SaveResult(outputPath, archivePath, rawConfigs)
 			_, instance, err := util.StartSinBox(outbounds, tags, *socks)
 			if err != nil {
 				fmt.Println(err)
