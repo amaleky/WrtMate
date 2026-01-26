@@ -107,17 +107,7 @@ func ParseOutbounds(seenKeys *sync.Map) ([]OutboundType, []string, []string, int
 	foundCount := 0
 	rawConfigs := make([]string, 0)
 	tags := make([]string, 0, 50)
-	outbounds := []OutboundType{
-		{
-			"type":                        "urltest",
-			"tag":                         "Auto",
-			"outbounds":                   tags,
-			"url":                         "https://1.1.1.1/cdn-cgi/trace/",
-			"interval":                    "1m",
-			"tolerance":                   50,
-			"interrupt_exist_connections": false,
-		},
-	}
+	outbounds := make([]OutboundType, 0, 50)
 
 	seenKeys.Range(func(key, value interface{}) bool {
 		linesCount++

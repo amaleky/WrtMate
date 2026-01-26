@@ -27,12 +27,19 @@ func main() {
 	paths := util.GetSubscriptions(outputDir)
 	paths = append([]string{archivePath}, paths...)
 	util.ParseFiles(paths, seenKeys)
-	instance, StopInterval := util.StartProxy(socks, seenKeys, outputPath, archivePath, start)
-	util.TestOutbounds(seenKeys, util.ParseURLTestURLs(*urlTest), *jobs, *timeout, *socks, *output == "" && *socks == 0)
-	fmt.Printf("\033[32mDone in %.2fs\n", time.Since(start).Seconds())
-	StopInterval()
+	util.TestOutbounds(seenKeys, *urlTest, *jobs, *timeout, *socks, *output == "" && *socks == 0)
 
-	if *socks > 0 && instance != nil {
+	outbounds, tags, rawConfigs, foundCount, linesCount := util.ParseOutbounds(seenKeys)
+	util.SaveResult(outputPath, archivePath, rawConfigs, outbounds, tags, *socks)
+	fmt.Printf("# Found %d configs from %d in %.2fs\n", foundCount, linesCount, time.Since(start).Seconds())
+
+	if *socks > 0 {
+		_, instance, err := util.StartSinBox(outbounds, tags, *socks)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		defer instance.Close()
 		select {}
 	}
 }

@@ -73,12 +73,18 @@ func urlTest(ctx context.Context, link string, detour network.Dialer) error {
 	return nil
 }
 
-func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout int, socks int, printResults bool) {
+type outboundSelector interface {
+	SelectOutbound(tag string) bool
+}
+
+func TestOutbounds(seenKeys *sync.Map, url string, jobs int, timeout int, socks int, printResults bool) {
+	urlTestURLs := ParseURLTestURLs(url)
 	if jobs < 1 {
 		jobs = 1
 	}
 
 	var wg sync.WaitGroup
+	var selectOnce sync.Once
 	tags := make([]string, 0, 50)
 	semaphore := make(chan struct{}, jobs)
 	outbounds := make([]OutboundType, 0)
@@ -91,12 +97,21 @@ func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout i
 		return true
 	})
 
-	ctx, instance, err := StartSinBox(outbounds, tags, socks+1)
+	ctx, instance, err := StartSinBox(outbounds, tags, socks)
 	if err != nil {
 		fmt.Println("# Failed to start service: ", err)
 		return
 	}
 	defer instance.Close()
+
+	selectorOutbound, ok := instance.Outbound().Outbound("Select")
+	if !ok {
+		fmt.Println("# Selector outbound 'Select' not found.")
+	}
+	selector, ok := selectorOutbound.(outboundSelector)
+	if !ok {
+		fmt.Println("# Outbound 'Select' does not implement outboundSelector.")
+	}
 
 	worker := func(entry SeenKeyType) {
 		defer wg.Done()
@@ -128,9 +143,14 @@ func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout i
 			Outbound: entry.Outbound,
 		})
 
-		if printResults {
-			fmt.Println(entry.Raw)
-		}
+		selectOnce.Do(func() {
+			if selector.SelectOutbound(tag) {
+				fmt.Printf("Running SOCKS proxy: socks://127.0.0.1:%d\n", socks)
+				if printResults {
+					fmt.Println(entry.Raw)
+				}
+			}
+		})
 	}
 
 	seenKeys.Range(func(key, value interface{}) bool {

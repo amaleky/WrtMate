@@ -28,9 +28,10 @@ func WriteRawOutput(outputPath string, rawConfigs []string) error {
 	return os.WriteFile(outputPath, []byte(strings.Join(rawConfigs, "\n")), 0o644)
 }
 
-func SaveResult(outputPath string, archivePath string, rawConfigs []string, outbounds []OutboundType, socks int) {
+func SaveResult(outputPath string, archivePath string, rawConfigs []string, outbounds []OutboundType, tags []string, socks int) {
 	if strings.HasSuffix(strings.ToLower(outputPath), ".json") {
-		WriteJSONOutput(outputPath, GetSingBoxConf(outbounds, socks))
+		jsonOutput, _ := GetSingBoxConf(outbounds, tags, socks, "Auto")
+		WriteJSONOutput(outputPath, jsonOutput)
 	} else if outputPath != "" {
 		WriteRawOutput(outputPath, rawConfigs)
 	}
