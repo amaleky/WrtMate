@@ -1,10 +1,6 @@
 package util
 
 func GetSingBoxConf(outbounds []OutboundType, socks int) map[string]interface{} {
-	if socks <= 0 {
-		socks = DEFAULT_SOCKS_PORT
-	}
-
 	var finalOutbound string
 	for _, outbound := range outbounds {
 		if outbound["type"] == "urltest" {
@@ -27,18 +23,23 @@ func GetSingBoxConf(outbounds []OutboundType, socks int) map[string]interface{} 
 		routeConfig["final"] = finalOutbound
 	}
 
-	return map[string]interface{}{
+	config := map[string]interface{}{
 		"log": map[string]interface{}{
 			"level": "warning",
 		},
-		"inbounds": []map[string]interface{}{
+		"outbounds": outbounds,
+		"route":     routeConfig,
+	}
+
+	if socks > 1 && socks <= 65535 {
+		config["inbounds"] = []map[string]interface{}{
 			{
 				"type":        "mixed",
 				"listen":      "0.0.0.0",
 				"listen_port": socks,
 			},
-		},
-		"outbounds": outbounds,
-		"route":     routeConfig,
+		}
 	}
+
+	return config
 }

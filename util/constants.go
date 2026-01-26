@@ -8,7 +8,6 @@ type SeenKeyType struct {
 	Outbound OutboundType
 }
 
-var DEFAULT_SOCKS_PORT = 9802
 var DEFAULT_URL_TEST = "https://cachefly.cachefly.net/1mb.test"
 
 var SUBSCRIPTIONS = []string{
