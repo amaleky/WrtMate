@@ -16,7 +16,7 @@ func main() {
 	urlTest := flag.String("urltest", util.DEFAULT_URL_TEST, "comma-separated list of URLs to use for urltest")
 	output := flag.String("output", "", "path to write output (default stdout)")
 	timeout := flag.Int("timeout", 15, "network timeout in seconds")
-	socks := flag.Int("socks", util.DEFAULT_SOCKS_PORT, "socks proxy port")
+	socks := flag.Int("socks", 0, "socks proxy port")
 	flag.Parse()
 
 	interval := 10
