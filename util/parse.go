@@ -67,11 +67,6 @@ func ParseFiles(paths []string, seenKeys *sync.Map) {
 		buf := make([]byte, 0, 64*1024)
 		scanner.Buffer(buf, 2*1024*1024)
 
-		if err := scanner.Err(); err != nil {
-			fmt.Println(err)
-			return
-		}
-
 		for scanner.Scan() {
 			line := strings.TrimSpace(scanner.Text())
 			if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//") {
@@ -83,13 +78,20 @@ func ParseFiles(paths []string, seenKeys *sync.Map) {
 				continue
 			}
 
-			tag, _ := outbound["tag"].(string)
+			tag, ok := outbound["tag"].(string)
+			if !ok || tag == "" {
+				continue
+			}
 
 			seenKeys.LoadOrStore(tag, SeenKeyType{
 				Ok:       false,
 				Raw:      parsed,
 				Outbound: outbound,
 			})
+		}
+
+		if err := scanner.Err(); err != nil {
+			fmt.Println(err)
 		}
 	}
 
