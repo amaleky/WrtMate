@@ -30,10 +30,10 @@ func main() {
 	util.TestOutbounds(seenKeys, *urlTest, *jobs, *timeout, *socks, *output == "" && *socks == 0)
 
 	outbounds, tags, rawConfigs, foundCount, linesCount := util.ParseOutbounds(seenKeys)
-	util.SaveResult(outputPath, archivePath, rawConfigs, outbounds, tags, *socks)
 	fmt.Printf("# Found %d configs from %d in %.2fs\n", foundCount, linesCount, time.Since(start).Seconds())
 
-	if *socks > 0 {
+	if *socks > 0 && len(outbounds) > 0 {
+		util.SaveResult(outputPath, archivePath, rawConfigs, outbounds, tags, *socks)
 		_, instance, err := util.StartSinBox(outbounds, tags, *socks)
 		if err != nil {
 			fmt.Println(err)
