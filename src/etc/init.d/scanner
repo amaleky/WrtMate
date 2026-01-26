@@ -8,5 +8,6 @@ start_service() {
   procd_set_param command /usr/bin/scanner -urltest "https://cachefly.cachefly.net/1mb.test" -socks 9802
   procd_set_param stdout 1
   procd_set_param stderr 1
+  procd_set_param respawn 3600 5 0
   procd_close_instance
 }
