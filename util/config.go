@@ -5,6 +5,36 @@ func GetSingBoxConf(outbounds []OutboundType, tags []string, socks int, finalOut
 		socks = 9802
 	}
 
+	var defaultOutbounds []OutboundType
+
+	if finalOutbound == "Auto" {
+		defaultOutbounds = append(defaultOutbounds, OutboundType{
+			"type":                        "urltest",
+			"tag":                         "Auto",
+			"outbounds":                   tags,
+			"url":                         "https://1.1.1.1/cdn-cgi/trace/",
+			"interval":                    "1m",
+			"tolerance":                   50,
+			"interrupt_exist_connections": false,
+		})
+	}
+
+	if finalOutbound == "Select" {
+		defaultOutbounds = append(defaultOutbounds, OutboundType{
+			"type":      "selector",
+			"tag":       "Select",
+			"outbounds": tags,
+		})
+	}
+
+	defaultOutbounds = append(defaultOutbounds, OutboundType{
+		"type": "direct",
+		"tag":  "Direct",
+	}, OutboundType{
+		"type": "block",
+		"tag":  "Block",
+	})
+
 	config := map[string]interface{}{
 		"log": map[string]interface{}{
 			"level": "warning",
@@ -17,42 +47,24 @@ func GetSingBoxConf(outbounds []OutboundType, tags []string, socks int, finalOut
 				"listen_port": socks,
 			},
 		},
-		"outbounds": append([]OutboundType{
-			{
-				"type":                        "urltest",
-				"tag":                         "Auto",
-				"outbounds":                   tags,
-				"url":                         "https://1.1.1.1/cdn-cgi/trace/",
-				"interval":                    "1m",
-				"tolerance":                   50,
-				"interrupt_exist_connections": false,
-			},
-			{
-				"type":      "selector",
-				"tag":       "Select",
-				"outbounds": tags,
-			},
-			{
-				"type": "direct",
-				"tag":  "Direct",
-			},
-			{
-				"type": "block",
-				"tag":  "Block",
-			},
-		}, outbounds...),
+		"outbounds": append(defaultOutbounds, outbounds...),
 		"route": map[string]interface{}{
 			"rules": []map[string]interface{}{
 				{
 					"action": "sniff",
 				},
 				{
-					"inbound":  []string{"mixed-in"},
-					"outbound": finalOutbound,
+					"ip_is_private": true,
+					"outbound":      "direct",
+				},
+				{
+					"domain_suffix": []string{".ir", ".cn"},
+					"outbound":      "Direct",
 				},
 			},
+			"final": finalOutbound,
 		},
 	}
 
-	return config, len(config["outbounds"].([]OutboundType)) - len(outbounds)
+	return config, len(defaultOutbounds)
 }
