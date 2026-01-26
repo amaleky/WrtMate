@@ -28,7 +28,7 @@ func main() {
 	}
 
 	paths := util.GetSubscriptions(outputDir, timeout)
-	paths = append(paths, archivePath)
+	paths = append([]string{archivePath}, paths...)
 	util.ParseFiles(paths, seenKeys)
 
 	if *socks > 0 {
