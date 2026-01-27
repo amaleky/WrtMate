@@ -152,15 +152,9 @@ ssh_proxy() {
     chmod 600 "/root/.ssh/id_rsa"
   fi
 
-  if [[ "$SSH_USER" != "$NEW_SSH_USER" ]]; then
-    sed -i "s|^SSH_USER=.*|SSH_USER=${NEW_SSH_USER}|" "/etc/init.d/ssh-proxy"
-  fi
-  if [[ "$SSH_HOST" != "$NEW_SSH_HOST" ]]; then
-    sed -i "s|^SSH_HOST=.*|SSH_HOST=${NEW_SSH_HOST}|" "/etc/init.d/ssh-proxy"
-  fi
-  if [[ "$SSH_PORT" != "$NEW_SSH_PORT" ]]; then
-    sed -i "s|^SSH_PORT=.*|SSH_PORT=${NEW_SSH_PORT}|" "/etc/init.d/ssh-proxy"
-  fi
+  sed -i "s|^SSH_USER=.*|SSH_USER=${NEW_SSH_USER}|" "/etc/init.d/ssh-proxy"
+  sed -i "s|^SSH_HOST=.*|SSH_HOST=${NEW_SSH_HOST}|" "/etc/init.d/ssh-proxy"
+  sed -i "s|^SSH_PORT=.*|SSH_PORT=${NEW_SSH_PORT}|" "/etc/init.d/ssh-proxy"
 
   if [[ -f "/root/.ssh/id_rsa" ]]; then
     /etc/init.d/ssh-proxy enable
