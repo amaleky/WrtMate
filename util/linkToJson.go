@@ -38,6 +38,18 @@ func GetOutbound(line string) (OutboundType, string, error) {
 		outbound, err = tuic(uri)
 	case "ss", "shadowsocks":
 		outbound, err = ss(uri)
+	case "socks", "socks5", "socks4", "socks4a":
+		outbound, err = socks(uri)
+	case "http", "https":
+		outbound, err = httpProxy(uri)
+	case "wireguard", "wg":
+		outbound, err = wireguard(uri)
+	case "shadowtls":
+		outbound, err = shadowtls(uri)
+	case "ssh":
+		outbound, err = sshOutbound(uri)
+	case "naive":
+		outbound, err = naive(uri)
 	}
 	if err == nil && outbound != nil {
 		return outbound, uri.String(), nil
@@ -54,9 +66,9 @@ func isInList(list []string, method string) bool {
 	return false
 }
 
-func getHostPort(u *url.URL) (string, int) {
+func getHostPort(u *url.URL, defaultPort int) (string, int) {
 	host := u.Hostname()
-	port := 443
+	port := defaultPort
 	if ps := u.Port(); len(ps) > 0 {
 		if p, err := strconv.Atoi(ps); err == nil && p > 0 {
 			port = p
@@ -252,7 +264,7 @@ func trojan(u *url.URL) (OutboundType, error) {
 
 func hy(u *url.URL) (OutboundType, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
-	host, port := getHostPort(u)
+	host, port := getHostPort(u, 443)
 	tls := map[string]interface{}{
 		"enabled":     true,
 		"server_name": query.Get("peer"),
@@ -296,7 +308,7 @@ func hy(u *url.URL) (OutboundType, error) {
 
 func hy2(u *url.URL) (OutboundType, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
-	host, port := getHostPort(u)
+	host, port := getHostPort(u, 443)
 	tls := map[string]interface{}{
 		"enabled":     true,
 		"server_name": query.Get("sni"),
@@ -341,7 +353,7 @@ func hy2(u *url.URL) (OutboundType, error) {
 
 func anytls(u *url.URL) (OutboundType, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
-	host, port := getHostPort(u)
+	host, port := getHostPort(u, 443)
 	tls := map[string]interface{}{
 		"enabled":     true,
 		"server_name": query.Get("sni"),
@@ -368,7 +380,7 @@ func anytls(u *url.URL) (OutboundType, error) {
 
 func tuic(u *url.URL) (OutboundType, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
-	host, port := getHostPort(u)
+	host, port := getHostPort(u, 443)
 	tls := map[string]interface{}{
 		"enabled":     true,
 		"server_name": query.Get("sni"),
@@ -403,7 +415,7 @@ func tuic(u *url.URL) (OutboundType, error) {
 
 func ss(u *url.URL) (OutboundType, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
-	host, port := getHostPort(u)
+	host, port := getHostPort(u, 443)
 	method := strings.TrimSpace(u.User.Username())
 	password, ok := u.User.Password()
 	if !ok {
@@ -474,6 +486,253 @@ func ss(u *url.URL) (OutboundType, error) {
 	}
 
 	return ss, nil
+}
+
+func socks(u *url.URL) (OutboundType, error) {
+	query, _ := url.ParseQuery(u.RawQuery)
+	host, port := getHostPort(u, 1080)
+	tag := "socks" + "|" + host + "|" + strconv.Itoa(port)
+	socks := OutboundType{
+		"type":        "socks",
+		"tag":         tag,
+		"server":      host,
+		"server_port": port,
+	}
+	username := ""
+	password := ""
+	if u.User != nil {
+		username = u.User.Username()
+		password, _ = u.User.Password()
+	}
+	if len(username) > 0 {
+		socks["username"] = username
+	}
+	if len(password) > 0 {
+		socks["password"] = password
+	}
+	version := strings.TrimSpace(query.Get("version"))
+	switch strings.ToLower(u.Scheme) {
+	case "socks4":
+		version = "4"
+	case "socks4a":
+		version = "4a"
+	case "socks5", "socks":
+		if version == "" {
+			version = "5"
+		}
+	}
+	if len(version) > 0 {
+		socks["version"] = version
+	}
+	return socks, nil
+}
+
+func httpProxy(u *url.URL) (OutboundType, error) {
+	query, _ := url.ParseQuery(u.RawQuery)
+	host, port := getHostPort(u, 80)
+	tag := "http" + "|" + host + "|" + strconv.Itoa(port)
+	http := OutboundType{
+		"type":        "http",
+		"tag":         tag,
+		"server":      host,
+		"server_port": port,
+	}
+	username := ""
+	password := ""
+	if u.User != nil {
+		username = u.User.Username()
+		password, _ = u.User.Password()
+	}
+	if len(username) > 0 {
+		http["username"] = username
+	}
+	if len(password) > 0 {
+		http["password"] = password
+	}
+	security := strings.TrimSpace(query.Get("security"))
+	if query.Get("tls") == "1" || query.Get("tls") == "true" || strings.EqualFold(u.Scheme, "https") {
+		security = "tls"
+	}
+	if security == "tls" {
+		tls, err := getTls("tls", &query)
+		if err != nil {
+			return nil, err
+		}
+		http["tls"] = tls
+	}
+	return http, nil
+}
+
+func wireguard(u *url.URL) (OutboundType, error) {
+	query, _ := url.ParseQuery(u.RawQuery)
+	host, port := getHostPort(u, 51820)
+	tag := "wireguard" + "|" + host + "|" + strconv.Itoa(port)
+	privateKey := strings.TrimSpace(query.Get("private_key"))
+	if privateKey == "" {
+		privateKey = strings.TrimSpace(u.User.Username())
+	}
+	peerPublicKey := strings.TrimSpace(query.Get("peer_public_key"))
+	if peerPublicKey == "" {
+		peerPublicKey = strings.TrimSpace(query.Get("public_key"))
+	}
+	if privateKey == "" || peerPublicKey == "" {
+		return nil, errors.New("wireguard requires private_key and peer_public_key")
+	}
+	wireguard := OutboundType{
+		"type":            "wireguard",
+		"tag":             tag,
+		"server":          host,
+		"server_port":     port,
+		"private_key":     privateKey,
+		"peer_public_key": peerPublicKey,
+	}
+	preSharedKey := strings.TrimSpace(query.Get("pre_shared_key"))
+	if preSharedKey == "" {
+		preSharedKey = strings.TrimSpace(query.Get("psk"))
+	}
+	if preSharedKey != "" {
+		wireguard["pre_shared_key"] = preSharedKey
+	}
+	localAddress := strings.TrimSpace(query.Get("local_address"))
+	if localAddress == "" {
+		localAddress = strings.TrimSpace(query.Get("address"))
+	}
+	if localAddress != "" {
+		wireguard["local_address"] = strings.Split(localAddress, ",")
+	}
+	mtu, _ := strconv.Atoi(query.Get("mtu"))
+	if mtu > 0 {
+		wireguard["mtu"] = mtu
+	}
+	reservedRaw := strings.TrimSpace(query.Get("reserved"))
+	if reservedRaw != "" {
+		parts := strings.Split(reservedRaw, ",")
+		reserved := make([]int, 0, len(parts))
+		for _, part := range parts {
+			value, err := strconv.Atoi(strings.TrimSpace(part))
+			if err != nil {
+				return nil, errors.New("wireguard reserved must be comma-separated integers")
+			}
+			reserved = append(reserved, value)
+		}
+		wireguard["reserved"] = reserved
+	}
+	return wireguard, nil
+}
+
+func shadowtls(u *url.URL) (OutboundType, error) {
+	query, _ := url.ParseQuery(u.RawQuery)
+	host, port := getHostPort(u, 443)
+	tag := "shadowtls" + "|" + host + "|" + strconv.Itoa(port)
+	username := ""
+	password := ""
+	if u.User != nil {
+		username = u.User.Username()
+		password, _ = u.User.Password()
+	}
+	username = strings.TrimSpace(username)
+	password = strings.TrimSpace(password)
+	if password == "" {
+		password = username
+	}
+	if password == "" {
+		password = strings.TrimSpace(query.Get("password"))
+	}
+	if password == "" {
+		return nil, errors.New("shadowtls requires password")
+	}
+	version := strings.TrimSpace(query.Get("version"))
+	if version == "" {
+		version = "3"
+	}
+	tls, err := getTls("tls", &query)
+	if err != nil {
+		return nil, err
+	}
+	shadowtls := OutboundType{
+		"type":        "shadowtls",
+		"tag":         tag,
+		"server":      host,
+		"server_port": port,
+		"version":     version,
+		"password":    password,
+		"tls":         tls,
+	}
+	return shadowtls, nil
+}
+
+func sshOutbound(u *url.URL) (OutboundType, error) {
+	query, _ := url.ParseQuery(u.RawQuery)
+	host, port := getHostPort(u, 22)
+	tag := "ssh" + "|" + host + "|" + strconv.Itoa(port)
+	ssh := OutboundType{
+		"type":        "ssh",
+		"tag":         tag,
+		"server":      host,
+		"server_port": port,
+	}
+	username := ""
+	password := ""
+	if u.User != nil {
+		username = u.User.Username()
+		password, _ = u.User.Password()
+	}
+	username = strings.TrimSpace(username)
+	if username == "" {
+		username = strings.TrimSpace(query.Get("user"))
+	}
+	if len(username) > 0 {
+		ssh["user"] = username
+	}
+	if len(password) > 0 {
+		ssh["password"] = password
+	}
+	privateKey := strings.TrimSpace(query.Get("private_key"))
+	if privateKey != "" {
+		ssh["private_key"] = privateKey
+	}
+	privateKeyPath := strings.TrimSpace(query.Get("private_key_path"))
+	if privateKeyPath != "" {
+		ssh["private_key_path"] = privateKeyPath
+	}
+	hostKey := strings.TrimSpace(query.Get("host_key"))
+	if hostKey != "" {
+		ssh["host_key"] = hostKey
+	}
+	hostKeyAlgorithms := strings.TrimSpace(query.Get("host_key_algorithms"))
+	if hostKeyAlgorithms != "" {
+		ssh["host_key_algorithms"] = strings.Split(hostKeyAlgorithms, ",")
+	}
+	return ssh, nil
+}
+
+func naive(u *url.URL) (OutboundType, error) {
+	query, _ := url.ParseQuery(u.RawQuery)
+	host, port := getHostPort(u, 443)
+	tag := "naive" + "|" + host + "|" + strconv.Itoa(port)
+	username := ""
+	password := ""
+	if u.User != nil {
+		username = u.User.Username()
+		password, _ = u.User.Password()
+	}
+	if username == "" || password == "" {
+		return nil, errors.New("naive requires username and password")
+	}
+	tls, err := getTls("tls", &query)
+	if err != nil {
+		return nil, err
+	}
+	naive := OutboundType{
+		"type":        "naive",
+		"tag":         tag,
+		"server":      host,
+		"server_port": port,
+		"username":    username,
+		"password":    password,
+		"tls":         tls,
+	}
+	return naive, nil
 }
 
 func getTransport(tp_type string, q *url.Values) map[string]interface{} {
