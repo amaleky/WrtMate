@@ -37,7 +37,7 @@ func GetSingBoxConf(outbounds []OutboundType, tags []string, socks int, finalOut
 
 	config := map[string]interface{}{
 		"log": map[string]interface{}{
-			"level": "warning",
+			"level": "fatal",
 		},
 		"inbounds": []map[string]interface{}{
 			{
