@@ -25,37 +25,38 @@ func urlTest(ctx context.Context, link string, detour network.Dialer) error {
 	}
 	hostname := linkURL.Hostname()
 	port := linkURL.Port()
-	if port == "" {
-		switch linkURL.Scheme {
-		case "http":
-			port = "80"
-		case "https":
-			port = "443"
-		}
+	if port == "" && linkURL.Scheme == "http" {
+		port = "80"
+	} else if port == "" && linkURL.Scheme == "https" {
+		port = "443"
 	}
-	instance, err := detour.DialContext(ctx, "tcp", metadata.ParseSocksaddrHostPortStr(hostname, port))
-	if err != nil {
-		return err
-	}
-	defer instance.Close()
+	dialAddr := metadata.ParseSocksaddrHostPortStr(hostname, port)
 	req, err := http.NewRequest(http.MethodGet, link, nil)
 	if err != nil {
 		return err
 	}
-	client := http.Client{
-		Transport: &http.Transport{
-			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-				return instance, nil
-			},
-			TLSClientConfig: &tls.Config{
-				Time:    ntp.TimeFuncFromContext(ctx),
-				RootCAs: adapter.RootPoolFromContext(ctx),
-			},
+	timeout := timeoutFromContext(ctx, constant.TCPTimeout)
+	transport := &http.Transport{
+		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			return detour.DialContext(ctx, "tcp", dialAddr)
 		},
+		TLSClientConfig: &tls.Config{
+			Time:    ntp.TimeFuncFromContext(ctx),
+			RootCAs: adapter.RootPoolFromContext(ctx),
+		},
+		DisableKeepAlives: true,
+	}
+	if timeout > 0 {
+		transport.TLSHandshakeTimeout = timeout
+		transport.ResponseHeaderTimeout = timeout
+		transport.ExpectContinueTimeout = timeout
+	}
+	client := http.Client{
+		Transport: transport,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
-		Timeout: constant.TCPTimeout,
+		Timeout: timeout,
 	}
 	defer client.CloseIdleConnections()
 	resp, err := client.Do(req.WithContext(ctx))
@@ -71,6 +72,16 @@ func urlTest(ctx context.Context, link string, detour network.Dialer) error {
 		return err
 	}
 	return nil
+}
+
+func timeoutFromContext(ctx context.Context, fallback time.Duration) time.Duration {
+	if deadline, ok := ctx.Deadline(); ok {
+		remaining := time.Until(deadline)
+		if remaining > 0 {
+			return remaining
+		}
+	}
+	return fallback
 }
 
 type outboundSelector interface {
