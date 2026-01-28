@@ -158,7 +158,7 @@ func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout i
 		}
 
 		selectOnce.Do(func() {
-			if selector.SelectOutbound(tag) {
+			if socks > 0 && selector.SelectOutbound(tag) {
 				fmt.Printf("Running SOCKS proxy: socks://127.0.0.1:%d\n", socks)
 			}
 		})
