@@ -10,6 +10,11 @@ if [ ! -d "$V2RAY_DIR" ]; then mkdir -p "$V2RAY_DIR"; fi
 if [ ! -d "$SINGBOX_DIR" ]; then mkdir -p "$SINGBOX_DIR"; fi
 if [ ! -d "$RULESET_DIR" ]; then mkdir -p "$RULESET_DIR"; fi
 
+if [ ! -f "/usr/bin/sing-box" ]; then
+  opkg update
+  opkg install sing-box
+fi
+
 download() {
   FILE="$1"
   URL="$2"
