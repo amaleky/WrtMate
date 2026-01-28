@@ -88,8 +88,7 @@ type outboundSelector interface {
 	SelectOutbound(tag string) bool
 }
 
-func TestOutbounds(seenKeys *sync.Map, url string, jobs int, timeout int, socks int, printResults bool) {
-	urlTestURLs := ParseURLTestURLs(url)
+func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout int, socks int, printResults bool) {
 	if jobs < 1 {
 		jobs = 1
 	}
@@ -108,7 +107,7 @@ func TestOutbounds(seenKeys *sync.Map, url string, jobs int, timeout int, socks 
 		return true
 	})
 
-	ctx, instance, err := StartSinBox(outbounds, tags, socks)
+	ctx, instance, err := StartSinBox(outbounds, tags, socks, urlTestURLs[0])
 	if err != nil {
 		fmt.Println("# Failed to start service: ", err)
 		return

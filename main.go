@@ -27,14 +27,16 @@ func main() {
 	paths := util.GetSubscriptions(outputDir)
 	paths = append([]string{archivePath}, paths...)
 	util.ParseFiles(paths, seenKeys)
-	util.TestOutbounds(seenKeys, *urlTest, *jobs, *timeout, *socks, *output == "" && *socks == 0)
+
+	urlTestURLs := util.ParseURLTestURLs(*urlTest)
+	util.TestOutbounds(seenKeys, urlTestURLs, *jobs, *timeout, *socks, *output == "" && *socks == 0)
 
 	outbounds, tags, rawConfigs, foundCount, linesCount := util.ParseOutbounds(seenKeys)
 	fmt.Printf("# Found %d configs from %d in %.2fs\n", foundCount, linesCount, time.Since(start).Seconds())
 
 	if *socks > 0 && len(outbounds) > 0 {
-		util.SaveResult(outputPath, archivePath, rawConfigs, outbounds, tags, *socks)
-		_, instance, err := util.StartSinBox(outbounds, tags, *socks)
+		util.SaveResult(outputPath, archivePath, rawConfigs, outbounds, tags, *socks, urlTestURLs[0])
+		_, instance, err := util.StartSinBox(outbounds, tags, *socks, urlTestURLs[0])
 		if err != nil {
 			fmt.Println(err)
 			return

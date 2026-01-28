@@ -28,8 +28,8 @@ func invalidOutboundKey(err error) int {
 	return index
 }
 
-func StartSinBox(outbounds []OutboundType, tags []string, socks int) (context.Context, *box.Box, error) {
-	config, defaultOutbounds := GetSingBoxConf(outbounds, tags, socks, "Select")
+func StartSinBox(outbounds []OutboundType, tags []string, socks int, urlTest string) (context.Context, *box.Box, error) {
+	config, defaultOutbounds := GetSingBoxConf(outbounds, tags, socks, "Select", urlTest)
 	configJSON, err := json.Marshal(config)
 	if err != nil {
 		return nil, nil, err
@@ -48,7 +48,7 @@ func StartSinBox(outbounds []OutboundType, tags []string, socks int) (context.Co
 		if idx >= 0 && idx < len(outbounds) && len(outbounds) > 1 {
 			tags = append(tags[:idx], tags[idx+1:]...)
 			outbounds = append(outbounds[:idx], outbounds[idx+1:]...)
-			return StartSinBox(outbounds, tags, socks)
+			return StartSinBox(outbounds, tags, socks, urlTest)
 		}
 		return ctx, instance, err
 	}

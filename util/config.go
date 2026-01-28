@@ -1,6 +1,6 @@
 package util
 
-func GetSingBoxConf(outbounds []OutboundType, tags []string, socks int, finalOutbound string) (map[string]interface{}, int) {
+func GetSingBoxConf(outbounds []OutboundType, tags []string, socks int, finalOutbound string, urlTest string) (map[string]interface{}, int) {
 	if socks <= 1 || socks > 65535 {
 		socks = 9802
 	}
@@ -12,7 +12,7 @@ func GetSingBoxConf(outbounds []OutboundType, tags []string, socks int, finalOut
 			"type":                        "urltest",
 			"tag":                         "Auto",
 			"outbounds":                   tags,
-			"url":                         "https://1.1.1.1/cdn-cgi/trace/",
+			"url":                         urlTest,
 			"interval":                    "1m",
 			"tolerance":                   50,
 			"interrupt_exist_connections": false,
