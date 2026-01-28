@@ -216,6 +216,16 @@ rule-set:local:/usr/share/singbox/rule-set/geoip-phishing.srs'
 config shunt_rules 'Direct'
 	option remarks 'Direct'
 	option network 'tcp,udp'
-	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-direct.srs'
+	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-direct.srs
+rule-set:local:/usr/share/singbox/rule-set/linkedin.srs
+rule-set:local:/usr/share/singbox/rule-set/riot.srs
+domain:pinsvc.net
+domain:snapp.cab
+domain:ptp
+domain:meet.google.com
+domain:dl.playstation.net
+domain:update.playstation.net
+domain:indllserver.info'
+
 	option ip_list 'rule-set:local:/usr/share/singbox/rule-set/geoip-ir.srs
 rule-set:local:/usr/share/singbox/rule-set/geoip-private.srs'

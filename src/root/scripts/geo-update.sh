@@ -60,25 +60,43 @@ download "$RULESET_DIR/geoip-ir.srs" "https://raw.githubusercontent.com/Chocolat
 download "$RULESET_DIR/geoip-private.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geoip-private.srs"
 download "$RULESET_DIR/domains-ir.txt" "https://github.com/bootmortis/iran-hosted-domains/releases/latest/download/domains.txt"
 download "$RULESET_DIR/iran_domains_direct.txt" "https://raw.githubusercontent.com/liketolivefree/iran_domain-ip/main/iran_domains_direct.txt"
-download "$RULESET_DIR/linkedin.txt" "$BASE_URL/linkedin"
-download "$RULESET_DIR/riot.txt" "$BASE_URL/riot"
 
 cat "$RULESET_DIR/domains-ir.txt" \
   "$RULESET_DIR/iran_domains_direct.txt" \
-  "$RULESET_DIR/linkedin.txt" \
-  "$RULESET_DIR/riot.txt" \
 | grep -vE "(##|/|^[[:space:]\!\?\[\.\*\$\-]|include:|.+\.ir$| @ads)" \
 | sed 's/^www\./\^/; s/$websocket.*//; s/$third-party.*//; s/$script.*//; s/\^.*$/\^/; s/#.*//g; /^||/! s/^/||/; /[^ ^]$/ s/$/^/; s/full://g; s/domain://g; s/geoip://g; s/geosite://g; s/ @cn//g' \
 | grep -vF '||^' \
 | grep -vE '([0-9]{1,3}\.){3}[0-9]{1,3}' \
 | sort -u > "$RULESET_DIR/geosite-direct.txt"
 
-for DOMAIN in "ir" "pinsvc.net" "snapp.cab" "local" "ptp" "meet.google.com" "dl.playstation.net" "update.playstation.net" "indllserver.info"; do
+for DOMAIN in "ir" "local" "localhost"; do
   echo "||$DOMAIN^" >> "$RULESET_DIR/geosite-direct.txt"
 done
 
 if [ "$(wc -c <"$RULESET_DIR/geosite-direct.txt" | tr -d ' ')" != "$CURRENT_SIZE" ]; then
   sing-box rule-set convert --type adguard --output "$RULESET_DIR/geosite-direct.srs" "$RULESET_DIR/geosite-direct.txt"
+fi
+
+download "$RULESET_DIR/linkedin.txt" "$BASE_URL/linkedin"
+cat "$RULESET_DIR/linkedin.txt" \
+| grep -vE "(##|/|^[[:space:]\!\?\[\.\*\$\-]|include:|.+\.ir$| @ads)" \
+| sed 's/^www\./\^/; s/$websocket.*//; s/$third-party.*//; s/$script.*//; s/\^.*$/\^/; s/#.*//g; /^||/! s/^/||/; /[^ ^]$/ s/$/^/; s/full://g; s/domain://g; s/geoip://g; s/geosite://g; s/ @cn//g' \
+| grep -vF '||^' \
+| grep -vE '([0-9]{1,3}\.){3}[0-9]{1,3}' \
+| sort -u > "$RULESET_DIR/linkedin.txt"
+if [ "$(wc -c <"$RULESET_DIR/linkedin.txt" | tr -d ' ')" != "$CURRENT_SIZE" ]; then
+  sing-box rule-set convert --type adguard --output "$RULESET_DIR/linkedin.srs" "$RULESET_DIR/linkedin.txt"
+fi
+
+download "$RULESET_DIR/riot.txt" "$BASE_URL/riot"
+cat "$RULESET_DIR/riot.txt" \
+| grep -vE "(##|/|^[[:space:]\!\?\[\.\*\$\-]|include:|.+\.ir$| @ads)" \
+| sed 's/^www\./\^/; s/$websocket.*//; s/$third-party.*//; s/$script.*//; s/\^.*$/\^/; s/#.*//g; /^||/! s/^/||/; /[^ ^]$/ s/$/^/; s/full://g; s/domain://g; s/geoip://g; s/geosite://g; s/ @cn//g' \
+| grep -vF '||^' \
+| grep -vE '([0-9]{1,3}\.){3}[0-9]{1,3}' \
+| sort -u > "$RULESET_DIR/riot.txt"
+if [ "$(wc -c <"$RULESET_DIR/riot.txt" | tr -d ' ')" != "$CURRENT_SIZE" ]; then
+  sing-box rule-set convert --type adguard --output "$RULESET_DIR/riot.srs" "$RULESET_DIR/riot.txt"
 fi
 
 # Block
