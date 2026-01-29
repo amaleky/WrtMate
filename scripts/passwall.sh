@@ -259,7 +259,7 @@ cleanup() {
       rm -rfv "/etc/init.d/${SERVICE}"
     fi
   done
-  rm -rfv "/root/warp" "/root/scripts/scanner.sh" "/root/ghost" "/usr/bin/hiddify-cli" "/usr/bin/hiddify" "/usr/bin/sing-box-plus" "/root/scripts/scanner.sh" "/root/.cache/subscriptions" "/root/.hiddify_version" "/root/.sing_box_plus_version" "/etc/init.d/balancer" "/root/balancer" "/root/scripts/logwatch.sh" "/etc/hotplug.d/iface/99-url-test" /root/.*_version
+  rm -rfv "/root/warp" "/root/scripts/scanner.sh" "/root/ghost" "/usr/bin/hiddify-cli" "/usr/bin/hiddify" "/usr/bin/sing-box-plus" "/root/scripts/scanner.sh" "/root/.cache/subscriptions" "/root/.hiddify_version" "/root/.sing_box_plus_version" "/root/balancer" "/root/scripts/logwatch.sh" "/etc/hotplug.d/iface/99-url-test" /root/.*_version
   del_cron_job "/etc/init.d/scanner start"
 }
 
