@@ -176,13 +176,20 @@ func vmess(u *url.URL) (OutboundType, error) {
 	if !ok || len(add) == 0 {
 		return nil, errors.New("Invalid vmess: missing add")
 	}
+	uuid, ok := dataJson["id"].(string)
+	if !ok || len(uuid) == 0 {
+		return nil, errors.New("Invalid vmess: missing uuid")
+	}
+	if len(uuid) != 36 || strings.Count(uuid, "-") != 4 {
+		return nil, errors.New("Invalid vmess: invalid uuid format")
+	}
 	tag := "vmess" + "|" + add + "|" + strconv.Itoa(serverPort)
 	vmess := OutboundType{
 		"type":        "vmess",
 		"tag":         tag,
 		"server":      add,
 		"server_port": serverPort,
-		"uuid":        dataJson["id"],
+		"uuid":        uuid,
 		"security":    "auto",
 		"alter_id":    alter_id,
 		"tls":         tls,
@@ -217,13 +224,16 @@ func vless(u *url.URL) (OutboundType, error) {
 	if !isInList([]string{"", "xtls-rprx-vision"}, flow) {
 		return nil, errors.New("Unsupported vless flow: " + flow)
 	}
-
+	uuid := u.User.Username()
+	if len(uuid) != 36 || strings.Count(uuid, "-") != 4 {
+		return nil, errors.New("Invalid vless: invalid uuid format")
+	}
 	vless := OutboundType{
 		"type":        "vless",
 		"tag":         tag,
 		"server":      host,
 		"server_port": port,
-		"uuid":        u.User.Username(),
+		"uuid":        uuid,
 		"flow":        flow,
 		"tls":         tls,
 		"transport":   getTransport(tp_type, &query),
@@ -250,12 +260,16 @@ func trojan(u *url.URL) (OutboundType, error) {
 	if err != nil {
 		return nil, err
 	}
+	password := u.User.Username()
+	if len(password) == 0 {
+		return nil, errors.New("Invalid trojan: missing password")
+	}
 	trojan := OutboundType{
 		"type":        "trojan",
 		"tag":         tag,
 		"server":      host,
 		"server_port": port,
-		"password":    u.User.Username(),
+		"password":    password,
 		"tls":         tls,
 		"transport":   getTransport(tp_type, &query),
 	}
@@ -398,13 +412,17 @@ func tuic(u *url.URL) (OutboundType, error) {
 		tls["disable_sni"] = true
 	}
 	tag := "tuic" + "|" + host + "|" + strconv.Itoa(port)
+	uuid := u.User.Username()
+	if len(uuid) != 36 || strings.Count(uuid, "-") != 4 {
+		return nil, errors.New("Invalid tuic: invalid uuid format")
+	}
 	password, _ := u.User.Password()
 	tuic := OutboundType{
 		"type":               "tuic",
 		"tag":                tag,
 		"server":             host,
 		"server_port":        port,
-		"uuid":               u.User.Username(),
+		"uuid":               uuid,
 		"password":           password,
 		"congestion_control": query.Get("congestion_control"),
 		"udp_relay_mode":     query.Get("udp_relay_mode"),
@@ -415,6 +433,9 @@ func tuic(u *url.URL) (OutboundType, error) {
 
 func ss(u *url.URL) (OutboundType, error) {
 	query, _ := url.ParseQuery(u.RawQuery)
+	if len(query.Get("ech")) > 0 {
+		return nil, errors.New("shadowsocks does not support ECH")
+	}
 	host, port := getHostPort(u, 443)
 	method := strings.TrimSpace(u.User.Username())
 	password, ok := u.User.Password()
@@ -839,6 +860,13 @@ func getTls(security string, q *url.Values) (map[string]interface{}, error) {
 		}
 	}
 	if len(tls_ech) > 0 {
+		echBytes, err := base64.StdEncoding.DecodeString(tls_ech)
+		if err != nil {
+			return nil, errors.New("Invalid ECH config: must be valid base64")
+		}
+		if len(echBytes) == 0 {
+			return nil, errors.New("Invalid ECH config: empty after decoding")
+		}
 		tls["ech"] = map[string]interface{}{
 			"enabled": true,
 			"config": []string{

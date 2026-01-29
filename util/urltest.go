@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -44,32 +43,23 @@ func urlTest(ctx context.Context, link string, detour network.Dialer) error {
 			Time:    ntp.TimeFuncFromContext(ctx),
 			RootCAs: adapter.RootPoolFromContext(ctx),
 		},
-		DisableKeepAlives: true,
+		DisableKeepAlives:     true,
+		MaxIdleConns:          1,
+		MaxIdleConnsPerHost:   1,
+		IdleConnTimeout:       1 * time.Second,
+		TLSHandshakeTimeout:   timeout,
+		ResponseHeaderTimeout: timeout,
+		ExpectContinueTimeout: 1 * time.Second,
 	}
-	if timeout > 0 {
-		transport.TLSHandshakeTimeout = timeout
-		transport.ResponseHeaderTimeout = timeout
-		transport.ExpectContinueTimeout = timeout
-	}
-	client := http.Client{
-		Transport: transport,
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-		Timeout: timeout,
-	}
-	defer client.CloseIdleConnections()
+	client := &http.Client{Transport: transport, Timeout: timeout}
+	defer transport.CloseIdleConnections()
 	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode > 399 {
+	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
 		return fmt.Errorf("unexpected status: %d", resp.StatusCode)
-	}
-	_, err = io.Copy(io.Discard, resp.Body)
-	if err != nil {
-		return err
 	}
 	return nil
 }
@@ -89,10 +79,6 @@ type outboundSelector interface {
 }
 
 func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout int, socks int, printResults bool) {
-	if jobs < 1 {
-		jobs = 1
-	}
-
 	var wg sync.WaitGroup
 	var selectOnce sync.Once
 	tags := make([]string, 0, 50)
@@ -173,4 +159,5 @@ func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout i
 	})
 
 	wg.Wait()
+	close(semaphore)
 }

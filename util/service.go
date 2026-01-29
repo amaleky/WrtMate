@@ -29,32 +29,46 @@ func invalidOutboundKey(err error) int {
 }
 
 func StartSinBox(outbounds []OutboundType, tags []string, socks int, urlTest string) (context.Context, *box.Box, error) {
-	config, defaultOutbounds := GetSingBoxConf(outbounds, tags, socks, "Select", urlTest)
-	configJSON, err := json.Marshal(config)
-	if err != nil {
-		return nil, nil, err
-	}
-	ctx := include.Context(context.Background())
-	var opts option.Options
-	if err := opts.UnmarshalJSONContext(ctx, configJSON); err != nil {
-		return nil, nil, err
-	}
-	instance, err := box.New(box.Options{
-		Context: ctx,
-		Options: opts,
-	})
-	if err != nil {
-		idx := invalidOutboundKey(err) - defaultOutbounds
-		if idx >= 0 && idx < len(outbounds) && len(outbounds) > 1 {
-			tags = append(tags[:idx], tags[idx+1:]...)
-			outbounds = append(outbounds[:idx], outbounds[idx+1:]...)
-			return StartSinBox(outbounds, tags, socks, urlTest)
+	curOutbounds := outbounds
+	curTags := tags
+
+	for {
+		config, defaultOutbounds := GetSingBoxConf(curOutbounds, curTags, socks, "Select", urlTest)
+		configJSON, err := json.Marshal(config)
+		if err != nil {
+			return nil, nil, err
 		}
-		return ctx, instance, err
+
+		ctx := include.Context(context.Background())
+		var opts option.Options
+		if err := opts.UnmarshalJSONContext(ctx, configJSON); err != nil {
+			return nil, nil, err
+		}
+
+		instance, err := box.New(box.Options{
+			Context: ctx,
+			Options: opts,
+		})
+		if err != nil {
+			if instance != nil {
+				instance.Close()
+			}
+			idx := invalidOutboundKey(err) - defaultOutbounds
+			if idx >= 0 && idx < len(curOutbounds) && len(curOutbounds) > 1 {
+				fmt.Println("Removed invalid outbound", err, curOutbounds[idx])
+				ctx.Done()
+				curOutbounds = append(curOutbounds[:idx], curOutbounds[idx+1:]...)
+				curTags = append(curTags[:idx], curTags[idx+1:]...)
+				continue
+			}
+			return ctx, instance, err
+		}
+
+		if err := instance.Start(); err != nil {
+			instance.Close()
+			return nil, nil, err
+		}
+
+		return ctx, instance, nil
 	}
-	err = instance.Start()
-	if err != nil {
-		return nil, nil, err
-	}
-	return ctx, instance, nil
 }

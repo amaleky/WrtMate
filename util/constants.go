@@ -14,7 +14,6 @@ var SUBSCRIPTIONS = []string{
 	"https://raw.githubusercontent.com/10ium/multi-proxy-config-fetcher/main/configs/proxy_configs.txt",
 	"https://raw.githubusercontent.com/10ium/telegram-configs-collector/main/splitted/mixed",
 	"https://raw.githubusercontent.com/10ium/V2Hub3/main/merged",
-	"https://raw.githubusercontent.com/10ium/V2ray-Config/main/All_Configs_Sub.txt",
 	"https://raw.githubusercontent.com/10ium/V2RayAggregator/master/Eternity.txt",
 	"https://raw.githubusercontent.com/10ium/V2rayCollector/main/mixed_iran.txt",
 	"https://raw.githubusercontent.com/4n0nymou3/multi-proxy-config-fetcher/main/configs/proxy_configs.txt",

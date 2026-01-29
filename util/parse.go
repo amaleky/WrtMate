@@ -51,17 +51,38 @@ func ParseURLTestURLs(value string) []string {
 	return urls
 }
 
-func ParseFiles(paths []string, seenKeys *sync.Map) {
+func ParseFiles(paths []string, seenKeys *sync.Map, jobs int) int {
 	var wg sync.WaitGroup
+	semaphore := make(chan struct{}, jobs)
 
-	worker := func(filePath string) {
+	processLine := func(line string) {
 		defer wg.Done()
-		file, err := os.Open(filePath)
+		defer func() { <-semaphore }()
+
+		outbound, parsed, err := GetOutbound(line)
 		if err != nil {
-			fmt.Println(err)
 			return
 		}
-		defer file.Close()
+
+		tag, ok := outbound["tag"].(string)
+		if !ok || tag == "" {
+			return
+		}
+
+		seenKeys.LoadOrStore(tag, SeenKeyType{
+			Ok:       false,
+			Raw:      parsed,
+			Outbound: outbound,
+		})
+	}
+
+	count := 0
+	for _, path := range paths {
+		file, err := os.Open(path)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
 
 		scanner := bufio.NewScanner(file)
 		buf := make([]byte, 0, 64*1024)
@@ -69,37 +90,26 @@ func ParseFiles(paths []string, seenKeys *sync.Map) {
 
 		for scanner.Scan() {
 			line := strings.TrimSpace(scanner.Text())
-			if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//") {
+			if len(line) > 2000 || strings.Count(line, "://") != 1 || line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//") {
 				continue
 			}
+			count++
 
-			outbound, parsed, err := GetOutbound(line)
-			if err != nil {
-				continue
-			}
-
-			tag, ok := outbound["tag"].(string)
-			if !ok || tag == "" {
-				continue
-			}
-
-			seenKeys.LoadOrStore(tag, SeenKeyType{
-				Ok:       false,
-				Raw:      parsed,
-				Outbound: outbound,
-			})
+			semaphore <- struct{}{}
+			wg.Add(1)
+			go processLine(line)
 		}
 
 		if err := scanner.Err(); err != nil {
 			fmt.Println(err)
 		}
+		file.Close()
 	}
 
-	for _, path := range paths {
-		wg.Add(1)
-		go worker(path)
-	}
 	wg.Wait()
+	close(semaphore)
+
+	return count
 }
 
 func ParseOutbounds(seenKeys *sync.Map) ([]OutboundType, []string, []string, int, int) {
