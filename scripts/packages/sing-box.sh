@@ -67,12 +67,31 @@ main() {
         ;;
     esac
   fi
+
   REMOTE_VERSION="$(curl -s -L "https://api.github.com/repos/SagerNet/sing-box/releases/latest" | jq -r '.tag_name | ltrimstr("v")')"
-  curl -L -o /tmp/sing-box.tar.gz "https://github.com/SagerNet/sing-box/releases/latest/download/sing-box-${REMOTE_VERSION}-linux-${DETECTED_ARCH}.tar.gz" || echo "Failed to download sing-box."
-  tar -xvzf /tmp/sing-box.tar.gz -C /tmp
-  mv /tmp/sing-box-*/sing-box /usr/bin/sing-box
-  chmod +x /usr/bin/sing-box
-  rm -rfv /tmp/sing-box-* /tmp/sing-box.tar.gz
+  DOWNLOAD_URL="https://github.com/SagerNet/sing-box/releases/latest/download/sing-box-${REMOTE_VERSION}-linux-${DETECTED_ARCH}.tar.gz"
+  REMOTE_SIZE=$(curl -sI -L "$DOWNLOAD_URL" | grep -i Content-Length | tail -n1 | awk '{print $2}' | tr -d '\r')
+  LOCAL_FILE="$HOME/sing-box"
+  if [ -f "/etc/openwrt_release" ]; then
+    LOCAL_FILE="/usr/bin/sing-box"
+  elif [ "$DETECTED_OS" = "darwin" ]; then
+    LOCAL_FILE="${PREFIX:-$HOME/.local}/bin/sing-box"
+  fi
+  mkdir -p "$(dirname "$LOCAL_FILE")"
+
+  if [ -f "$LOCAL_FILE" ]; then
+    LOCAL_SIZE=$(wc -c <"$LOCAL_FILE" | tr -d ' ')
+  else
+    LOCAL_SIZE=0
+  fi
+
+  if [ "$REMOTE_SIZE" != "$LOCAL_SIZE" ] || [ "$LOCAL_SIZE" -eq 0 ]; then
+    curl -L -o "/tmp/sing-box.tar.gz" "$DOWNLOAD_URL" || echo "Failed to download sing-box."
+    tar -xvzf "/tmp/sing-box.tar.gz" -C /tmp
+    mv "/tmp/sing-box-*/sing-box" "$LOCAL_FILE"
+    chmod +x "$LOCAL_FILE"
+    rm -rfv /tmp/sing-box-* "/tmp/sing-box.tar.gz"
+  fi
 }
 
 main "$@"

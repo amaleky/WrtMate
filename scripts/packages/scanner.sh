@@ -90,16 +90,6 @@ main() {
     esac
   fi
 
-  if [ -f "/etc/openwrt_release" ]; then
-      INSTALL_PATH="/usr/bin/scanner"
-  else
-    INSTALL_PATH="${PREFIX:-$HOME/.local}/bin/scanner"
-    mkdir -p "$(dirname "$INSTALL_PATH")"
-    if [ -f "/usr/bin/scanner" ]; then
-      sudo rm -rfv /usr/bin/scanner
-    fi
-  fi
-
   LINE='export PATH="$HOME/.local/bin:$PATH"'
   if [ -f ~/.bashrc ]; then
     if ! grep -qxF "$LINE" ~/.bashrc; then
@@ -114,8 +104,26 @@ main() {
     fi
   fi
 
-  wget "https://github.com/amaleky/WrtMate/releases/latest/download/scanner_${DETECTED_OS}-${DETECTED_ARCH}" -O "$INSTALL_PATH"
-  chmod +x "$INSTALL_PATH"
+  DOWNLOAD_URL="https://github.com/amaleky/WrtMate/releases/latest/download/scanner_${DETECTED_OS}-${DETECTED_ARCH}"
+  REMOTE_SIZE=$(curl -sI -L "$DOWNLOAD_URL" | grep -i Content-Length | tail -n1 | awk '{print $2}' | tr -d '\r')
+  LOCAL_FILE="$HOME/scanner"
+  if [ -f "/etc/openwrt_release" ]; then
+    LOCAL_FILE="/usr/bin/scanner"
+  elif [ "$DETECTED_OS" = "darwin" ]; then
+    LOCAL_FILE="${PREFIX:-$HOME/.local}/bin/scanner"
+  fi
+  mkdir -p "$(dirname "$LOCAL_FILE")"
+
+  if [ -f "$LOCAL_FILE" ]; then
+    LOCAL_SIZE=$(wc -c <"$LOCAL_FILE" | tr -d ' ')
+  else
+    LOCAL_SIZE=0
+  fi
+
+  if [ "$REMOTE_SIZE" != "$LOCAL_SIZE" ] || [ "$LOCAL_SIZE" -eq 0 ]; then
+    curl -L -o "$LOCAL_FILE" "$DOWNLOAD_URL" || echo "Failed to download scanner."
+    chmod +x "$LOCAL_FILE"
+  fi
 }
 
 main "$@"
