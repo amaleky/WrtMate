@@ -76,9 +76,10 @@ main() {
   fi
 
   if [ "$DETECTED_OS" = "darwin" ]; then
-    curl -L -o "$HOME/lantern" "https://github.com/amaleky/WrtMate/releases/latest/download/lantern_${DETECTED_OS}-${DETECTED_ARCH}" || echo "Failed to download lantern."
-    xattr -d com.apple.quarantine "$HOME/lantern"
-    chmod +x "$HOME/lantern"
+    INSTALL_PATH="${PREFIX:-$HOME/.local}/bin/scanner"
+    mkdir -p "$(dirname "$INSTALL_PATH")"
+    curl -L -o "$INSTALL_PATH" "https://github.com/amaleky/WrtMate/releases/latest/download/lantern_${DETECTED_OS}-${DETECTED_ARCH}" || echo "Failed to download lantern."
+    chmod +x "$INSTALL_PATH"
   else
     curl -L -o "/usr/bin/lantern" "https://github.com/amaleky/WrtMate/releases/latest/download/lantern_${DETECTED_OS}-${DETECTED_ARCH}" || echo "Failed to download lantern."
     chmod +x "/usr/bin/lantern"

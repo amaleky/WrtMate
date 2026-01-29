@@ -76,9 +76,10 @@ main() {
   fi
 
   if [ "$DETECTED_OS" = "darwin" ]; then
+    INSTALL_PATH="${PREFIX:-$HOME/.local}/bin/scanner"
+    mkdir -p "$(dirname "$INSTALL_PATH")"
     curl -L -o "$HOME/psiphon" "https://github.com/amaleky/WrtMate/releases/latest/download/psiphon_${DETECTED_OS}-${DETECTED_ARCH}" || echo "Failed to download psiphon."
-    xattr -d com.apple.quarantine "$HOME/psiphon"
-    chmod +x "$HOME/psiphon"
+    chmod +x "$INSTALL_PATH"
   else
     curl -L -o "/usr/bin/psiphon" "https://github.com/amaleky/WrtMate/releases/latest/download/psiphon_${DETECTED_OS}-${DETECTED_ARCH}" || echo "Failed to download psiphon."
     chmod +x "/usr/bin/psiphon"
