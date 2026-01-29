@@ -10,7 +10,6 @@ if [ ! -d /root/.cache/ ]; then mkdir /root/.cache/; fi
 scanner() {
   info "scanner"
 
-
   REMOTE_VERSION="$(curl -s -L "https://api.github.com/repos/amaleky/WrtMate/releases/latest" | jq -r '.tag_name')"
   LOCAL_VERSION="$(cat "/root/.cache/.scanner_version" 2>/dev/null || echo 'none')"
 
