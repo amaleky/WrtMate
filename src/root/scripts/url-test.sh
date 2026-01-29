@@ -1,5 +1,10 @@
 #!/bin/sh
 
+if [ "$(uci get passwall2.@global[0].enabled)" != "1" ]; then
+  echo "Passwall is disabled. Exiting url-test."
+  exit 0
+fi
+
 get_retry_count() {
   FILE="/tmp/$1.count"
   cat "$FILE" 2>/dev/null || echo 0
