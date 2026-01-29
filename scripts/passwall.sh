@@ -135,26 +135,28 @@ ssh_proxy() {
   if [ ! -d /root/.ssh/ ]; then mkdir /root/.ssh/; fi
   ensure_packages "openssh-client"
 
-  SSH_USER=$(grep -E "^SSH_USER=" "/etc/init.d/ssh-proxy" | cut -d'=' -f2-)
-  SSH_HOST=$(grep -E "^SSH_HOST=" "/etc/init.d/ssh-proxy" | cut -d'=' -f2-)
-  SSH_PORT=$(grep -E "^SSH_PORT=" "/etc/init.d/ssh-proxy" | cut -d'=' -f2-)
+  if [[ ! -f "/etc/init.d/ssh-proxy" ]]; then
+    SSH_USER=$(grep -E "^SSH_USER=" "/etc/init.d/ssh-proxy" | cut -d'=' -f2-)
+    SSH_HOST=$(grep -E "^SSH_HOST=" "/etc/init.d/ssh-proxy" | cut -d'=' -f2-)
+    SSH_PORT=$(grep -E "^SSH_PORT=" "/etc/init.d/ssh-proxy" | cut -d'=' -f2-)
 
-  read -r -p "Enter SSH user " -e -i "$SSH_USER" NEW_SSH_USER
-  read -r -p "Enter SSH host: " -e -i "$SSH_HOST" NEW_SSH_HOST
-  read -r -p "Enter SSH port: " -e -i "$SSH_PORT" NEW_SSH_PORT
+    read -r -p "Enter SSH user " -e -i "$SSH_USER" NEW_SSH_USER
+    read -r -p "Enter SSH host: " -e -i "$SSH_HOST" NEW_SSH_HOST
+    read -r -p "Enter SSH port: " -e -i "$SSH_PORT" NEW_SSH_PORT
 
-  curl -s -L -o "/etc/init.d/ssh-proxy" "${REPO_URL}/src/etc/init.d/ssh-proxy" || error "Failed to download ssh-proxy init script."
-  chmod +x "/etc/init.d/ssh-proxy"
+    curl -s -L -o "/etc/init.d/ssh-proxy" "${REPO_URL}/src/etc/init.d/ssh-proxy" || error "Failed to download ssh-proxy init script."
+    chmod +x "/etc/init.d/ssh-proxy"
 
-  if [[ ! -f "/root/.ssh/id_rsa" ]]; then
-    info "Please paste your SSH private key (press Ctrl+D when done):"
-    cat >"/root/.ssh/id_rsa"
-    chmod 600 "/root/.ssh/id_rsa"
+    if [[ ! -f "/root/.ssh/id_rsa" ]]; then
+      info "Please paste your SSH private key (press Ctrl+D when done):"
+      cat >"/root/.ssh/id_rsa"
+      chmod 600 "/root/.ssh/id_rsa"
+    fi
+
+    sed -i "s|^SSH_USER=.*|SSH_USER=${NEW_SSH_USER}|" "/etc/init.d/ssh-proxy"
+    sed -i "s|^SSH_HOST=.*|SSH_HOST=${NEW_SSH_HOST}|" "/etc/init.d/ssh-proxy"
+    sed -i "s|^SSH_PORT=.*|SSH_PORT=${NEW_SSH_PORT}|" "/etc/init.d/ssh-proxy"
   fi
-
-  sed -i "s|^SSH_USER=.*|SSH_USER=${NEW_SSH_USER}|" "/etc/init.d/ssh-proxy"
-  sed -i "s|^SSH_HOST=.*|SSH_HOST=${NEW_SSH_HOST}|" "/etc/init.d/ssh-proxy"
-  sed -i "s|^SSH_PORT=.*|SSH_PORT=${NEW_SSH_PORT}|" "/etc/init.d/ssh-proxy"
 
   if [[ -f "/root/.ssh/id_rsa" ]]; then
     /etc/init.d/ssh-proxy enable
@@ -214,32 +216,9 @@ passwall() {
     fi
   fi
 
-  if uci -q show passwall2.@subscribe_list[0] >/dev/null; then
-    uci get passwall2.@subscribe_list[0].url > "/tmp/passwall2_subscribe_list_url"
-    uci get passwall2.@subscribe_list[0].remark > "/tmp/passwall2_subscribe_list_remark"
-  fi
-
   curl -s -L -o "/usr/lib/lua/luci/view/passwall2/global/status.htm" "${REPO_URL}/src/usr/lib/lua/luci/view/passwall2/global/status.htm" || error "Failed to download passwall status header."
   curl -s -L -o "/etc/config/passwall2" "${REPO_URL}/src/etc/config/passwall2" || error "Failed to download passwall config."
   uci commit passwall2
-
-  if [ -f "/tmp/passwall2_subscribe_list_url" ]; then
-    uci -q add passwall2 subscribe_list
-    uci set passwall2.@subscribe_list[0].remark="$(cat "/tmp/passwall2_subscribe_list_remark")"
-    uci set passwall2.@subscribe_list[0].url="$(cat "/tmp/passwall2_subscribe_list_url")"
-    uci set passwall2.@subscribe_list[0].allowInsecure="1"
-    uci set passwall2.@subscribe_list[0].filter_keyword_mode="5"
-    uci set passwall2.@subscribe_list[0].ss_type="global"
-    uci set passwall2.@subscribe_list[0].trojan_type="global"
-    uci set passwall2.@subscribe_list[0].vmess_type="global"
-    uci set passwall2.@subscribe_list[0].vless_type="global"
-    uci set passwall2.@subscribe_list[0].hysteria2_type="global"
-    uci set passwall2.@subscribe_list[0].domain_strategy="global"
-    uci set passwall2.@subscribe_list[0].auto_update="0"
-    uci set passwall2.@subscribe_list[0].user_agent="curl"
-    uci commit passwall2
-    rm -f "/tmp/passwall2_subscribe_list_*"
-  fi
 
   /etc/init.d/passwall2 restart
 
