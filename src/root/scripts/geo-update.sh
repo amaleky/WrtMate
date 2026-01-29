@@ -82,6 +82,7 @@ if [ "$(wc -c <"$RULESET_DIR/geosite-direct.txt" | tr -d ' ')" != "$CURRENT_SIZE
   sing-box rule-set convert --type adguard --output "$RULESET_DIR/geosite-direct.srs" "$RULESET_DIR/geosite-direct.txt"
 fi
 
+CURRENT_SIZE=$(wc -c <"$RULESET_DIR/linkedin.txt" | tr -d ' ')
 download "$RULESET_DIR/linkedin.txt" "$BASE_URL/linkedin"
 cat "$RULESET_DIR/linkedin.txt" \
 | grep -vE "(##|/|^[[:space:]\!\?\[\.\*\$\-]|include:|.+\.ir$| @ads)" \
@@ -93,6 +94,7 @@ if [ "$(wc -c <"$RULESET_DIR/linkedin.txt" | tr -d ' ')" != "$CURRENT_SIZE" ]; t
   sing-box rule-set convert --type adguard --output "$RULESET_DIR/linkedin.srs" "$RULESET_DIR/linkedin.txt"
 fi
 
+CURRENT_SIZE=$(wc -c <"$RULESET_DIR/riot.txt" | tr -d ' ')
 download "$RULESET_DIR/riot.txt" "$BASE_URL/riot"
 cat "$RULESET_DIR/riot.txt" \
 | grep -vE "(##|/|^[[:space:]\!\?\[\.\*\$\-]|include:|.+\.ir$| @ads)" \
