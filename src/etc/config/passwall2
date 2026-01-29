@@ -7,26 +7,6 @@ config nodes 'Splitter'
 	option Block '_blackhole'
 	option Direct '_direct'
 
-config socks 'Auto'
-	option enabled '0'
-	option port '9801'
-	option http_port '0'
-	option node 'Scanner'
-	option log '1'
-	option enable_autoswitch '1'
-	option autoswitch_testing_time '10'
-	option autoswitch_connect_timeout '3'
-	option autoswitch_retry_num '1'
-	option autoswitch_restore_switch '1'
-	option autoswitch_probe_url 'https://1.1.1.1/cdn-cgi/trace/'
-	list autoswitch_backup_node 'Scanner'
-	list autoswitch_backup_node 'WarpPlus'
-	list autoswitch_backup_node 'Psiphon'
-	list autoswitch_backup_node 'Tor'
-	list autoswitch_backup_node 'SshProxy'
-	list autoswitch_backup_node 'Lantern'
-	list autoswitch_backup_node 'ServerLess'
-
 config nodes 'Scanner'
 	option group 'default'
 	option remarks 'Scanner'
@@ -226,6 +206,5 @@ domain:meet.google.com
 domain:dl.playstation.net
 domain:update.playstation.net
 domain:indllserver.info'
-
 	option ip_list 'rule-set:local:/usr/share/singbox/rule-set/geoip-ir.srs
 rule-set:local:/usr/share/singbox/rule-set/geoip-private.srs'
