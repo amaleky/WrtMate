@@ -1,8 +1,13 @@
 package util
 
 func GetSingBoxConf(outbounds []OutboundType, tags []string, socks int, finalOutbound string, urlTest string) (map[string]interface{}, int) {
-	if socks <= 1 || socks > 65535 {
-		socks = 9802
+	if socks <= 1 || socks > 65535 || urlTest == "" {
+		return map[string]interface{}{
+			"log": map[string]interface{}{
+				"level": "fatal",
+			},
+			"outbounds": outbounds,
+		}, 0
 	}
 
 	var defaultOutbounds []OutboundType

@@ -75,7 +75,7 @@ func timeoutFromContext(ctx context.Context, fallback time.Duration) time.Durati
 	return fallback
 }
 
-func runTempProxy(tag string, entry SeenKeyType, socks int, urlTestURLs []string, serviceInstance *box.Box) {
+func runTempProxy(tag string, entry SeenKeyType, socks int, urlTest string, serviceInstance *box.Box) {
 	type outboundSelector interface {
 		SelectOutbound(tag string) bool
 	}
@@ -83,7 +83,7 @@ func runTempProxy(tag string, entry SeenKeyType, socks int, urlTestURLs []string
 	instanceTags = append(instanceTags, tag)
 	var instanceOutbounds []OutboundType
 	instanceOutbounds = append(instanceOutbounds, entry.Outbound)
-	_, instance, err := StartSinBox(instanceOutbounds, instanceTags, socks, urlTestURLs[0])
+	_, instance, err := StartSinBox(instanceOutbounds, instanceTags, socks, urlTest)
 	if err != nil {
 		fmt.Println("# Failed to start service: ", err)
 		return
@@ -132,7 +132,7 @@ func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout i
 			batchOutbounds[i] = entry.Outbound
 		}
 
-		ctx, instance, err := StartSinBox(batchOutbounds, batchTags, socks, urlTestURLs[0])
+		ctx, instance, err := StartSinBox(batchOutbounds, batchTags, 0, "")
 		if err != nil {
 			fmt.Println("# Failed to start service: ", err)
 			continue
@@ -176,7 +176,7 @@ func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout i
 			}
 
 			selectOnce.Do(func() {
-				runTempProxy(tag, entry, socks, urlTestURLs, serviceInstance)
+				runTempProxy(tag, entry, socks, urlTestURLs[0], serviceInstance)
 			})
 		}
 
