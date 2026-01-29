@@ -79,85 +79,104 @@ type outboundSelector interface {
 }
 
 func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout int, socks int, printResults bool) {
-	var wg sync.WaitGroup
-	var selectOnce sync.Once
-	tags := make([]string, 0, 50)
-	semaphore := make(chan struct{}, jobs)
-	outbounds := make([]OutboundType, 0)
-
+	var entries []SeenKeyType
+	var tags []string
 	seenKeys.Range(func(key, value interface{}) bool {
 		entry := value.(SeenKeyType)
 		tag := key.(string)
+		entries = append(entries, entry)
 		tags = append(tags, tag)
-		outbounds = append(outbounds, entry.Outbound)
 		return true
 	})
 
-	ctx, instance, err := StartSinBox(outbounds, tags, socks, urlTestURLs[0])
-	if err != nil {
-		fmt.Println("# Failed to start service: ", err)
-		return
-	}
-	defer instance.Close()
+	var selectOnce sync.Once
+	maxBatchSize := jobs
 
-	selectorOutbound, ok := instance.Outbound().Outbound("Select")
-	if !ok {
-		fmt.Println("# Selector outbound 'Select' not found.")
-	}
-	selector, ok := selectorOutbound.(outboundSelector)
-	if !ok {
-		fmt.Println("# Outbound 'Select' does not implement outboundSelector.")
-	}
+	for start := 0; start < len(entries); start += maxBatchSize {
+		fmt.Printf("# Processing %d/%d configs\n", start, len(entries))
+		end := start + maxBatchSize
+		if end > len(entries) {
+			end = len(entries)
+		}
 
-	worker := func(entry SeenKeyType) {
-		defer wg.Done()
-		defer func() { <-semaphore }()
+		batchEntries := entries[start:end]
+		batchTags := tags[start:end]
+		batchOutbounds := make([]OutboundType, len(batchEntries))
+		for i, entry := range batchEntries {
+			batchOutbounds[i] = entry.Outbound
+		}
 
-		tag, _ := entry.Outbound["tag"].(string)
+		ctx, instance, err := StartSinBox(batchOutbounds, batchTags, socks, urlTestURLs[0])
+		if err != nil {
+			fmt.Println("# Failed to start service: ", err)
+			continue
+		}
 
-		out, ok := instance.Outbound().Outbound(tag)
+		selectorOutbound, ok := instance.Outbound().Outbound("Select")
 		if !ok {
-			return
+			fmt.Println("# Selector outbound 'Select' not found.")
+		}
+		selector, ok := selectorOutbound.(outboundSelector)
+		if !ok {
+			fmt.Println("# Outbound 'Select' does not implement outboundSelector.")
 		}
 
-		var testErr error
-		for _, testURL := range urlTestURLs {
-			testCtx, cancel := context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
-			testErr = urlTest(testCtx, testURL, out)
-			cancel()
+		batchJobs := jobs
+		if len(batchEntries) < batchJobs {
+			batchJobs = len(batchEntries)
+		}
+		semaphore := make(chan struct{}, batchJobs)
+		var wg sync.WaitGroup
+
+		worker := func(entry SeenKeyType) {
+			defer wg.Done()
+			defer func() { <-semaphore }()
+
+			tag, _ := entry.Outbound["tag"].(string)
+
+			out, ok := instance.Outbound().Outbound(tag)
+			if !ok {
+				return
+			}
+
+			var testErr error
+			for _, testURL := range urlTestURLs {
+				testCtx, cancel := context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
+				testErr = urlTest(testCtx, testURL, out)
+				cancel()
+				if testErr != nil {
+					break
+				}
+			}
 			if testErr != nil {
-				break
+				return
 			}
-		}
-		if testErr != nil {
-			return
-		}
 
-		seenKeys.Store(tag, SeenKeyType{
-			Ok:       true,
-			Raw:      entry.Raw,
-			Outbound: entry.Outbound,
-		})
+			seenKeys.Store(tag, SeenKeyType{
+				Ok:       true,
+				Raw:      entry.Raw,
+				Outbound: entry.Outbound,
+			})
 
-		if printResults {
-			fmt.Println(entry.Raw)
-		}
-
-		selectOnce.Do(func() {
-			if socks > 0 && selector.SelectOutbound(tag) {
-				fmt.Printf("Running SOCKS proxy: socks://127.0.0.1:%d\n", socks)
+			if printResults {
+				fmt.Println(entry.Raw)
 			}
-		})
+
+			selectOnce.Do(func() {
+				if socks > 0 && selector != nil && selector.SelectOutbound(tag) {
+					fmt.Printf("Running SOCKS proxy: socks://127.0.0.1:%d\n", socks)
+				}
+			})
+		}
+
+		for _, entry := range batchEntries {
+			semaphore <- struct{}{}
+			wg.Add(1)
+			go worker(entry)
+		}
+
+		wg.Wait()
+		close(semaphore)
+		instance.Close()
 	}
-
-	seenKeys.Range(func(key, value interface{}) bool {
-		entry := value.(SeenKeyType)
-		semaphore <- struct{}{}
-		wg.Add(1)
-		go worker(entry)
-		return true
-	})
-
-	wg.Wait()
-	close(semaphore)
 }
