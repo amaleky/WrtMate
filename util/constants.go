@@ -8,7 +8,7 @@ type SeenKeyType struct {
 	Outbound OutboundType
 }
 
-var DEFAULT_URL_TEST = "https://1.1.1.1/cdn-cgi/trace/"
+var DEFAULT_URL_TEST = "https://cachefly.cachefly.net/1mb.test"
 
 var SUBSCRIPTIONS = []string{
 	"https://raw.githubusercontent.com/10ium/multi-proxy-config-fetcher/main/configs/proxy_configs.txt",
