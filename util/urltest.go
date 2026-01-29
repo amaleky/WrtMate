@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	box "github.com/sagernet/sing-box"
 	"github.com/sagernet/sing-box/adapter"
 	"github.com/sagernet/sing-box/constant"
 	"github.com/sagernet/sing/common/metadata"
@@ -74,8 +75,33 @@ func timeoutFromContext(ctx context.Context, fallback time.Duration) time.Durati
 	return fallback
 }
 
-type outboundSelector interface {
-	SelectOutbound(tag string) bool
+func runTempProxy(tag string, entry SeenKeyType, socks int, urlTestURLs []string, serviceInstance *box.Box) {
+	type outboundSelector interface {
+		SelectOutbound(tag string) bool
+	}
+	var instanceTags []string
+	instanceTags = append(instanceTags, tag)
+	var instanceOutbounds []OutboundType
+	instanceOutbounds = append(instanceOutbounds, entry.Outbound)
+	_, instance, err := StartSinBox(instanceOutbounds, instanceTags, socks, urlTestURLs[0])
+	if err != nil {
+		fmt.Println("# Failed to start service: ", err)
+		return
+	}
+	serviceInstance = instance
+	selectorOutbound, ok := instance.Outbound().Outbound("Select")
+	if !ok {
+		fmt.Println("# Selector outbound 'Select' not found.")
+		return
+	}
+	selector, ok := selectorOutbound.(outboundSelector)
+	if !ok {
+		fmt.Println("# Outbound 'Select' does not implement outboundSelector.")
+		return
+	}
+	if socks > 0 && selector.SelectOutbound(tag) {
+		fmt.Printf("Running SOCKS proxy: socks://127.0.0.1:%d\n", socks)
+	}
 }
 
 func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout int, socks int, printResults bool) {
@@ -90,10 +116,10 @@ func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout i
 	})
 
 	var selectOnce sync.Once
+	var serviceInstance *box.Box
 	maxBatchSize := jobs
 
 	for start := 0; start < len(entries); start += maxBatchSize {
-		fmt.Printf("# Processing %d/%d configs\n", start, len(entries))
 		end := start + maxBatchSize
 		if end > len(entries) {
 			end = len(entries)
@@ -110,15 +136,6 @@ func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout i
 		if err != nil {
 			fmt.Println("# Failed to start service: ", err)
 			continue
-		}
-
-		selectorOutbound, ok := instance.Outbound().Outbound("Select")
-		if !ok {
-			fmt.Println("# Selector outbound 'Select' not found.")
-		}
-		selector, ok := selectorOutbound.(outboundSelector)
-		if !ok {
-			fmt.Println("# Outbound 'Select' does not implement outboundSelector.")
 		}
 
 		batchJobs := jobs
@@ -139,17 +156,13 @@ func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout i
 				return
 			}
 
-			var testErr error
 			for _, testURL := range urlTestURLs {
 				testCtx, cancel := context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
-				testErr = urlTest(testCtx, testURL, out)
+				testErr := urlTest(testCtx, testURL, out)
 				cancel()
 				if testErr != nil {
-					break
+					return
 				}
-			}
-			if testErr != nil {
-				return
 			}
 
 			seenKeys.Store(tag, SeenKeyType{
@@ -163,9 +176,7 @@ func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout i
 			}
 
 			selectOnce.Do(func() {
-				if socks > 0 && selector != nil && selector.SelectOutbound(tag) {
-					fmt.Printf("Running SOCKS proxy: socks://127.0.0.1:%d\n", socks)
-				}
+				runTempProxy(tag, entry, socks, urlTestURLs, serviceInstance)
 			})
 		}
 
@@ -178,5 +189,8 @@ func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout i
 		wg.Wait()
 		close(semaphore)
 		instance.Close()
+		if serviceInstance != nil {
+			serviceInstance.Close()
+		}
 	}
 }
