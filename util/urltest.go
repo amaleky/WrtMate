@@ -75,7 +75,7 @@ func timeoutFromContext(ctx context.Context, fallback time.Duration) time.Durati
 	return fallback
 }
 
-func runTempProxy(tag string, entry SeenKeyType, socks int, urlTest string, serviceInstance *box.Box) {
+func runTempProxy(tag string, entry SeenKeyType, socks int, urlTest string) *box.Box {
 	type outboundSelector interface {
 		SelectOutbound(tag string) bool
 	}
@@ -86,22 +86,22 @@ func runTempProxy(tag string, entry SeenKeyType, socks int, urlTest string, serv
 	_, instance, err := StartSinBox(instanceOutbounds, instanceTags, socks, urlTest)
 	if err != nil {
 		fmt.Println("# Failed to start service: ", err)
-		return
+		return nil
 	}
-	serviceInstance = instance
 	selectorOutbound, ok := instance.Outbound().Outbound("Select")
 	if !ok {
 		fmt.Println("# Selector outbound 'Select' not found.")
-		return
+		return nil
 	}
 	selector, ok := selectorOutbound.(outboundSelector)
 	if !ok {
 		fmt.Println("# Outbound 'Select' does not implement outboundSelector.")
-		return
+		return nil
 	}
 	if socks > 0 && selector.SelectOutbound(tag) {
 		fmt.Printf("Running SOCKS proxy: socks://127.0.0.1:%d\n", socks)
 	}
+	return instance
 }
 
 func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout int, socks int, printResults bool) {
@@ -118,12 +118,14 @@ func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout i
 	var selectOnce sync.Once
 	var serviceInstance *box.Box
 	maxBatchSize := jobs
+	total := len(entries)
 
-	for start := 0; start < len(entries); start += maxBatchSize {
+	for start := 0; start < total; start += maxBatchSize {
 		end := start + maxBatchSize
-		if end > len(entries) {
-			end = len(entries)
+		if end > total {
+			end = total
 		}
+		fmt.Printf("# Processing %d/%d configs\n", end, total)
 
 		batchEntries := entries[start:end]
 		batchTags := tags[start:end]
@@ -176,7 +178,7 @@ func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout i
 			}
 
 			selectOnce.Do(func() {
-				runTempProxy(tag, entry, socks, urlTestURLs[0], serviceInstance)
+				serviceInstance = runTempProxy(tag, entry, socks, urlTestURLs[0])
 			})
 		}
 
@@ -189,8 +191,9 @@ func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout i
 		wg.Wait()
 		close(semaphore)
 		instance.Close()
-		if serviceInstance != nil {
-			serviceInstance.Close()
-		}
+	}
+
+	if serviceInstance != nil {
+		serviceInstance.Close()
 	}
 }
