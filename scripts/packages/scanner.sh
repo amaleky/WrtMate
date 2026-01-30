@@ -96,20 +96,6 @@ main() {
     esac
   fi
 
-  LINE='export PATH="$HOME/.local/bin:$PATH"'
-  if [ -f ~/.bashrc ]; then
-    if ! grep -qxF "$LINE" ~/.bashrc; then
-      echo "$LINE" >> ~/.bashrc
-      source ~/.bashrc
-    fi
-  fi
-  if [ -f ~/.zshrc ]; then
-    if ! grep -qxF "$LINE" ~/.zshrc; then
-      echo "$LINE" >> ~/.zshrc
-      source ~/.zshrc
-    fi
-  fi
-
   DOWNLOAD_URL="https://github.com/amaleky/WrtMate/releases/latest/download/scanner_${DETECTED_OS}-${DETECTED_ARCH}"
   REMOTE_SIZE=$(curl -sI -L "$DOWNLOAD_URL" | grep -i Content-Length | tail -n1 | awk '{print $2}' | tr -d '\r')
   LOCAL_FILE="$HOME/scanner"
@@ -129,6 +115,20 @@ main() {
   if [ "$REMOTE_SIZE" != "$LOCAL_SIZE" ] || [ "$LOCAL_SIZE" -eq 0 ]; then
     curl -L -o "$LOCAL_FILE" "$DOWNLOAD_URL" || echo "Failed to download scanner."
     chmod +x "$LOCAL_FILE"
+  fi
+
+  LINE='export PATH="$HOME/.local/bin:$PATH"'
+  if [ -f ~/.bashrc ]; then
+    if ! grep -qxF "$LINE" ~/.bashrc; then
+      echo "$LINE" >> ~/.bashrc
+      source ~/.bashrc
+    fi
+  fi
+  if [ -f ~/.zshrc ]; then
+    if ! grep -qxF "$LINE" ~/.zshrc; then
+      echo "$LINE" >> ~/.zshrc
+      source ~/.zshrc
+    fi
   fi
 }
 
