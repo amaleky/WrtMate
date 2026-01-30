@@ -8,10 +8,8 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"sync"
 	"time"
 
-	box "github.com/sagernet/sing-box"
 	"github.com/sagernet/sing-box/adapter"
 	"github.com/sagernet/sing-box/constant"
 	"github.com/sagernet/sing/common/metadata"
@@ -79,93 +77,4 @@ func timeoutFromContext(ctx context.Context, fallback time.Duration) time.Durati
 		}
 	}
 	return fallback
-}
-
-func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout int, socks int, run bool, printResults bool) (context.Context, *box.Box) {
-	var entries []SeenKeyType
-	seenKeys.Range(func(key, value interface{}) bool {
-		entries = append(entries, value.(SeenKeyType))
-		return true
-	})
-
-	var selectOnce sync.Once
-	var tmpCtx context.Context
-	var tmpInstance *box.Box
-	total := len(entries)
-
-	for start := 0; start < total; start += jobs {
-		end := start + jobs
-		if end > total {
-			end = total
-		}
-		fmt.Printf("# Processing %d/%d configs\n", end, total)
-
-		batchEntries := entries[start:end]
-		batchOutbounds := make([]OutboundType, len(batchEntries))
-		for i, entry := range batchEntries {
-			batchOutbounds[i] = entry.Outbound
-		}
-
-		ctx, instance, err := StartSinBox(batchOutbounds, nil, 0, "")
-		if err != nil {
-			fmt.Println("# Failed to start test instance: ", err)
-			continue
-		}
-
-		semaphore := make(chan struct{}, len(batchEntries))
-		var wg sync.WaitGroup
-
-		worker := func(entry SeenKeyType) {
-			defer wg.Done()
-			defer func() { <-semaphore }()
-
-			tag, _ := entry.Outbound["tag"].(string)
-
-			out, ok := instance.Outbound().Outbound(tag)
-			if !ok {
-				return
-			}
-
-			for _, testURL := range urlTestURLs {
-				testCtx, cancel := context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
-				testErr := urlTest(testCtx, testURL, out)
-				cancel()
-				if testErr != nil {
-					return
-				}
-			}
-
-			seenKeys.Store(tag, SeenKeyType{
-				Ok:       true,
-				Raw:      entry.Raw,
-				Outbound: entry.Outbound,
-			})
-
-			if printResults {
-				fmt.Println(entry.Raw)
-			}
-
-			selectOnce.Do(func() {
-				if run && socks > 0 {
-					tmpCtx, tmpInstance, _ = StartSinBox([]OutboundType{entry.Outbound}, []string{tag}, socks, urlTestURLs[0])
-				}
-			})
-		}
-
-		for _, entry := range batchEntries {
-			semaphore <- struct{}{}
-			wg.Add(1)
-			go worker(entry)
-		}
-
-		wg.Wait()
-		close(semaphore)
-		instance.Close()
-		ctx.Done()
-		batchEntries = nil
-		batchOutbounds = nil
-	}
-
-	entries = nil
-	return tmpCtx, tmpInstance
 }

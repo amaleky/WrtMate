@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"scanner/util"
-	"sync"
 	"time"
 )
 
@@ -17,7 +16,6 @@ func main() {
 	socks := flag.Int("socks", 0, "socks proxy port")
 	flag.Parse()
 
-	seenKeys := &sync.Map{}
 	urlTestURLs := util.ParseURLTestURLs(*urlTest)
 	outputDir, outputPath, archivePath, err := util.GeneratePaths(output)
 	if err != nil {
@@ -25,31 +23,15 @@ func main() {
 		return
 	}
 
-	util.ParseFiles([]string{archivePath}, seenKeys, *jobs)
-	ctx1, instance1 := util.TestOutbounds(seenKeys, urlTestURLs, *jobs, *timeout, *socks, true, *output == "" && *socks == 0)
+	paths := util.GetSubscriptions(outputDir)
+	paths = append([]string{archivePath}, paths...)
 
-	util.ParseFiles(util.GetSubscriptions(outputDir), seenKeys, *jobs)
-	ctx2, instance2 := util.TestOutbounds(seenKeys, urlTestURLs, *jobs, *timeout, *socks, instance1 == nil, *output == "" && *socks == 0)
+	raws, outbounds, tags, foundCount, totalCount := util.TestOutbounds(paths, urlTestURLs, *jobs, *timeout, *socks, *output == "" && *socks == 0)
 
-	outbounds, tags, rawConfigs, foundCount, linesCount := util.ParseOutbounds(seenKeys)
+	fmt.Printf("# Found %d/%d configs in %.2fs\n", foundCount, totalCount, time.Since(start).Seconds())
+
 	if len(outbounds) > 0 {
-		util.SaveResult(outputPath, archivePath, rawConfigs, outbounds, tags, *socks, urlTestURLs[0])
-	}
-	seenKeys = nil
-	rawConfigs = nil
-	fmt.Printf("# Found %d/%d configs in %.2fs\n", foundCount, linesCount, time.Since(start).Seconds())
-
-	if ctx1 != nil {
-		ctx1.Done()
-	}
-	if instance1 != nil {
-		instance1.Close()
-	}
-	if ctx2 != nil {
-		ctx2.Done()
-	}
-	if instance2 != nil {
-		instance2.Close()
+		util.SaveResult(outputPath, archivePath, raws, outbounds, tags, *socks, urlTestURLs[0])
 	}
 
 	if *socks > 0 && len(outbounds) > 0 {

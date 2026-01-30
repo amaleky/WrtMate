@@ -2,8 +2,8 @@ package util
 
 type OutboundType map[string]interface{}
 
-type SeenKeyType struct {
-	Ok       bool
+type EntryType struct {
+	Tag      string
 	Raw      string
 	Outbound OutboundType
 }
