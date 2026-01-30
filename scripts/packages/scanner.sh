@@ -5,7 +5,13 @@ main() {
 
   if [ "${PREFIX:-}" = "/data/data/com.termux/files/usr" ] || [ -d "/data/data/com.termux/files/usr" ]; then
     DETECTED_OS="android"
-    termux-setup-storage
+    if ! command -v termux-chroot >/dev/null 2>&1; then
+      pkg update
+      pkg install -y proot
+      termux-chroot
+      echo "precedence ::ffff:0:0/96  100" >> /etc/gai.conf
+      termux-setup-storage
+    fi
   else
     case "$(uname -s)" in
       Darwin) DETECTED_OS="darwin" ;;
