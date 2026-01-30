@@ -82,7 +82,6 @@ func StartSinBox(outbounds []OutboundType, tags []string, socks int, urlTest str
 func getRetry(err error, defaultOutbounds int, outbounds []OutboundType, tags []string) ([]OutboundType, []string) {
 	idx := invalidOutboundKey(err) - defaultOutbounds
 	if idx >= 0 && idx < len(outbounds) && len(outbounds) > 1 {
-		fmt.Println("Removed invalid outbound", err, outbounds[idx])
 		outbounds = append(outbounds[:idx], outbounds[idx+1:]...)
 		if tags != nil {
 			tags = append(tags[:idx], tags[idx+1:]...)

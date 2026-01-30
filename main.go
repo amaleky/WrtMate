@@ -9,6 +9,7 @@ import (
 )
 
 func main() {
+	start := time.Now()
 	jobs := flag.Int("jobs", 1000, "number of parallel jobs")
 	urlTest := flag.String("urltest", util.DEFAULT_URL_TEST, "comma-separated list of URLs to use for urltest")
 	output := flag.String("output", "", "path to write output (default stdout)")
@@ -17,24 +18,19 @@ func main() {
 	flag.Parse()
 
 	seenKeys := &sync.Map{}
+	urlTestURLs := util.ParseURLTestURLs(*urlTest)
 	outputDir, outputPath, archivePath, err := util.GeneratePaths(output)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	start := time.Now()
-	paths := util.GetSubscriptions(outputDir)
-	paths = append([]string{archivePath}, paths...)
-	fmt.Printf("# Downloaded %d subscription in %.2fs\n", len(paths)-1, time.Since(start).Seconds())
-
-	start = time.Now()
-	count := util.ParseFiles(paths, seenKeys, *jobs)
-	fmt.Printf("# Parsed %d lines in %.2fs\n", count, time.Since(start).Seconds())
-
-	start = time.Now()
-	urlTestURLs := util.ParseURLTestURLs(*urlTest)
+	util.ParseFiles([]string{archivePath}, seenKeys, *jobs)
 	util.TestOutbounds(seenKeys, urlTestURLs, *jobs, *timeout, *socks, *output == "" && *socks == 0)
+
+	util.ParseFiles(util.GetSubscriptions(outputDir), seenKeys, *jobs)
+	util.TestOutbounds(seenKeys, urlTestURLs, *jobs, *timeout, *socks, *output == "" && *socks == 0)
+
 	outbounds, tags, rawConfigs, foundCount, linesCount := util.ParseOutbounds(seenKeys)
 	if len(outbounds) > 0 {
 		util.SaveResult(outputPath, archivePath, rawConfigs, outbounds, tags, *socks, urlTestURLs[0])

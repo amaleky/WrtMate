@@ -51,7 +51,7 @@ func ParseURLTestURLs(value string) []string {
 	return urls
 }
 
-func ParseFiles(paths []string, seenKeys *sync.Map, jobs int) int {
+func ParseFiles(paths []string, seenKeys *sync.Map, jobs int) {
 	var wg sync.WaitGroup
 	semaphore := make(chan struct{}, jobs)
 
@@ -76,7 +76,6 @@ func ParseFiles(paths []string, seenKeys *sync.Map, jobs int) int {
 		})
 	}
 
-	count := 0
 	for _, path := range paths {
 		file, err := os.Open(path)
 		if err != nil {
@@ -93,8 +92,6 @@ func ParseFiles(paths []string, seenKeys *sync.Map, jobs int) int {
 			if len(line) > 2000 || strings.Count(line, "://") != 1 || line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//") {
 				continue
 			}
-			count++
-
 			semaphore <- struct{}{}
 			wg.Add(1)
 			go processLine(line)
@@ -108,8 +105,6 @@ func ParseFiles(paths []string, seenKeys *sync.Map, jobs int) int {
 
 	wg.Wait()
 	close(semaphore)
-
-	return count
 }
 
 func ParseOutbounds(seenKeys *sync.Map) ([]OutboundType, []string, []string, int, int) {
