@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -61,6 +62,11 @@ func urlTest(ctx context.Context, link string, detour network.Dialer) error {
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
 		return fmt.Errorf("unexpected status: %d", resp.StatusCode)
+	}
+	const maxBodySize = 1024 * 1024 // 1MB
+	_, err = io.CopyN(io.Discard, resp.Body, maxBodySize)
+	if err != nil && err != io.EOF {
+		return fmt.Errorf("failed to read response body: %w", err)
 	}
 	return nil
 }
