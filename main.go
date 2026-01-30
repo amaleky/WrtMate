@@ -36,10 +36,14 @@ func main() {
 	urlTestURLs := util.ParseURLTestURLs(*urlTest)
 	util.TestOutbounds(seenKeys, urlTestURLs, *jobs, *timeout, *socks, *output == "" && *socks == 0)
 	outbounds, tags, rawConfigs, foundCount, linesCount := util.ParseOutbounds(seenKeys)
+	if len(outbounds) > 0 {
+		util.SaveResult(outputPath, archivePath, rawConfigs, outbounds, tags, *socks, urlTestURLs[0])
+	}
+	seenKeys = nil
+	rawConfigs = nil
 	fmt.Printf("# Found %d/%d configs in %.2fs\n", foundCount, linesCount, time.Since(start).Seconds())
 
 	if *socks > 0 && len(outbounds) > 0 {
-		util.SaveResult(outputPath, archivePath, rawConfigs, outbounds, tags, *socks, urlTestURLs[0])
 		_, instance, err := util.StartSinBox(outbounds, tags, *socks, urlTestURLs[0])
 		if err != nil {
 			fmt.Println(err)

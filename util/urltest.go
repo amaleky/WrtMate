@@ -91,16 +91,18 @@ func runTempProxy(tag string, entry SeenKeyType, socks int, urlTest string) *box
 	instanceOutbounds = append(instanceOutbounds, entry.Outbound)
 	_, instance, err := StartSinBox(instanceOutbounds, instanceTags, socks, urlTest)
 	if err != nil {
-		fmt.Println("# Failed to start service: ", err)
+		fmt.Println("# Failed to start temp instance: ", err, instanceOutbounds)
 		return nil
 	}
 	selectorOutbound, ok := instance.Outbound().Outbound("Select")
 	if !ok {
+		instance.Close()
 		fmt.Println("# Selector outbound 'Select' not found.")
 		return nil
 	}
 	selector, ok := selectorOutbound.(outboundSelector)
 	if !ok {
+		instance.Close()
 		fmt.Println("# Outbound 'Select' does not implement outboundSelector.")
 		return nil
 	}
@@ -112,45 +114,35 @@ func runTempProxy(tag string, entry SeenKeyType, socks int, urlTest string) *box
 
 func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout int, socks int, printResults bool) {
 	var entries []SeenKeyType
-	var tags []string
 	seenKeys.Range(func(key, value interface{}) bool {
-		entry := value.(SeenKeyType)
-		tag := key.(string)
-		entries = append(entries, entry)
-		tags = append(tags, tag)
+		entries = append(entries, value.(SeenKeyType))
 		return true
 	})
 
 	var selectOnce sync.Once
 	var serviceInstance *box.Box
-	maxBatchSize := jobs
 	total := len(entries)
 
-	for start := 0; start < total; start += maxBatchSize {
-		end := start + maxBatchSize
+	for start := 0; start < total; start += jobs {
+		end := start + jobs
 		if end > total {
 			end = total
 		}
 		fmt.Printf("# Processing %d/%d configs\n", end, total)
 
 		batchEntries := entries[start:end]
-		batchTags := tags[start:end]
 		batchOutbounds := make([]OutboundType, len(batchEntries))
 		for i, entry := range batchEntries {
 			batchOutbounds[i] = entry.Outbound
 		}
 
-		ctx, instance, err := StartSinBox(batchOutbounds, batchTags, 0, "")
+		ctx, instance, err := StartSinBox(batchOutbounds, nil, 0, "")
 		if err != nil {
-			fmt.Println("# Failed to start service: ", err)
+			fmt.Println("# Failed to start test instance: ", err)
 			continue
 		}
 
-		batchJobs := jobs
-		if len(batchEntries) < batchJobs {
-			batchJobs = len(batchEntries)
-		}
-		semaphore := make(chan struct{}, batchJobs)
+		semaphore := make(chan struct{}, len(batchEntries))
 		var wg sync.WaitGroup
 
 		worker := func(entry SeenKeyType) {
@@ -197,9 +189,14 @@ func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout i
 		wg.Wait()
 		close(semaphore)
 		instance.Close()
+		ctx.Done()
+		batchEntries = nil
+		batchOutbounds = nil
 	}
 
 	if serviceInstance != nil {
 		serviceInstance.Close()
 	}
+
+	entries = nil
 }

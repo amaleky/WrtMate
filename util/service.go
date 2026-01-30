@@ -58,7 +58,9 @@ func StartSinBox(outbounds []OutboundType, tags []string, socks int, urlTest str
 				fmt.Println("Removed invalid outbound", err, curOutbounds[idx])
 				ctx.Done()
 				curOutbounds = append(curOutbounds[:idx], curOutbounds[idx+1:]...)
-				curTags = append(curTags[:idx], curTags[idx+1:]...)
+				if curTags != nil {
+					curTags = append(curTags[:idx], curTags[idx+1:]...)
+				}
 				continue
 			}
 			return ctx, instance, err
