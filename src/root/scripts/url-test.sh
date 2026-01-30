@@ -57,7 +57,21 @@ test_service() {
   NODE="$2"
   PORT="$3"
   AUTO_STOP="$4"
-  if [ "$(get_retry_count "$SERVICE")" -le 5 ] || [ "$(uci get passwall2.Splitter.default_node)" = "$NODE" ] || [ "$(uci get passwall2.Auto.node)" = "$NODE" ]; then
+
+  PID=$(pidof "$SERVICE")
+  UPTIME=$(cat /proc/uptime | cut -d' ' -f1 | cut -d'.' -f1)
+  START_TIME=$(cat /proc/$PID/stat | awk '{print $22}')
+  CLK_TCK=$(getconf CLK_TCK 2>/dev/null || echo 100)
+  START_SEC=$((START_TIME / CLK_TCK))
+  ELAPSED=$((UPTIME - START_SEC))
+  FIFTEEN_MINUTES=900
+
+  if [ $ELAPSED -le $FIFTEEN_MINUTES ]; then
+    echo "⏳ $NODE just started, skipping connectivity test"
+    return
+  fi
+
+  if [ "$(get_retry_count "$SERVICE")" -le 5 ] || [ "$(uci get passwall2.Splitter.default_node)" = "$NODE" ]; then
     if ! test_socks_port "$PORT" "https://1.1.1.1/cdn-cgi/trace/"; then
       echo "❌ $NODE connectivity test failed"
       case "$SERVICE" in
