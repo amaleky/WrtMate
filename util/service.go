@@ -29,48 +29,65 @@ func invalidOutboundKey(err error) int {
 }
 
 func StartSinBox(outbounds []OutboundType, tags []string, socks int, urlTest string) (context.Context, *box.Box, error) {
-	curOutbounds := outbounds
-	curTags := tags
-
-	for {
-		config, defaultOutbounds := GetSingBoxConf(curOutbounds, curTags, socks, "Select", urlTest)
-		configJSON, err := json.Marshal(config)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		ctx := include.Context(context.Background())
-		var opts option.Options
-		if err := opts.UnmarshalJSONContext(ctx, configJSON); err != nil {
-			return nil, nil, err
-		}
-
-		instance, err := box.New(box.Options{
-			Context: ctx,
-			Options: opts,
-		})
-		if err != nil {
-			if instance != nil {
-				instance.Close()
-			}
-			idx := invalidOutboundKey(err) - defaultOutbounds
-			if idx >= 0 && idx < len(curOutbounds) && len(curOutbounds) > 1 {
-				fmt.Println("Removed invalid outbound", err, curOutbounds[idx])
-				ctx.Done()
-				curOutbounds = append(curOutbounds[:idx], curOutbounds[idx+1:]...)
-				if curTags != nil {
-					curTags = append(curTags[:idx], curTags[idx+1:]...)
-				}
-				continue
-			}
-			return ctx, instance, err
-		}
-
-		if err := instance.Start(); err != nil {
-			instance.Close()
-			return nil, nil, err
-		}
-
-		return ctx, instance, nil
+	config, defaultOutbounds := GetSingBoxConf(outbounds, tags, socks, "Select", urlTest)
+	configJSON, err := json.Marshal(config)
+	if err != nil {
+		return nil, nil, err
 	}
+
+	ctx := include.Context(context.Background())
+	var opts option.Options
+	if err := opts.UnmarshalJSONContext(ctx, configJSON); err != nil {
+		if ctx != nil {
+			ctx.Done()
+		}
+		outbounds, tags = getRetry(err, defaultOutbounds, outbounds, tags)
+		if outbounds != nil {
+			return StartSinBox(outbounds, tags, socks, urlTest)
+		}
+		return nil, nil, err
+	}
+
+	instance, err := box.New(box.Options{
+		Context: ctx,
+		Options: opts,
+	})
+	if err != nil {
+		if instance != nil {
+			instance.Close()
+		}
+		if ctx != nil {
+			ctx.Done()
+		}
+		outbounds, tags = getRetry(err, defaultOutbounds, outbounds, tags)
+		if outbounds != nil {
+			return StartSinBox(outbounds, tags, socks, urlTest)
+		}
+		return ctx, instance, err
+	}
+
+	if err := instance.Start(); err != nil {
+		if instance != nil {
+			instance.Close()
+		}
+		if ctx != nil {
+			ctx.Done()
+		}
+		return nil, nil, err
+	}
+
+	return ctx, instance, nil
+}
+
+func getRetry(err error, defaultOutbounds int, outbounds []OutboundType, tags []string) ([]OutboundType, []string) {
+	idx := invalidOutboundKey(err) - defaultOutbounds
+	if idx >= 0 && idx < len(outbounds) && len(outbounds) > 1 {
+		fmt.Println("Removed invalid outbound", err, outbounds[idx])
+		outbounds = append(outbounds[:idx], outbounds[idx+1:]...)
+		if tags != nil {
+			tags = append(tags[:idx], tags[idx+1:]...)
+		}
+		return outbounds, tags
+	}
+	return nil, nil
 }
