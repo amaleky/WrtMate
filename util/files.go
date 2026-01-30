@@ -30,7 +30,7 @@ func WriteRawOutput(outputPath string, rawConfigs []string) error {
 
 func SaveResult(outputPath string, archivePath string, rawConfigs []string, outbounds []OutboundType, tags []string, socks int, urlTest string) {
 	if strings.HasSuffix(strings.ToLower(outputPath), ".json") {
-		jsonOutput, _ := GetSingBoxConf(outbounds, tags, socks, "Auto", urlTest)
+		jsonOutput, _ := GetSingBoxConf(outbounds, tags, socks, urlTest)
 		WriteJSONOutput(outputPath, jsonOutput)
 	} else if outputPath != "" {
 		WriteRawOutput(outputPath, rawConfigs)

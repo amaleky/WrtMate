@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	box "github.com/sagernet/sing-box"
 	"github.com/sagernet/sing-box/adapter"
 	"github.com/sagernet/sing-box/constant"
 	"github.com/sagernet/sing/common/metadata"
@@ -81,38 +80,7 @@ func timeoutFromContext(ctx context.Context, fallback time.Duration) time.Durati
 	return fallback
 }
 
-func runTempProxy(tag string, entry SeenKeyType, socks int, urlTest string) *box.Box {
-	type outboundSelector interface {
-		SelectOutbound(tag string) bool
-	}
-	var instanceTags []string
-	instanceTags = append(instanceTags, tag)
-	var instanceOutbounds []OutboundType
-	instanceOutbounds = append(instanceOutbounds, entry.Outbound)
-	_, instance, err := StartSinBox(instanceOutbounds, instanceTags, socks, urlTest)
-	if err != nil {
-		fmt.Println("# Failed to start temp instance: ", err, instanceOutbounds)
-		return nil
-	}
-	selectorOutbound, ok := instance.Outbound().Outbound("Select")
-	if !ok {
-		instance.Close()
-		fmt.Println("# Selector outbound 'Select' not found.")
-		return nil
-	}
-	selector, ok := selectorOutbound.(outboundSelector)
-	if !ok {
-		instance.Close()
-		fmt.Println("# Outbound 'Select' does not implement outboundSelector.")
-		return nil
-	}
-	if socks > 0 && selector.SelectOutbound(tag) {
-		fmt.Printf("Running SOCKS proxy: socks://127.0.0.1:%d\n", socks)
-	}
-	return instance
-}
-
-func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout int, socks int, printResults bool) {
+func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout int, printResults bool) ([]OutboundType, []string) {
 	var entries []SeenKeyType
 	seenKeys.Range(func(key, value interface{}) bool {
 		entries = append(entries, value.(SeenKeyType))
@@ -120,7 +88,8 @@ func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout i
 	})
 
 	var selectOnce sync.Once
-	var serviceInstance *box.Box
+	var foundTags []string
+	var foundOutbounds []OutboundType
 	total := len(entries)
 
 	for start := 0; start < total; start += jobs {
@@ -176,7 +145,8 @@ func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout i
 			}
 
 			selectOnce.Do(func() {
-				serviceInstance = runTempProxy(tag, entry, socks, urlTestURLs[0])
+				foundTags = []string{tag}
+				foundOutbounds = []OutboundType{entry.Outbound}
 			})
 		}
 
@@ -194,9 +164,6 @@ func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout i
 		batchOutbounds = nil
 	}
 
-	if serviceInstance != nil {
-		serviceInstance.Close()
-	}
-
 	entries = nil
+	return foundOutbounds, foundTags
 }

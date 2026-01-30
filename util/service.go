@@ -29,7 +29,10 @@ func invalidOutboundKey(err error) int {
 }
 
 func StartSinBox(outbounds []OutboundType, tags []string, socks int, urlTest string) (context.Context, *box.Box, error) {
-	config, defaultOutbounds := GetSingBoxConf(outbounds, tags, socks, "Select", urlTest)
+	if outbounds == nil || len(outbounds) == 0 {
+		return nil, nil, fmt.Errorf("no outbounds provided")
+	}
+	config, defaultOutbounds := GetSingBoxConf(outbounds, tags, socks, urlTest)
 	configJSON, err := json.Marshal(config)
 	if err != nil {
 		return nil, nil, err
@@ -74,6 +77,10 @@ func StartSinBox(outbounds []OutboundType, tags []string, socks int, urlTest str
 			ctx.Done()
 		}
 		return nil, nil, err
+	}
+
+	if socks > 0 {
+		fmt.Printf("Running SOCKS proxy: socks://127.0.0.1:%d\n", socks)
 	}
 
 	return ctx, instance, nil

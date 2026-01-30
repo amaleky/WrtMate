@@ -1,6 +1,6 @@
 package util
 
-func GetSingBoxConf(outbounds []OutboundType, tags []string, socks int, finalOutbound string, urlTest string) (map[string]interface{}, int) {
+func GetSingBoxConf(outbounds []OutboundType, tags []string, socks int, urlTest string) (map[string]interface{}, int) {
 	if socks <= 1 || socks > 65535 || urlTest == "" || outbounds == nil || len(outbounds) == 0 {
 		return map[string]interface{}{
 			"log": map[string]interface{}{
@@ -10,37 +10,7 @@ func GetSingBoxConf(outbounds []OutboundType, tags []string, socks int, finalOut
 		}, 0
 	}
 
-	var defaultOutbounds []OutboundType
-
-	if finalOutbound == "Auto" {
-		defaultOutbounds = append(defaultOutbounds, OutboundType{
-			"type":                        "urltest",
-			"tag":                         "Auto",
-			"outbounds":                   tags,
-			"url":                         urlTest,
-			"interval":                    "1m",
-			"tolerance":                   50,
-			"interrupt_exist_connections": false,
-		})
-	}
-
-	if finalOutbound == "Select" {
-		defaultOutbounds = append(defaultOutbounds, OutboundType{
-			"type":      "selector",
-			"tag":       "Select",
-			"outbounds": tags,
-		})
-	}
-
-	defaultOutbounds = append(defaultOutbounds, OutboundType{
-		"type": "direct",
-		"tag":  "Direct",
-	}, OutboundType{
-		"type": "block",
-		"tag":  "Block",
-	})
-
-	config := map[string]interface{}{
+	return map[string]interface{}{
 		"log": map[string]interface{}{
 			"level": "fatal",
 		},
@@ -52,7 +22,25 @@ func GetSingBoxConf(outbounds []OutboundType, tags []string, socks int, finalOut
 				"listen_port": socks,
 			},
 		},
-		"outbounds": append(defaultOutbounds, outbounds...),
+		"outbounds": append([]OutboundType{
+			{
+				"type":                        "urltest",
+				"tag":                         "Auto",
+				"outbounds":                   tags,
+				"url":                         urlTest,
+				"interval":                    "1m",
+				"tolerance":                   50,
+				"interrupt_exist_connections": false,
+			},
+			{
+				"type": "direct",
+				"tag":  "Direct",
+			},
+			{
+				"type": "block",
+				"tag":  "Block",
+			},
+		}, outbounds...),
 		"route": map[string]interface{}{
 			"rules": []map[string]interface{}{
 				{
@@ -67,9 +55,7 @@ func GetSingBoxConf(outbounds []OutboundType, tags []string, socks int, finalOut
 					"outbound":      "Direct",
 				},
 			},
-			"final": finalOutbound,
+			"final": "Auto",
 		},
-	}
-
-	return config, len(defaultOutbounds)
+	}, 3
 }

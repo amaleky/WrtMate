@@ -26,10 +26,11 @@ func main() {
 	}
 
 	util.ParseFiles([]string{archivePath}, seenKeys, *jobs)
-	util.TestOutbounds(seenKeys, urlTestURLs, *jobs, *timeout, *socks, *output == "" && *socks == 0)
+	foundOutbounds, foundTags := util.TestOutbounds(seenKeys, urlTestURLs, *jobs, *timeout, *output == "" && *socks == 0)
+	_, instance, _ := util.StartSinBox(foundOutbounds, foundTags, *socks, urlTestURLs[0])
 
 	util.ParseFiles(util.GetSubscriptions(outputDir), seenKeys, *jobs)
-	util.TestOutbounds(seenKeys, urlTestURLs, *jobs, *timeout, *socks, *output == "" && *socks == 0)
+	foundOutbounds, foundTags = util.TestOutbounds(seenKeys, urlTestURLs, *jobs, *timeout, *output == "" && *socks == 0)
 
 	outbounds, tags, rawConfigs, foundCount, linesCount := util.ParseOutbounds(seenKeys)
 	if len(outbounds) > 0 {
@@ -40,6 +41,9 @@ func main() {
 	fmt.Printf("# Found %d/%d configs in %.2fs\n", foundCount, linesCount, time.Since(start).Seconds())
 
 	if *socks > 0 && len(outbounds) > 0 {
+		if instance != nil {
+			instance.Close()
+		}
 		_, instance, err := util.StartSinBox(outbounds, tags, *socks, urlTestURLs[0])
 		if err != nil {
 			fmt.Println(err)
