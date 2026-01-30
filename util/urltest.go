@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	box "github.com/sagernet/sing-box"
 	"github.com/sagernet/sing-box/adapter"
 	"github.com/sagernet/sing-box/constant"
 	"github.com/sagernet/sing/common/metadata"
@@ -80,7 +81,7 @@ func timeoutFromContext(ctx context.Context, fallback time.Duration) time.Durati
 	return fallback
 }
 
-func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout int, printResults bool) ([]OutboundType, []string) {
+func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout int, socks int, run bool, printResults bool) (context.Context, *box.Box) {
 	var entries []SeenKeyType
 	seenKeys.Range(func(key, value interface{}) bool {
 		entries = append(entries, value.(SeenKeyType))
@@ -88,8 +89,8 @@ func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout i
 	})
 
 	var selectOnce sync.Once
-	var foundTags []string
-	var foundOutbounds []OutboundType
+	var tmpCtx context.Context
+	var tmpInstance *box.Box
 	total := len(entries)
 
 	for start := 0; start < total; start += jobs {
@@ -145,8 +146,9 @@ func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout i
 			}
 
 			selectOnce.Do(func() {
-				foundTags = []string{tag}
-				foundOutbounds = []OutboundType{entry.Outbound}
+				if run && socks > 0 {
+					tmpCtx, tmpInstance, _ = StartSinBox([]OutboundType{entry.Outbound}, []string{tag}, socks, urlTestURLs[0])
+				}
 			})
 		}
 
@@ -165,5 +167,5 @@ func TestOutbounds(seenKeys *sync.Map, urlTestURLs []string, jobs int, timeout i
 	}
 
 	entries = nil
-	return foundOutbounds, foundTags
+	return tmpCtx, tmpInstance
 }
