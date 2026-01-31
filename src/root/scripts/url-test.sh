@@ -18,7 +18,7 @@ set_retry_count() {
 test_socks_port() {
   SOCKS_PORT=$1
   URL=$2
-  if curl -s -L -I --max-time 2 --retry 2 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" "$URL"; then
+  if curl -s -L -I --max-time 5 --retry 3 --socks5-hostname "127.0.0.1:$SOCKS_PORT" -o "/dev/null" "$URL"; then
     return 0
   else
     return 1
