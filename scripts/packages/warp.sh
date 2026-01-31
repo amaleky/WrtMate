@@ -58,11 +58,9 @@ main() {
 
   DOWNLOAD_URL="https://github.com/voidr3aper-anon/Vwarp/releases/latest/download/vwarp_linux-${DETECTED_ARCH}.zip"
   REMOTE_SIZE=$(curl -sI -L "$DOWNLOAD_URL" | grep -i Content-Length | tail -n1 | awk '{print $2}' | tr -d '\r')
-  LOCAL_FILE="$HOME/warp-plus"
+  LOCAL_FILE="${PREFIX:-$HOME/.local}/bin/warp-plus"
   if [ -f "/etc/openwrt_release" ]; then
     LOCAL_FILE="/usr/bin/warp-plus"
-  elif [ "$DETECTED_OS" = "darwin" ]; then
-    LOCAL_FILE="${PREFIX:-$HOME/.local}/bin/warp-plus"
   fi
   mkdir -p "$(dirname "$LOCAL_FILE")"
 

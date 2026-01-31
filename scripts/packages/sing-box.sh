@@ -71,11 +71,9 @@ main() {
   REMOTE_VERSION="$(curl -s -L "https://api.github.com/repos/SagerNet/sing-box/releases/latest" | jq -r '.tag_name | ltrimstr("v")')"
   DOWNLOAD_URL="https://github.com/SagerNet/sing-box/releases/latest/download/sing-box-${REMOTE_VERSION}-linux-${DETECTED_ARCH}.tar.gz"
   REMOTE_SIZE=$(curl -sI -L "$DOWNLOAD_URL" | grep -i Content-Length | tail -n1 | awk '{print $2}' | tr -d '\r')
-  LOCAL_FILE="$HOME/sing-box"
+  LOCAL_FILE="${PREFIX:-$HOME/.local}/bin/sing-box"
   if [ -f "/etc/openwrt_release" ]; then
     LOCAL_FILE="/usr/bin/sing-box"
-  elif [ "$DETECTED_OS" = "darwin" ]; then
-    LOCAL_FILE="${PREFIX:-$HOME/.local}/bin/sing-box"
   fi
   mkdir -p "$(dirname "$LOCAL_FILE")"
 

@@ -77,11 +77,9 @@ main() {
 
   DOWNLOAD_URL="https://github.com/amaleky/WrtMate/releases/latest/download/psiphon_${DETECTED_OS}-${DETECTED_ARCH}"
   REMOTE_SIZE=$(curl -sI -L "$DOWNLOAD_URL" | grep -i Content-Length | tail -n1 | awk '{print $2}' | tr -d '\r')
-  LOCAL_FILE="$HOME/psiphon"
+  LOCAL_FILE="${PREFIX:-$HOME/.local}/bin/psiphon"
   if [ -f "/etc/openwrt_release" ]; then
     LOCAL_FILE="/usr/bin/psiphon"
-  elif [ "$DETECTED_OS" = "darwin" ]; then
-    LOCAL_FILE="${PREFIX:-$HOME/.local}/bin/psiphon"
   fi
   mkdir -p "$(dirname "$LOCAL_FILE")"
 
