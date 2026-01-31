@@ -77,6 +77,8 @@ main() {
     mv "/tmp/vwarp" "$LOCAL_FILE"
     chmod +x "$LOCAL_FILE"
     rm -rfv "/tmp/warp.zip" "/tmp/README.md" /tmp/LICENSE*
+  else
+    echo "$LOCAL_FILE is already installed"
   fi
 }
 

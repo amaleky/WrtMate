@@ -91,6 +91,8 @@ main() {
     mv "/tmp/sing-box-*/sing-box" "$LOCAL_FILE"
     chmod +x "$LOCAL_FILE"
     rm -rfv /tmp/sing-box-* "/tmp/sing-box.tar.gz"
+  else
+    echo "$LOCAL_FILE is already installed"
   fi
 }
 

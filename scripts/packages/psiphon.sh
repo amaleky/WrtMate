@@ -94,6 +94,8 @@ main() {
   if [ "$REMOTE_SIZE" != "$LOCAL_SIZE" ] || [ "$LOCAL_SIZE" -eq 0 ]; then
     curl -L -o "$LOCAL_FILE" "$DOWNLOAD_URL" || echo "Failed to download psiphon."
     chmod +x "$LOCAL_FILE"
+  else
+    echo "$LOCAL_FILE is already installed"
   fi
 }
 
