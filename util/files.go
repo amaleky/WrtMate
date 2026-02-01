@@ -25,6 +25,15 @@ func WriteJSONOutput(outputPath string, config map[string]interface{}) error {
 }
 
 func WriteRawOutput(outputPath string, rawConfigs []string) error {
+	if len(rawConfigs) < 10 {
+		file, err := os.OpenFile(outputPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+		_, err = file.WriteString(strings.Join(rawConfigs, "\n"))
+		return err
+	}
 	return os.WriteFile(outputPath, []byte(strings.Join(rawConfigs, "\n")), 0o644)
 }
 
