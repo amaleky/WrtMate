@@ -48,7 +48,7 @@ func GetSingBoxConf(outbounds []OutboundType, tags []string, socks int, urlTest 
 				},
 				{
 					"ip_is_private": true,
-					"outbound":      "direct",
+					"outbound":      "Direct",
 				},
 				{
 					"domain_suffix": []string{".ir", ".cn"},
