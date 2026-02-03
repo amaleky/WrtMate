@@ -28,7 +28,7 @@ func GetSingBoxConf(outbounds []OutboundType, tags []string, socks int, urlTest 
 				"tag":                         "Auto",
 				"outbounds":                   tags,
 				"url":                         urlTest,
-				"interval":                    "1m",
+				"interval":                    "30m",
 				"tolerance":                   50,
 				"interrupt_exist_connections": false,
 			},
