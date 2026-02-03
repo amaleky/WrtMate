@@ -38,9 +38,7 @@ func ParseURLTestURLs(value string) []string {
 	urls := make([]string, 0, len(rawParts))
 	for _, part := range rawParts {
 		trimmed := strings.TrimSpace(part)
-		if trimmed == "" {
-			urls = append(urls, DEFAULT_URL_TEST)
-		} else {
+		if trimmed != "" {
 			urls = append(urls, trimmed)
 		}
 	}

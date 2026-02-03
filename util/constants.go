@@ -8,8 +8,6 @@ type EntryType struct {
 	Outbound OutboundType
 }
 
-var DEFAULT_URL_TEST = "https://cachefly.cachefly.net/1mb.test"
-
 var SUBSCRIPTIONS = []string{
 	"https://raw.githubusercontent.com/10ium/V2Hub3/main/merged",
 	"https://raw.githubusercontent.com/10ium/V2rayCollector/main/mixed_iran.txt",
