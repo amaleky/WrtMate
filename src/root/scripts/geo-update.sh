@@ -94,16 +94,12 @@ if [ "$(wc -c <"$RULESET_DIR/linkedin.txt" | tr -d ' ')" != "$CURRENT_SIZE" ]; t
   sing-box rule-set convert --type adguard --output "$RULESET_DIR/linkedin.srs" "$RULESET_DIR/linkedin.txt"
 fi
 
-CURRENT_SIZE=$(wc -c <"$RULESET_DIR/riot.txt" | tr -d ' ')
-download "$RULESET_DIR/riot.txt" "$BASE_URL/riot" "false"
-cat "$RULESET_DIR/riot.txt" \
-| grep -vE "(##|/|^[[:space:]\!\?\[\.\*\$\-]|include:|.+\.ir$| @ads)" \
-| sed 's/^www\./\^/; s/$websocket.*//; s/$third-party.*//; s/$script.*//; s/\^.*$/\^/; s/#.*//g; /^||/! s/^/||/; /[^ ^]$/ s/$/^/; s/full://g; s/domain://g; s/geoip://g; s/geosite://g; s/ @cn//g' \
-| grep -vF '||^' \
-| grep -vE '([0-9]{1,3}\.){3}[0-9]{1,3}' \
-| sort -u > "$RULESET_DIR/riot.txt"
-if [ "$(wc -c <"$RULESET_DIR/riot.txt" | tr -d ' ')" != "$CURRENT_SIZE" ]; then
-  sing-box rule-set convert --type adguard --output "$RULESET_DIR/riot.srs" "$RULESET_DIR/riot.txt"
+CURRENT_SIZE=$(wc -c <"$RULESET_DIR/game.txt" | tr -d ' ')
+for DOMAIN in "historyofdota.com" "historyofdota.net" "historyofdota.org" "instituteofwar.org" "molesports.com" "rgpub.io" "riot-games.com" "riot.com" "riot.net" "riotcdn.net" "riotgames.co.kr" "riotgames.com" "riotgames.info" "riotgames.jp" "riotgames.net" "riotgames.tv" "riotpin.com" "riotpoints.com" "rstatic.net" "supremacy.com" "supremacy.net" "championshipseriesleague.com" "lcsmerch.com" "leaguehighschool.com" "leagueoflegends.ca" "leagueoflegends.cn" "leagueoflegends.co.kr" "leagueoflegends.com" "leagueoflegends.info" "leagueoflegends.kr" "leagueoflegends.net" "leagueoflegends.org" "leagueoflegendsscripts.com" "leaguesharp.info" "leaguoflegends.com" "learnwithleague.com" "lol-europe.com" "lolclub.org" "lolespor.com" "lolesports.com" "lolfanart.net" "lolpcs.com" "lolshop.co.kr" "lolstatic.com" "lolusercontent.com" "lpl.com.cn" "pvp.net" "pvp.tv" "ulol.com" "lolstatic-a.akamaihd.net" "playvalorant.com" "riotforgegames.com" "ruinedking.com" "convrgencegame.com" "lolstatic-a.akamaihd.net" "myqcloud.com" "qq.com" "activisionblizzard.com" "activision.com" "demonware.net" "callofduty.com" "callofdutyleague.com" "codmwest.com" "appsflyersdk.com"; do
+  echo "||$DOMAIN^" >> "$RULESET_DIR/game.txt"
+done
+if [ "$(wc -c <"$RULESET_DIR/game.txt" | tr -d ' ')" != "$CURRENT_SIZE" ]; then
+  sing-box rule-set convert --type adguard --output "$RULESET_DIR/game.srs" "$RULESET_DIR/game.txt"
 fi
 
 # Block
