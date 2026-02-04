@@ -47,6 +47,7 @@ jobs:
       GOARM: ${{ matrix.goarm }}
       GOMIPS: ${{ matrix.gomips }}
       CGO_ENABLED: 0
+      GOTOOLCHAIN: go1.24.12
       ASSET_NAME: ${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goarm && format('v{0}', matrix.goarm) || '' }}${{ matrix.gomips && format('-{0}', matrix.gomips) || '' }}
 
     steps:
@@ -56,11 +57,11 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: "1.25.5"
+          go-version: "1.24.12"
           check-latest: true
 
       - name: Build Psiphon
-        if: matrix.goos != 'android'
+        if: matrix.goos == 'linux'
         run: |
           git clone --depth 1 https://github.com/Psiphon-Labs/psiphon-tunnel-core.git
           pushd ./psiphon-tunnel-core || exit 1
@@ -68,7 +69,7 @@ jobs:
           popd
 
       - name: Upload Psiphon
-        if: matrix.goos != 'android'
+        if: matrix.goos == 'linux'
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -88,8 +89,8 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
 
-      - name: Install Lantern toolchain
-        if: matrix.goos != 'darwin' && matrix.goos != 'android'
+      - name: Install CGO toolchain
+        if: matrix.goos == 'linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y xz-utils
@@ -200,7 +201,7 @@ jobs:
           echo "AR=zig ar" >> "$GITHUB_ENV"
 
       - name: Build Lantern
-        if: matrix.goos != 'darwin' && matrix.goos != 'android'
+        if: matrix.goos == 'linux'
         env:
           CGO_ENABLED: 1
         run: |
@@ -211,7 +212,7 @@ jobs:
           popd
 
       - name: Upload Lantern
-        if: matrix.goos != 'darwin' && matrix.goos != 'android'
+        if: matrix.goos == 'linux'
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}

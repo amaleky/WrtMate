@@ -3,7 +3,7 @@
 
 module scanner
 
-go 1.25.5
+go 1.24.12
 
 require (
 	github.com/sagernet/sing v0.7.16
