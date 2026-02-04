@@ -56,28 +56,18 @@ main() {
     esac
   fi
 
-  DOWNLOAD_URL="https://github.com/voidr3aper-anon/Vwarp/releases/latest/download/vwarp_linux-${DETECTED_ARCH}.zip"
-  REMOTE_SIZE=$(curl -sI -L "$DOWNLOAD_URL" | grep -i Content-Length | tail -n1 | awk '{print $2}' | tr -d '\r')
+  DOWNLOAD_URL="https://github.com/bepass-org/warp-plus/releases/latest/download/warp-plus_linux-${DETECTED_ARCH}.zip"
   LOCAL_FILE="${PREFIX:-$HOME/.local}/bin/warp-plus"
   if [ -f "/etc/openwrt_release" ]; then
     LOCAL_FILE="/usr/bin/warp-plus"
   fi
   mkdir -p "$(dirname "$LOCAL_FILE")"
 
-  if [ -f "$LOCAL_FILE" ]; then
-    LOCAL_SIZE=$(wc -c <"$LOCAL_FILE" | tr -d ' ')
-  else
-    LOCAL_SIZE=0
-  fi
-
-  if [ "$REMOTE_SIZE" != "$LOCAL_SIZE" ] || [ "$LOCAL_SIZE" -eq 0 ]; then
-    unzip -o "/tmp/warp.zip" -d "/tmp"
-    mv "/tmp/vwarp" "$LOCAL_FILE"
-    chmod +x "$LOCAL_FILE"
-    rm -rfv "/tmp/warp.zip" "/tmp/README.md" /tmp/LICENSE*
-  else
-    echo "$LOCAL_FILE is already installed"
-  fi
+  curl -L -o "/tmp/warp.zip" "$DOWNLOAD_URL" || echo "Failed to download warp-plus."
+  unzip -o "/tmp/warp.zip" -d "/tmp"
+  mv "/tmp/warp-plus" "$LOCAL_FILE"
+  chmod +x "$LOCAL_FILE"
+  rm -rfv "/tmp/warp.zip" "/tmp/README.md" /tmp/LICENSE*
 }
 
 main "$@"

@@ -5,7 +5,7 @@ USE_PROCD=1
 
 start_service() {
   procd_open_instance
-  procd_set_param command /usr/bin/warp-plus --masque-preferred --noize-preset heavy --bind 0.0.0.0:9803 --test-url "https://1.1.1.1/cdn-cgi/trace/"
+  procd_set_param command /usr/bin/warp-plus --scan --bind 0.0.0.0:9803 --test-url "https://1.1.1.1/cdn-cgi/trace/"
   procd_set_param stdout 1
   procd_set_param stderr 1
   procd_set_param respawn

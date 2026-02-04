@@ -75,7 +75,7 @@ test_service() {
     if ! test_socks_port "$PORT" "https://1.1.1.1/cdn-cgi/trace/"; then
       echo "❌ $NODE connectivity test failed"
       case "$SERVICE" in
-        warp-plus) rm -rfv /.cache/vwarp/ ;;
+        warp-plus) rm -rfv /.cache/warp-plus ;;
         ssh-proxy) rm -fv /root/.ssh/known_hosts ;;
       esac
       if [ "$SERVICE" != "scanner" ]; then
