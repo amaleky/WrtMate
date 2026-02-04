@@ -1,9 +1,6 @@
 #!/bin/bash
 # Passwall configuration for OpenWRT
 
-MIN_RAM_MB=400
-TOTAL_RAM=$(($(grep MemTotal /proc/meminfo | awk '{print $2}') / 1024))
-
 if [ ! -d /root/scripts/ ]; then mkdir /root/scripts/; fi
 if [ ! -d /root/.cache/ ]; then mkdir /root/.cache/; fi
 
@@ -34,24 +31,21 @@ warp() {
   info "warp"
 
   REMOTE_VERSION="$(curl -s -L "https://api.github.com/repos/bepass-org/warp-plus/releases/latest" | jq -r '.tag_name')"
-  LOCAL_VERSION="$(cat "/root/.cache/.vwarp_version" 2>/dev/null || echo 'none')"
+  LOCAL_VERSION="$(cat "/root/.cache/.warp_version" 2>/dev/null || echo 'none')"
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
     if [[ -f "/etc/init.d/warp-plus" ]] && /etc/init.d/warp-plus running; then
       /etc/init.d/warp-plus stop
     fi
     source <(wget -qO- "${REPO_URL}/scripts/packages/warp.sh")
     if [ -n "$REMOTE_VERSION" ]; then
-      echo "$REMOTE_VERSION" >"/root/.cache/.vwarp_version"
+      echo "$REMOTE_VERSION" >"/root/.cache/.warp_version"
     fi
   fi
 
   curl -s -L -o "/etc/init.d/warp-plus" "${REPO_URL}/src/etc/init.d/warp-plus" || error "Failed to download warp-plus init script."
   chmod +x /etc/init.d/warp-plus
 
-  if [ "$TOTAL_RAM" -ge "$MIN_RAM_MB" ]; then
-    /etc/init.d/warp-plus enable
-    /etc/init.d/warp-plus start
-  fi
+  /etc/init.d/warp-plus enable
 }
 
 psiphon() {
@@ -76,10 +70,7 @@ psiphon() {
 
   curl -s -L -o "/root/psiphon/client.config" "https://raw.githubusercontent.com/amaleky/WrtMate/main/src/root/psiphon/client.config" || error "Failed to download psiphon configs."
 
-  if [ "$TOTAL_RAM" -ge "$MIN_RAM_MB" ]; then
-    /etc/init.d/psiphon enable
-    /etc/init.d/psiphon start
-  fi
+  /etc/init.d/psiphon enable
 }
 
 lantern() {
@@ -101,10 +92,7 @@ lantern() {
   curl -s -L -o "/etc/init.d/lantern" "${REPO_URL}/src/etc/init.d/lantern" || error "Failed to download lantern init script."
   chmod +x /etc/init.d/lantern
 
-  if [ "$TOTAL_RAM" -ge "$MIN_RAM_MB" ]; then
-    /etc/init.d/lantern enable
-    /etc/init.d/lantern start
-  fi
+  /etc/init.d/lantern enable
 }
 
 tor() {
@@ -123,10 +111,7 @@ tor() {
     } >>/etc/tor/torrc
   fi
 
-  if [ "$TOTAL_RAM" -ge "$MIN_RAM_MB" ]; then
-    /etc/init.d/tor enable
-    /etc/init.d/tor start
-  fi
+  /etc/init.d/tor enable
 }
 
 ssh_proxy() {
@@ -172,10 +157,7 @@ server_less() {
 
   curl -s -L -o "/root/xray/subscription.json" "https://raw.githubusercontent.com/voidr3aper-anon/GFW-slayer/main/configs/general/V-force.json" || error "Failed to download ServerLess configs list."
 
-  if [ "$TOTAL_RAM" -ge "$MIN_RAM_MB" ]; then
-    /etc/init.d/serverless enable
-    /etc/init.d/serverless start
-  fi
+  /etc/init.d/serverless enable
 }
 
 url_test() {
@@ -246,6 +228,7 @@ main() {
     "$1"
   else
     check_min_requirements 200 500 2
+    cleanup
     scanner
     warp
     psiphon
@@ -255,11 +238,11 @@ main() {
     geo_update
     passwall
     ssh_proxy
-    cleanup
     tor
   fi
 
   success "PassWall configuration completed successfully"
+  reboot
 }
 
 main "$@"
