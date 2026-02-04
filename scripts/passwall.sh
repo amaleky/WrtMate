@@ -224,22 +224,20 @@ cleanup() {
 }
 
 main() {
-  if [ -n "${1-}" ]; then
-    "$1"
-  else
-    check_min_requirements 200 500 2
-    cleanup
-    scanner
-    warp
-    psiphon
-    lantern
-    server_less
-    url_test
-    geo_update
-    passwall
-    ssh_proxy
-    tor
-  fi
+  touch "/tmp/passwall_install.lock"
+
+  check_min_requirements 200 500 2
+  cleanup
+  scanner
+  warp
+  psiphon
+  lantern
+  server_less
+  url_test
+  geo_update
+  passwall
+  ssh_proxy
+  tor
 
   success "PassWall configuration completed successfully"
   reboot

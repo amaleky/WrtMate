@@ -1,5 +1,10 @@
 #!/bin/sh
 
+if [ -f "/tmp/passwall_install.lock" ]; then
+  echo "Passwall is installing. Exiting url-test."
+  exit 0
+fi
+
 if [ "$(uci get passwall2.@global[0].enabled)" != "1" ]; then
   echo "Passwall is disabled. Exiting url-test."
   exit 0
