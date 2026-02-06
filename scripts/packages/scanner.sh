@@ -1,4 +1,7 @@
 #!/bin/bash
+# Usage:
+#   bash -c "$(wget -qO- https://raw.githubusercontent.com/amaleky/WrtMate/main/scripts/packages/scanner.sh)"
+#
 
 main() {
   local DETECTED_OS SYSTEM_ARCH DETECTED_ARCH
