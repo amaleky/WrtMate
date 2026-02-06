@@ -10,7 +10,6 @@ main() {
       pkg install -y proot
       termux-chroot
       echo "precedence ::ffff:0:0/96  100" >> /etc/gai.conf
-      termux-setup-storage
     fi
   else
     case "$(uname -s)" in
