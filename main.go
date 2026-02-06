@@ -26,7 +26,9 @@ func main() {
 	raws, outbounds, tags, foundCount, totalCount := util.TestOutbounds([]string{archivePath}, urlTestURLs, *jobs, *timeout, *socks, *output == "" && *socks == 0)
 
 	if len(outbounds) < 10 {
-		raws, outbounds, tags, foundCount, totalCount = util.TestOutbounds(util.GetSubscriptions(outputDir), urlTestURLs, *jobs, *timeout, *socks, *output == "" && *socks == 0)
+		paths := util.GetSubscriptions(outputDir)
+		paths = append([]string{archivePath}, paths...)
+		raws, outbounds, tags, foundCount, totalCount = util.TestOutbounds(paths, urlTestURLs, *jobs, *timeout, *socks, *output == "" && *socks == 0)
 	}
 
 	fmt.Printf("# Found %d/%d configs in %.2fs\n", foundCount, totalCount, time.Since(start).Seconds())
