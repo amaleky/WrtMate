@@ -40,6 +40,7 @@ var SUBSCRIPTIONS = []string{
 	"https://raw.githubusercontent.com/VPNforWindowsSub/configs/master/full.txt",
 	"https://raw.githubusercontent.com/crackbest/V2ray-Config/main/config.txt",
 	"https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/all_extracted_configs.txt",
+	"https://raw.githubusercontent.com/expressalaki/ExpressVPN/main/configs.txt",
 	"https://raw.githubusercontent.com/giromo/Collector/main/All_Configs_Sub.txt",
 	"https://raw.githubusercontent.com/hamedcode/port-based-v2ray-configs/main/sub/ss.txt",
 	"https://raw.githubusercontent.com/hamedcode/port-based-v2ray-configs/main/sub/trojan.txt",
