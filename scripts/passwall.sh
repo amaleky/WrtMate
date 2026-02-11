@@ -68,7 +68,7 @@ psiphon() {
   curl -s -L -o "/etc/init.d/psiphon" "${REPO_URL}/src/etc/init.d/psiphon" || error "Failed to download psiphon init script."
   chmod +x /etc/init.d/psiphon
 
-  curl -s -L -o "/root/psiphon/client.config" "https://raw.githubusercontent.com/amaleky/WrtMate/main/src/root/psiphon/client.config" || error "Failed to download psiphon configs."
+  curl -s -L -o "/root/psiphon/client.config" "$REPO_URL/src/root/psiphon/client.config" || error "Failed to download psiphon configs."
 
   /etc/init.d/psiphon enable
 }
@@ -155,7 +155,7 @@ server_less() {
   curl -s -L -o "/etc/init.d/serverless" "${REPO_URL}/src/etc/init.d/serverless" || error "Failed to download serverless init script."
   chmod +x /etc/init.d/serverless
 
-  curl -s -L -o "/root/xray/subscription.json" "https://raw.githubusercontent.com/voidr3aper-anon/GFW-slayer/main/configs/general/V-force.json" || error "Failed to download ServerLess configs list."
+  curl -s -L -o "/root/xray/subscription.json" "https://cdn.jsdelivr.net/gh/voidr3aper-anon/GFW-slayer@main/configs/general/V-force.json" || error "Failed to download ServerLess configs list."
 
   /etc/init.d/serverless enable
 }

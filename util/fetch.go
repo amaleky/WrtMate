@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -14,43 +13,51 @@ import (
 func fetchURL(rawURL, outputDir string) string {
 	fileName := hashAsFileName(rawURL)
 	filePath := filepath.Join(outputDir, fileName)
+	etagFilePath := filePath + ".etag"
 	fi, err := os.Stat(filePath)
 	if err == nil && !fi.IsDir() {
-		client := &http.Client{Timeout: time.Duration(2) * time.Second}
-		headReq, _ := http.NewRequest(http.MethodHead, rawURL, nil)
-		headResp, err := client.Do(headReq)
-		if err != nil || headResp.StatusCode != http.StatusOK {
-			return filePath
-		}
-		defer headResp.Body.Close()
-		remoteSizeStr := headResp.Header.Get("Content-Length")
-		if remoteSizeStr != "" {
-			remoteSize, err := strconv.ParseInt(remoteSizeStr, 10, 64)
-			if err != nil {
-				fmt.Println(err)
-			} else if remoteSize == fi.Size() {
+		storedETag, _ := os.ReadFile(etagFilePath)
+		if len(storedETag) > 0 {
+			client := &http.Client{Timeout: time.Duration(2) * time.Second}
+			headReq, _ := http.NewRequest(http.MethodHead, rawURL, nil)
+			headReq.Header.Set("If-None-Match", string(storedETag))
+			headResp, err := client.Do(headReq)
+			if err != nil || headResp.StatusCode == http.StatusNotModified {
 				return filePath
 			}
+			defer headResp.Body.Close()
 		}
 	}
-	client := &http.Client{Timeout: time.Duration(15) * time.Second}
+
+	client := &http.Client{Timeout: time.Duration(30) * time.Second}
 	resp, err := client.Get(rawURL)
 	if err != nil {
 		fmt.Println(err)
 		return filePath
 	}
+
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusOK {
 		data, err := io.ReadAll(resp.Body)
-		if err == nil {
-			decodedData, err := DecodeBase64IfNeeded(string(data))
-			if err == nil {
-				data = []byte(decodedData)
-			}
-			fmt.Println("# Downloaded subscription:", fileName)
-			_ = os.WriteFile(filePath, data, 0o644)
+		if err != nil {
+			fmt.Println(err)
+			return filePath
+		}
+
+		decodedData, err := DecodeBase64IfNeeded(string(data))
+		if err != nil {
+			fmt.Println(err)
+			return filePath
+		}
+
+		data = []byte(decodedData)
+		fmt.Println("# Downloaded subscription:", fileName)
+		_ = os.WriteFile(filePath, data, 0o644)
+		if etag := resp.Header.Get("ETag"); etag != "" {
+			_ = os.WriteFile(etagFilePath, []byte(etag), 0o644)
 		}
 	}
+
 	return filePath
 }
 
