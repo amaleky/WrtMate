@@ -34,6 +34,7 @@ ensure_packages() {
   for pkgname in $pkglist; do
     if ! is_package_installed "$pkgname"; then
       info "Installing package: $pkgname"
+      update_package_lists
       opkg install "$pkgname" || error "Failed to install $pkgname"
     fi
   done
@@ -127,7 +128,6 @@ check_environment() {
 }
 
 install_dependencies() {
-  update_package_lists
   ensure_packages "jq curl unzip"
 }
 
