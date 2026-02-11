@@ -6,11 +6,11 @@
 # License: MIT
 #
 # Usage:
-#   bash -c "$(wget -qO- https://raw.githubusercontent.com/amaleky/WrtMate/main/install.sh)"
+#   bash -c "$(wget -qO- https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/install.sh)"
 #
 # For more information, see the README.md
 
-readonly REPO_URL="https://raw.githubusercontent.com/amaleky/WrtMate/main"
+readonly REPO_URL="https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main"
 export REPO_URL
 
 menu() {

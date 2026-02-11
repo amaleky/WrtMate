@@ -156,8 +156,8 @@ config global_rules
 	option geosite_update '1'
 	option geoip_update '1'
 	option v2ray_location_asset '/usr/share/v2ray/'
-	option geoip_url 'https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geoip-lite.dat'
-	option geosite_url 'https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geosite-lite.dat'
+	option geoip_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geoip-lite.dat'
+	option geosite_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geosite-lite.dat'
 	option enable_geoview '1'
 
 config global_app
@@ -178,9 +178,9 @@ config global_subscribe
 config global_singbox
 	option sniff_override_destination '0'
 	option geoip_path '/usr/share/singbox/geoip.db'
-	option geoip_url 'https://github.com/Chocolate4U/Iran-sing-box-rules/releases/latest/download/geoip-lite.db'
+	option geoip_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-sing-box-rules@release/geoip-lite.db'
 	option geosite_path '/usr/share/singbox/geosite.db'
-	option geosite_url 'https://github.com/Chocolate4U/Iran-sing-box-rules/releases/latest/download/geosite-lite.db'
+	option geosite_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-sing-box-rules@release/geosite-lite.db'
 	option record_fragment '0'
 	option fragment '0'
 

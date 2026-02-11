@@ -1,6 +1,6 @@
 #!/bin/bash
 # Usage:
-#   bash -c "$(wget -qO- https://raw.githubusercontent.com/amaleky/WrtMate/main/scripts/packages/scanner.sh)"
+#   bash -c "$(wget -qO- https://cdn.jsdelivr.net/gh/amaleky/WrtMate@main/scripts/packages/scanner.sh)"
 #
 
 main() {
