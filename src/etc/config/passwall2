@@ -205,8 +205,8 @@ domain:pinsvc.net
 domain:snapp.cab
 domain:ptp
 domain:meet.google.com
-domain:playstation.net
-domain:playstation.com
+domain:dl.playstation.net
+domain:update.playstation.net
 domain:indllserver.info'
 	option ip_list 'rule-set:local:/usr/share/singbox/rule-set/geoip-ir.srs
 rule-set:local:/usr/share/singbox/rule-set/geoip-private.srs'
