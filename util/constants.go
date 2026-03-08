@@ -30,7 +30,7 @@ var SUBSCRIPTIONS = []string{
 	"https://cdn.jsdelivr.net/gh/Freedom-Guard-Builder/Freedom-Finder@main/out/raw_all.txt",
 	"https://cdn.jsdelivr.net/gh/LalatinaHub/Mineral@master/result/nodes",
 	"https://cdn.jsdelivr.net/gh/Leon406/SubCrawler@main/sub/share/hysteria2",
-	"https://cdn.jsdelivr.net/gh/Leon406/SubCrawler@main/sub/share/vless",
+	"https://raw.githubusercontent.com/Leon406/SubCrawler/main/sub/share/vless",
 	"https://cdn.jsdelivr.net/gh/MatinGhanbari/v2ray-CONFIGs@main/subscriptions/v2ray/all_sub.txt",
 	"https://cdn.jsdelivr.net/gh/Mosifree/-FREE2CONFIG@main/Reality",
 	"https://cdn.jsdelivr.net/gh/NiREvil/vless@main/sub/SSTime",
