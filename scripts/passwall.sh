@@ -191,23 +191,10 @@ passwall() {
   rm -rfv /tmp/packages.zip /tmp/passwall /tmp/passwall.apk
 }
 
-cleanup() {
-  for SERVICE in "hiddify" "hiddify-cli" "balancer" "ghost" "logwatch" "lantern"; do
-    if [ -f "/etc/init.d/${SERVICE}" ]; then
-      /etc/init.d/${SERVICE} disable
-      /etc/init.d/${SERVICE} stop
-      rm -rfv "/etc/init.d/${SERVICE}"
-    fi
-  done
-  rm -rfv "/root/warp" "/root/scripts/scanner.sh" "/root/ghost" "/usr/bin/hiddify-cli" "/usr/bin/hiddify" "/usr/bin/sing-box-plus" "/root/scripts/scanner.sh" "/root/.cache/subscriptions" "/root/.hiddify_version" "/root/.sing_box_plus_version" "/root/balancer" "/root/scripts/logwatch.sh" "/etc/hotplug.d/iface/99-url-test" /root/.*_version
-  del_cron_job "/etc/init.d/scanner start"
-}
-
 main() {
   touch "/tmp/passwall_install.lock"
 
   check_min_requirements 200 500 2
-  cleanup
   scanner
   warp
   psiphon
