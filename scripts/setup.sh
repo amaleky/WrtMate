@@ -17,13 +17,8 @@ upgrade_firmware() {
 }
 
 upgrade_packages() {
-  UPGRADABLE_PACKAGES=$(opkg list-upgradable | cut -f 1 -d ' ')
-  if [ -n "$UPGRADABLE_PACKAGES" ]; then
-    if confirm "Do you want to upgrade packages?"; then
-      for PACKAGE in $UPGRADABLE_PACKAGES; do
-        opkg upgrade "$PACKAGE" || error "Failed to upgrade package $PACKAGE."
-      done
-    fi
+  if confirm "Do you want to upgrade packages?"; then
+    apk upgrade
   fi
 }
 

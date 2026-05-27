@@ -11,8 +11,8 @@ if [ ! -d "$SINGBOX_DIR" ]; then mkdir -p "$SINGBOX_DIR"; fi
 if [ ! -d "$RULESET_DIR" ]; then mkdir -p "$RULESET_DIR"; fi
 
 if [ ! -f "/usr/bin/sing-box" ]; then
-  opkg update
-  opkg install sing-box
+  apk update
+  apk add sing-box
 fi
 
 download() {

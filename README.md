@@ -39,8 +39,8 @@ To install WrtMate on your OpenWrt device, follow these steps:
 2. **Install Bash shell:**
 
    ```bash
-   opkg update
-   opkg install bash
+   apk update
+   apk add bash
    ```
 
 3. **Run the installation script:**

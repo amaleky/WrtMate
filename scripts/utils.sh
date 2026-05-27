@@ -1,6 +1,11 @@
 #!/bin/bash
 # Common utility functions used across scripts
 
+if ! command -v apk >/dev/null 2>&1; then
+  echo "Please upgrade your openwrt firmware"
+  exit 1
+fi
+
 # Colors for terminal output
 readonly RED="\033[1;31m"
 readonly GREEN="\033[1;32m"
@@ -26,7 +31,7 @@ success() {
 }
 
 is_package_installed() {
-  opkg list-installed | grep "^$1[- ]"
+  apk info -e "$1" >/dev/null 2>&1
 }
 
 ensure_packages() {
@@ -35,7 +40,7 @@ ensure_packages() {
     if ! is_package_installed "$pkgname"; then
       info "Installing package: $pkgname"
       update_package_lists
-      opkg install "$pkgname" || error "Failed to install $pkgname"
+      apk add "$pkgname" || error "Failed to install $pkgname"
     fi
   done
 }
@@ -61,7 +66,7 @@ update_package_lists() {
 
   info "Updating package lists..."
   touch "$timestamp_file"
-  if opkg update; then
+  if apk update; then
     date +%s >"$timestamp_file"
   else
     error "Failed to update package lists. Check internet connection."

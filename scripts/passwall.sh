@@ -160,15 +160,17 @@ passwall() {
   LOCAL_VERSION="$(cat "/root/.cache/.passwall_version" 2>/dev/null || echo 'none')"
 
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
-    opkg remove --autoremove dnsmasq luci-app-passwall
+    apk del dnsmasq luci-app-passwall
     ensure_packages "dnsmasq-full kmod-nft-socket kmod-nft-tproxy binutils"
 
-    curl -L -o "/tmp/packages.zip" "$(echo "$RELEASES" | jq -r ".[] | .assets[].browser_download_url | select(endswith(\"passwall_packages_ipk_$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2).zip\"))" | head -n1)" || error "Failed to download passwall packages."
+    curl -L -o "/tmp/packages.zip" "$(echo "$RELEASES" | jq -r ".[] | .assets[].browser_download_url | select(endswith(\"passwall_packages_apk_$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2).zip\"))" | head -n1)" || error "Failed to download passwall packages."
     unzip -o /tmp/packages.zip -d /tmp/passwall >/dev/null 2>&1
-    for pkg in /tmp/passwall/*.ipk; do opkg install "$pkg"; done
+    for pkg in /tmp/passwall/*.apk;
+      do apk add --allow-untrusted "$pkg"
+    done
 
-    curl -L -o "/tmp/passwall.ipk" "$(echo "$RELEASES" | jq -r '.[] | .assets[].browser_download_url | select(contains("luci-app-passwall2_") and endswith("_all.ipk"))' | head -n1)" || error "Failed to download passwall package."
-    opkg install /tmp/passwall.ipk || error "Failed to install Passwall."
+    curl -L -o "/tmp/passwall.apk" "$(echo "$RELEASES" | jq -r '.[] | .assets[].browser_download_url | select(contains("luci-app-passwall2-") and endswith(".apk"))' | head -n1)" || error "Failed to download passwall package."
+    apk add --allow-untrusted /tmp/passwall.apk || error "Failed to install Passwall."
 
     if [ -n "$REMOTE_VERSION" ]; then
       echo "$REMOTE_VERSION" >"/root/.cache/.passwall_version"
@@ -186,7 +188,7 @@ passwall() {
     /etc/init.d/passwall2 restart
   fi
 
-  rm -rfv /tmp/packages.zip /tmp/passwall /tmp/passwall.ipk
+  rm -rfv /tmp/packages.zip /tmp/passwall /tmp/passwall.apk
 }
 
 cleanup() {
