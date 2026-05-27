@@ -36,8 +36,8 @@ func urlTest(ctx context.Context, link string, detour network.Dialer) error {
 	}
 	timeout := timeoutFromContext(ctx, constant.TCPTimeout)
 	transport := &http.Transport{
-		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-			return detour.DialContext(ctx, "tcp", dialAddr)
+		DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
+			return safeDialContext(ctx, detour, dialAddr)
 		},
 		TLSClientConfig: &tls.Config{
 			Time:    ntp.TimeFuncFromContext(ctx),
@@ -67,6 +67,15 @@ func urlTest(ctx context.Context, link string, detour network.Dialer) error {
 		return fmt.Errorf("failed to read response body: %w", err)
 	}
 	return nil
+}
+
+func safeDialContext(ctx context.Context, detour network.Dialer, destination metadata.Socksaddr) (conn net.Conn, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("outbound dial panic: %v", r)
+		}
+	}()
+	return detour.DialContext(ctx, "tcp", destination)
 }
 
 func timeoutFromContext(ctx context.Context, fallback time.Duration) time.Duration {
