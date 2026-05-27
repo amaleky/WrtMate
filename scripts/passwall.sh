@@ -184,7 +184,8 @@ passwall() {
   curl -s -L -o "/etc/config/passwall2" "${REPO_URL}/src/etc/config/passwall2" || error "Failed to download passwall config."
   uci commit passwall2
 
-  /etc/init.d/passwall2 restart
+  /etc/init.d/passwall2 enable
+  /etc/init.d/passwall2 stop
 
   rm -rf /tmp/passwall
 }
