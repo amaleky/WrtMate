@@ -73,28 +73,6 @@ psiphon() {
   /etc/init.d/psiphon enable
 }
 
-lantern() {
-  info "lantern"
-
-  REMOTE_VERSION="$(curl -s -L "https://api.github.com/repos/amaleky/WrtMate/releases/latest" | jq -r '.tag_name')"
-  LOCAL_VERSION="$(cat "/root/.cache/.lantern_version" 2>/dev/null || echo 'none')"
-
-  if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
-    if [[ -f "/etc/init.d/lantern" ]] && /etc/init.d/lantern running; then
-      /etc/init.d/lantern stop
-    fi
-    source <(wget -qO- "${REPO_URL}/scripts/packages/lantern.sh")
-    if [ -n "$REMOTE_VERSION" ]; then
-      echo "$REMOTE_VERSION" >"/root/.cache/.lantern_version"
-    fi
-  fi
-
-  curl -s -L -o "/etc/init.d/lantern" "${REPO_URL}/src/etc/init.d/lantern" || error "Failed to download lantern init script."
-  chmod +x /etc/init.d/lantern
-
-  /etc/init.d/lantern enable
-}
-
 tor() {
   info "tor"
 
@@ -212,7 +190,7 @@ passwall() {
 }
 
 cleanup() {
-  for SERVICE in "hiddify" "hiddify-cli" "balancer" "ghost" "logwatch"; do
+  for SERVICE in "hiddify" "hiddify-cli" "balancer" "ghost" "logwatch" "lantern"; do
     if [ -f "/etc/init.d/${SERVICE}" ]; then
       /etc/init.d/${SERVICE} disable
       /etc/init.d/${SERVICE} stop
@@ -231,7 +209,6 @@ main() {
   scanner
   warp
   psiphon
-  lantern
   server_less
   url_test
   geo_update

@@ -199,25 +199,3 @@ jobs:
           echo "CC=/tmp/zig-cc" >> "$GITHUB_ENV"
           echo "CXX=/tmp/zig-cxx" >> "$GITHUB_ENV"
           echo "AR=zig ar" >> "$GITHUB_ENV"
-
-      - name: Build Lantern
-        if: matrix.goos == 'linux'
-        env:
-          CGO_ENABLED: 1
-        run: |
-          git clone --depth 1 https://github.com/getlantern/lantern-headless-client.git
-          pushd ./lantern-headless-client || exit 1
-          rm -f go.sum
-          go get -u github.com/getlantern/flashlight/v7@latest
-          go mod tidy
-          go build -o ../lantern_${ASSET_NAME} -trimpath -ldflags "-s -w -buildid= -checklinkname=0 -linkmode external -extldflags=-static" .
-          popd
-
-      - name: Upload Lantern
-        if: matrix.goos == 'linux'
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: lantern_${{ env.ASSET_NAME }}
-          tag: ${{ github.ref }}
-          overwrite: true
