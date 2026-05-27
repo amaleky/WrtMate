@@ -142,7 +142,7 @@ url_test() {
   info "url_test"
   curl -s -L -o "/root/scripts/url-test.sh" "${REPO_URL}/src/root/scripts/url-test.sh" || error "Failed to download url-test.sh."
   chmod +x /root/scripts/url-test.sh
-  add_cron_job "*/10 * * * * /root/scripts/url-test.sh"
+  add_cron_job "*/20 * * * * /root/scripts/url-test.sh"
 }
 
 geo_update() {
