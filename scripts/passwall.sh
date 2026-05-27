@@ -164,13 +164,16 @@ passwall() {
     ensure_packages "dnsmasq-full kmod-nft-socket kmod-nft-tproxy binutils"
 
     curl -L -o "/tmp/packages.zip" "$(echo "$RELEASES" | jq -r ".[] | .assets[].browser_download_url | select(endswith(\"passwall_packages_apk_$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2).zip\"))" | head -n1)" || error "Failed to download passwall packages."
-    unzip -o /tmp/packages.zip -d /tmp/passwall >/dev/null 2>&1
+    unzip -o "/tmp/packages.zip" -d "/tmp/passwall" >/dev/null 2>&1
+    rm -f "/tmp/packages.zip"
     for pkg in /tmp/passwall/*.apk;
       do apk add --allow-untrusted "$pkg"
+      rm -f "$pkg"
     done
 
     curl -L -o "/tmp/passwall.apk" "$(echo "$RELEASES" | jq -r '.[] | .assets[].browser_download_url | select(contains("luci-app-passwall2-") and endswith(".apk"))' | head -n1)" || error "Failed to download passwall package."
-    apk add --allow-untrusted /tmp/passwall.apk || error "Failed to install Passwall."
+    apk add --allow-untrusted "/tmp/passwall.apk" || error "Failed to install Passwall."
+    rm -f "/tmp/passwall.apk"
 
     if [ -n "$REMOTE_VERSION" ]; then
       echo "$REMOTE_VERSION" >"/root/.cache/.passwall_version"
@@ -183,12 +186,7 @@ passwall() {
 
   /etc/init.d/passwall2 restart
 
-  if ! top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default' | grep 'global' >/dev/null; then
-    info "Restarting passwall service..."
-    /etc/init.d/passwall2 restart
-  fi
-
-  rm -rfv /tmp/packages.zip /tmp/passwall /tmp/passwall.apk
+  rm -rf /tmp/passwall
 }
 
 main() {
