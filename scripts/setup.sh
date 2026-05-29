@@ -76,6 +76,8 @@ configure_dns() {
   for INTERFACE_V6 in $(uci show network | grep "proto='dhcpv6'" | cut -d. -f2 | cut -d= -f1); do
     uci del network.${INTERFACE_V6}.peerdns
     uci del network.${INTERFACE_V6}.dns
+    uci del network.${INTERFACE_V6}.dns
+    uci set network.${INTERFACE_V6}.disabled='1'
   done
   uci commit network
 }
