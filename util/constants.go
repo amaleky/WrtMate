@@ -9,6 +9,14 @@ type EntryType struct {
 }
 
 var SUBSCRIPTIONS = []string{
+	"https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/main/mci/sub_1.txt",
+	"https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/main/mci/sub_2.txt",
+	"https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/main/mci/sub_3.txt",
+	"https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/main/mci/sub_4.txt",
+	"https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/main/mtn/sub_1.txt",
+	"https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/main/mtn/sub_2.txt",
+	"https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/main/mtn/sub_3.txt",
+	"https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/main/mtn/sub_4.txt",
 	"https://cdn.jsdelivr.net/gh/10ium/V2Hub3@main/merged",
 	"https://cdn.jsdelivr.net/gh/10ium/V2rayCollector@main/mixed_iran.txt",
 	"https://cdn.jsdelivr.net/gh/10ium/V2rayCollectorLite@main/mixed_iran.txt",
