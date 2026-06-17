@@ -74,9 +74,7 @@ cat "$RULESET_DIR/domains-ir.txt" \
 | grep -vE '([0-9]{1,3}\.){3}[0-9]{1,3}' \
 | sort -u > "$RULESET_DIR/geosite-direct.txt"
 
-for DOMAIN in "ir" "local" "localhost"; do
-  echo "||$DOMAIN^" >> "$RULESET_DIR/geosite-direct.txt"
-done
+echo "||ir^" >> "$RULESET_DIR/geosite-direct.txt"
 
 if [ "$(wc -c <"$RULESET_DIR/geosite-direct.txt" | tr -d ' ')" != "$CURRENT_SIZE" ]; then
   sing-box rule-set convert --type adguard --output "$RULESET_DIR/geosite-direct.srs" "$RULESET_DIR/geosite-direct.txt"
