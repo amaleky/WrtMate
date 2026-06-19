@@ -2,13 +2,12 @@ config nodes 'Splitter'
 	option remarks 'Splitter'
 	option type 'sing-box'
 	option protocol '_shunt'
-	option default_node 'Scanner'
+	option default_node '_direct'
 	option Block '_blackhole'
 	option Direct '_direct'
+	option Sanction 'Scanner'
 	option write_ipset_direct '0'
 	option enable_geoview_ip '1'
-	option fakedns '0'
-	option default_fakedns '0'
 
 config nodes 'Scanner'
 	option group 'default'
@@ -197,3 +196,29 @@ domain:dl.playstation.net
 domain:update.playstation.net'
 	option ip_list 'rule-set:local:/usr/share/singbox/rule-set/geoip-ir.srs
 rule-set:local:/usr/share/singbox/rule-set/geoip-private.srs'
+
+config shunt_rules 'Sanction'
+	option remarks 'Sanction'
+	option network 'tcp,udp'
+	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-sanction.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-category-anticensorship.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-category-communication.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-category-entertainment.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-category-media.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-category-porn.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-category-social.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-category-forums.srs'
+	option ip_list '91.108.56.0/22
+91.108.4.0/22
+91.108.8.0/22
+91.108.16.0/22
+91.108.12.0/22
+149.154.160.0/20
+91.105.192.0/23
+91.108.20.0/22
+185.76.151.0/24
+2001:b28:f23d::/48
+2001:b28:f23f::/48
+2001:67c:4e8::/48
+2001:b28:f23c::/48
+2a0a:f280::/32'
