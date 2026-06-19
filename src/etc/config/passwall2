@@ -190,6 +190,7 @@ config shunt_rules 'Direct'
 	option network 'tcp,udp'
 	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-direct.srs
 rule-set:local:/usr/share/singbox/rule-set/linkedin.srs
+rule-set:local:/usr/share/singbox/rule-set/spotify.srs
 rule-set:local:/usr/share/singbox/rule-set/game.srs
 domain:meet.google.com
 domain:dl.playstation.net
