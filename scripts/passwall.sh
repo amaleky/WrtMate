@@ -149,7 +149,6 @@ geo_update() {
   info "geo_update"
   curl -s -L -o "/root/scripts/geo-update.sh" "${REPO_URL}/src/root/scripts/geo-update.sh" || error "Failed to download geo-update.sh."
   chmod +x /root/scripts/geo-update.sh
-  add_cron_job "0 6 * * 0 /root/scripts/geo-update.sh"
   /root/scripts/geo-update.sh
 }
 
