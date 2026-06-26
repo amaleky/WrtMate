@@ -188,9 +188,9 @@ config shunt_rules 'Direct'
 	option remarks 'Direct'
 	option network 'tcp,udp'
 	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-direct.srs
-rule-set:local:/usr/share/singbox/rule-set/linkedin.srs
-rule-set:local:/usr/share/singbox/rule-set/spotify.srs
-rule-set:local:/usr/share/singbox/rule-set/game.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-linkedin.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-spotify.srs
+rule-set:local:/usr/share/singbox/rule-set/geosite-game.srs
 domain:meet.google.com
 domain:dl.playstation.net
 domain:update.playstation.net'
@@ -200,14 +200,7 @@ rule-set:local:/usr/share/singbox/rule-set/geoip-private.srs'
 config shunt_rules 'Sanction'
 	option remarks 'Sanction'
 	option network 'tcp,udp'
-	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-sanction.srs
-rule-set:local:/usr/share/singbox/rule-set/geosite-category-anticensorship.srs
-rule-set:local:/usr/share/singbox/rule-set/geosite-category-communication.srs
-rule-set:local:/usr/share/singbox/rule-set/geosite-category-entertainment.srs
-rule-set:local:/usr/share/singbox/rule-set/geosite-category-media.srs
-rule-set:local:/usr/share/singbox/rule-set/geosite-category-porn.srs
-rule-set:local:/usr/share/singbox/rule-set/geosite-category-social.srs
-rule-set:local:/usr/share/singbox/rule-set/geosite-category-forums.srs'
+	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-sanction.srs'
 	option ip_list '91.108.56.0/22
 91.108.4.0/22
 91.108.8.0/22
