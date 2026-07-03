@@ -1,9 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
 XRAY_DIR="/usr/bin/"
 V2RAY_DIR="/usr/share/v2ray"
 SINGBOX_DIR="/usr/share/singbox"
 RULESET_DIR="$SINGBOX_DIR/rule-set"
+RESOURCE_DIRECTORY="/tmp/domain-list-community-master/data"
 
 if [ ! -d "$V2RAY_DIR" ]; then mkdir -p "$V2RAY_DIR"; fi
 if [ ! -d "$SINGBOX_DIR" ]; then mkdir -p "$SINGBOX_DIR"; fi
@@ -15,15 +16,15 @@ if [ ! -f "/usr/bin/sing-box" ]; then
 fi
 
 download() {
-  FILE="$1"
-  URL="$2"
-  UPDATE="$3"
-
-  echo "Downloading $FILE"
+  local FILE="$1"
+  local URL="$2"
+  local UPDATE="$3"
 
   if [ "$UPDATE" = "false" ] && [ -f "$FILE" ]; then
     return 0
   fi
+
+  echo "Downloading $FILE"
 
   REMOTE_SIZE=$(curl -s -I -L "$URL" | grep -i Content-Length | tail -n1 | awk '{print $2}' | tr -d '\r')
 
@@ -33,25 +34,23 @@ download() {
     LOCAL_SIZE=0
   fi
 
-  if [ "$REMOTE_SIZE" != "$LOCAL_SIZE" ] && [ "$REMOTE_SIZE" -gt 0 ]; then
+  if [ "$REMOTE_SIZE" != "$LOCAL_SIZE" ] || [ "$REMOTE_SIZE" -eq 0 ]; then
     echo "Getting $FILE"
-    TEMP_FILE="$(mktemp)"
-    if curl -s -L -o "$TEMP_FILE" "$URL"; then
-      cp -f "$TEMP_FILE" "$FILE"
+    TEMP_DOWNLOAD_FILE="$(mktemp)"
+    if curl -s -L -o "$TEMP_DOWNLOAD_FILE" "$URL"; then
+      mv -f "$TEMP_DOWNLOAD_FILE" "$FILE"
     fi
-    rm -rf "$TEMP_FILE"
   fi
 }
 
 parse() {
-  FILE="$1"
-  OUTPUT="$2"
-  AMEND="$3"
+  local FILE="$1"
+  local OUTPUT="$2"
+  local AMEND="$3"
 
-  if [ ! -d "/tmp/domain-list-community-master/data/" ]; then
+  if [ ! -d "$RESOURCE_DIRECTORY" ]; then
     download "/tmp/v2ray.zip" "https://github.com/v2ray/domain-list-community/archive/master.zip" "false"
     unzip -o "/tmp/v2ray.zip" -d "/tmp"
-    rm -f "/tmp/v2ray.zip"
   fi
 
   if [ "$AMEND" != "true" ]; then
@@ -67,23 +66,23 @@ parse() {
         echo "$LINE" >> "$OUTPUT"
         ;;
     esac
-  done < "/tmp/domain-list-community-master/data/$FILE"
+  done < "$RESOURCE_DIRECTORY/$FILE"
 }
 
 compile() {
-  FILE="$1"
+  local FILE="$1"
 
   echo "Compiling $FILE"
 
-  TEMP_FILE="$(mktemp)"
+  TEMP_COMPILE_FILE="$(mktemp)"
 
   cat "$RULESET_DIR/$FILE.txt" \
   | grep -vE "(##|/|^[[:space:]\!\?\[\.\*\$\-]|include:|.+\.ir$)" \
   | sed 's/^www\./\^/; s/$websocket.*//; s/$third-party.*//; s/$script.*//; s/\^.*$/\^/; s/#.*//g; /^||/! s/^/||/; /[^ ^]$/ s/$/^/; s/full://g; s/domain://g; s/geoip://g; s/geosite://g; s/ @ads//g; s/ @cn//g; s/ @!cn//g' \
   | grep -vF '||^' \
   | grep -vE '([0-9]{1,3}\.){3}[0-9]{1,3}' \
-  | sort -u > "$TEMP_FILE"
-  sing-box rule-set convert --type adguard --output "$RULESET_DIR/$FILE.srs" "$TEMP_FILE"
+  | sort -u > "$TEMP_COMPILE_FILE"
+  sing-box rule-set convert --type adguard --output "$RULESET_DIR/$FILE.srs" "$TEMP_COMPILE_FILE"
 }
 
 # Global
