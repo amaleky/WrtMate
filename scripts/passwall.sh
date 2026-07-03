@@ -24,7 +24,6 @@ scanner() {
   chmod +x /etc/init.d/scanner
 
   /etc/init.d/scanner enable
-  /etc/init.d/scanner start
 }
 
 warp() {
@@ -122,7 +121,6 @@ ssh_proxy() {
 
   if [[ -f "/root/.ssh/id_rsa" ]]; then
     /etc/init.d/ssh-proxy enable
-    /etc/init.d/ssh-proxy start
   fi
 }
 

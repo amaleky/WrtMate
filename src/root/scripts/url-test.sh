@@ -58,6 +58,10 @@ test_service() {
   PORT="$3"
   AUTO_STOP="$4"
 
+  if ! /etc/init.d/"$SERVICE" enabled; then
+    return
+  fi
+
   if [ "$(get_retry_count "$SERVICE")" -le 5 ] || [ "$(uci get passwall2.Splitter.default_node)" = "$NODE" ]; then
     if ! test_socks_port "$PORT" "https://1.1.1.1/cdn-cgi/trace/"; then
       echo "❌ $NODE connectivity test failed"
