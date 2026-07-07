@@ -191,6 +191,7 @@ config shunt_rules 'Direct'
 rule-set:local:/usr/share/singbox/rule-set/geosite-linkedin.srs
 rule-set:local:/usr/share/singbox/rule-set/geosite-spotify.srs
 rule-set:local:/usr/share/singbox/rule-set/geosite-game.srs
+domain:ir
 domain:meet.google.com
 domain:dl.playstation.net
 domain:update.playstation.net'
