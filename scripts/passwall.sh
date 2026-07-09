@@ -187,9 +187,10 @@ passwall() {
   rm -rf /tmp/passwall
 }
 
-dns_rebind_protection() {
+dns_config() {
   info "dns_rebind_protection"
   uci set dhcp.@dnsmasq[0].rebind_protection='0'
+  uci set dhcp.@dnsmasq[0].dns_forward_max='1500'
   uci commit dhcp
   /etc/init.d/dnsmasq restart
 }
@@ -207,7 +208,7 @@ main() {
   passwall
   ssh_proxy
   tor
-  dns_rebind_protection
+  dns_config
 
   success "PassWall configuration completed successfully"
   reboot
