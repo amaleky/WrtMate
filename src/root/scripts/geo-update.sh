@@ -49,7 +49,7 @@ parse() {
   local AMEND="$3"
 
   if [ ! -d "$RESOURCE_DIRECTORY" ]; then
-    download "/tmp/v2ray.zip" "https://github.com/v2ray/domain-list-community/archive/master.zip" "false"
+    download "/tmp/v2ray.zip" "https://github.com/v2fly/domain-list-community/archive/master.zip" "false"
     unzip -o "/tmp/v2ray.zip" -d "/tmp"
   fi
 
@@ -107,12 +107,6 @@ cat "$RULESET_DIR/iran_domains_direct.txt" >> "$RULESET_DIR/geosite-direct.txt"
 echo "||ir^" >> "$RULESET_DIR/geosite-direct.txt"
 compile  "geosite-direct"
 
-parse "linkedin" "$RULESET_DIR/geosite-linkedin.txt"
-compile "geosite-linkedin"
-
-parse "spotify" "$RULESET_DIR/geosite-spotify.txt"
-compile "geosite-spotify"
-
 parse "riot" "$RULESET_DIR/geosite-game.txt"
 for DOMAIN in "myqcloud.com" "qq.com" "activisionblizzard.com" "activision.com" "demonware.net" "callofduty.com" "callofdutyleague.com" "codmwest.com" "appsflyersdk.com"; do
   echo "||$DOMAIN^" >> "$RULESET_DIR/geosite-game.txt"
@@ -164,5 +158,11 @@ parse "category-forums" "$RULESET_DIR/geosite-sanction.txt" "true"
 parse "category-media" "$RULESET_DIR/geosite-sanction.txt" "true"
 parse "category-porn" "$RULESET_DIR/geosite-sanction.txt" "true"
 parse "category-social-media-!cn" "$RULESET_DIR/geosite-sanction.txt" "true"
+parse "linkedin" "$RULESET_DIR/geosite-sanction.txt" "true"
+parse "spotify" "$RULESET_DIR/geosite-sanction.txt" "true"
+
+for DOMAIN in "nx.app" "proxy.golang.org"; do
+  echo "||$DOMAIN^" >> "$RULESET_DIR/geosite-sanction.txt"
+done
 
 compile "geosite-sanction"

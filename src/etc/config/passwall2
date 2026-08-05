@@ -174,11 +174,11 @@ config global_app
 
 config global_subscribe
 	option filter_keyword_mode '1'
-	option ss_type 'sing-box'
-	option trojan_type 'sing-box'
-	option vmess_type 'sing-box'
-	option vless_type 'sing-box'
-	option hysteria2_type 'sing-box'
+	option ss_type 'xray'
+	option trojan_type 'xray'
+	option vmess_type 'xray'
+	option vless_type 'xray'
+	option hysteria2_type 'xray'
 	option domain_strategy 'prefer_ipv4'
 
 config global_singbox
@@ -201,8 +201,6 @@ config shunt_rules 'Direct'
 	option remarks 'Direct'
 	option network 'tcp,udp'
 	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-direct.srs
-rule-set:local:/usr/share/singbox/rule-set/geosite-linkedin.srs
-rule-set:local:/usr/share/singbox/rule-set/geosite-spotify.srs
 rule-set:local:/usr/share/singbox/rule-set/geosite-game.srs
 domain:ir
 domain:meet.google.com
