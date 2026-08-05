@@ -88,7 +88,7 @@ test_service() {
 main() {
   test_service "scanner" "Scanner" 9802 "false"
   test_service "warp-plus" "WarpPlus" 9803 "true"
-  test_service "psiphon" "Psiphon" 9804 "true"
+  test_service "psiphon" "Psiphon" 9804 "false"
   test_service "tor" "Tor" 9805 "true"
   test_service "ssh-proxy" "SshProxy" 9806 "true"
   test_serverless
