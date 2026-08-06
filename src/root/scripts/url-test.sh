@@ -26,7 +26,7 @@ test_socks_port() {
 }
 
 test_serverless() {
-  if test_socks_port "10808" "https://www.google.com"; then
+  if test_socks_port "10808" "https://www.youtube.com"; then
     echo "✅ serverless connectivity test passed"
   else
     SERVERLESS_CONFIG="/root/xray/serverless.json"
@@ -38,7 +38,7 @@ test_serverless() {
       echo "Testing serverless [$(jq -r '.remarks' "$SERVERLESS_CONFIG")]"
       /etc/init.d/serverless restart
       sleep 5
-      if test_socks_port "10808" "https://www.google.com"; then
+      if test_socks_port "10808" "https://www.youtube.com"; then
         echo "✅ serverless connectivity test passed"
         FOUND_WORKING=1
         break
