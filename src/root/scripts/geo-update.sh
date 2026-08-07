@@ -145,25 +145,32 @@ rm -f "$RULESET_DIR/geosite-sanction.txt"
 download "$RULESET_DIR/DynX-AntiBan-list.txt" "https://raw.githubusercontent.com/MrDevAnony/DynX-AntiBan-Domains/main/DynX-AntiBan-list.lst"
 cat "$RULESET_DIR/DynX-AntiBan-list.txt" >> "$RULESET_DIR/geosite-sanction.txt"
 
-download "$RULESET_DIR/ir-blocked-domain.txt" "https://raw.githubusercontent.com/filteryab/ir-blocked-domain/main/data/ir-blocked-domain"
-cat "$RULESET_DIR/ir-blocked-domain.txt" >> "$RULESET_DIR/geosite-sanction.txt"
-
 download "$RULESET_DIR/ir-sanctioned-domain.txt" "https://raw.githubusercontent.com/filteryab/ir-sanctioned-domain/main/data/ir-sanctioned-domain"
 cat "$RULESET_DIR/ir-sanctioned-domain.txt" >> "$RULESET_DIR/geosite-sanction.txt"
 
 parse "category-ai-!cn" "$RULESET_DIR/geosite-sanction.txt" "true"
-parse "category-anticensorship" "$RULESET_DIR/geosite-sanction.txt" "true"
-parse "category-communication" "$RULESET_DIR/geosite-sanction.txt" "true"
-parse "category-entertainment" "$RULESET_DIR/geosite-sanction.txt" "true"
-parse "category-forums" "$RULESET_DIR/geosite-sanction.txt" "true"
-parse "category-media" "$RULESET_DIR/geosite-sanction.txt" "true"
-parse "category-porn" "$RULESET_DIR/geosite-sanction.txt" "true"
-parse "category-social-media-!cn" "$RULESET_DIR/geosite-sanction.txt" "true"
 parse "linkedin" "$RULESET_DIR/geosite-sanction.txt" "true"
 parse "spotify" "$RULESET_DIR/geosite-sanction.txt" "true"
+parse "telegram" "$RULESET_DIR/geosite-sanction.txt" "true"
 
 for DOMAIN in "nx.app" "proxy.golang.org"; do
   echo "||$DOMAIN^" >> "$RULESET_DIR/geosite-sanction.txt"
 done
 
 compile "geosite-sanction"
+
+# Filter
+rm -f "$RULESET_DIR/geosite-filter.txt"
+
+download "$RULESET_DIR/ir-blocked-domain.txt" "https://raw.githubusercontent.com/filteryab/ir-blocked-domain/main/data/ir-blocked-domain"
+cat "$RULESET_DIR/ir-blocked-domain.txt" >> "$RULESET_DIR/geosite-filter.txt"
+
+parse "category-anticensorship" "$RULESET_DIR/geosite-filter.txt" "true"
+parse "category-communication" "$RULESET_DIR/geosite-filter.txt" "true"
+parse "category-entertainment" "$RULESET_DIR/geosite-filter.txt" "true"
+parse "category-forums" "$RULESET_DIR/geosite-filter.txt" "true"
+parse "category-media" "$RULESET_DIR/geosite-filter.txt" "true"
+parse "category-porn" "$RULESET_DIR/geosite-filter.txt" "true"
+parse "category-social-media-!cn" "$RULESET_DIR/geosite-filter.txt" "true"
+
+compile "geosite-filter"
