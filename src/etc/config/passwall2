@@ -4,8 +4,8 @@ config nodes 'Splitter'
 	option protocol '_shunt'
 	option default_node '_direct'
 	option Block '_blackhole'
-	option Direct '_direct'
 	option Sanction 'Scanner'
+	option Filter 'ServerLess'
 	option write_ipset_direct '0'
 	option enable_geoview_ip '1'
 
@@ -79,9 +79,10 @@ config global
 	option node 'Splitter'
 	option direct_dns_protocol 'auto'
 	option direct_dns_query_strategy 'UseIPv4'
-	option remote_dns_protocol 'tcp'
-	option remote_dns '1.1.1.1'
+	option remote_dns_protocol 'doh'
+	option remote_dns_doh 'https://1.1.1.1/dns-query'
 	option remote_dns_query_strategy 'UseIPv4'
+	option remote_dns_detour 'remote'
 	option dns_hosts 'dns.adguard.com 94.140.14.14
 adguard-dns.com 94.140.14.14
 dns.adguard-dns.com 94.140.14.14
@@ -126,7 +127,6 @@ PC.mshome.net 172.22.240.1'
 	option log_node '1'
 	option loglevel 'error'
 	option write_ipset_direct '0'
-	option remote_dns_detour 'remote'
 	option dns_redirect '0'
 	option node_socks_bind_local '0'
 
@@ -227,3 +227,8 @@ config shunt_rules 'Sanction'
 2001:67c:4e8::/48
 2001:b28:f23c::/48
 2a0a:f280::/32'
+
+config shunt_rules 'Filter'
+	option remarks 'Filter'
+	option network 'tcp,udp'
+	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-filter.srs'
