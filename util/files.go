@@ -61,6 +61,13 @@ func GeneratePaths(output *string) (string, string, string, error) {
 
 	outputPath := *output
 	archivePath := filepath.Join(homeDir, ".subscriptions", "archive.txt")
+	archive, err := os.OpenFile(archivePath, os.O_CREATE|os.O_WRONLY, 0o644)
+	if err != nil {
+		return "", "", "", err
+	}
+	if err := archive.Close(); err != nil {
+		return "", "", "", err
+	}
 
 	return outputDir, outputPath, archivePath, nil
 }
