@@ -41,7 +41,6 @@ var SUBSCRIPTIONS = []string{
 	"https://raw.githubusercontent.com/hamedcode/port-based-v2ray-configs/main/sub/trojan.txt",
 	"https://raw.githubusercontent.com/10ium/V2Hub3/main/merged",
 	"https://raw.githubusercontent.com/VPNforWindowsSub/configs/master/full.txt",
-	"https://raw.githubusercontent.com/mshojaei77/v2rayAuto/main/telegram/popular_channels",
 	"https://raw.githubusercontent.com/Firmfox/Proxify/main/v2ray_configs/separated_by_protocol/vmess.txt",
 	"https://raw.githubusercontent.com/LalatinaHub/Mineral/master/result/nodes",
 	"https://raw.githubusercontent.com/10ium/V2rayCollectorLite/main/mixed_iran.txt",
