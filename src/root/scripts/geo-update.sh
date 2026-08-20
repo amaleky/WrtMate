@@ -105,7 +105,9 @@ cat "$RULESET_DIR/domains-ir.txt" >> "$RULESET_DIR/geosite-direct.txt"
 download "$RULESET_DIR/iran_domains_direct.txt" "https://raw.githubusercontent.com/liketolivefree/iran_domain-ip/main/iran_domains_direct.txt"
 cat "$RULESET_DIR/iran_domains_direct.txt" >> "$RULESET_DIR/geosite-direct.txt"
 
-echo "||ir^" >> "$RULESET_DIR/geosite-direct.txt"
+for DOMAIN in "ir" "isaco.app" "indllserver.info"; do
+  echo "||$DOMAIN^" >> "$RULESET_DIR/geosite-direct.txt"
+done
 compile  "geosite-direct"
 
 parse "riot" "$RULESET_DIR/geosite-game.txt"
