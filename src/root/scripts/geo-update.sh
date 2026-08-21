@@ -137,6 +137,8 @@ cat "$RULESET_DIR/hagezi.txt" >> "$RULESET_DIR/geosite-adguard.txt"
 download "$RULESET_DIR/hoshsadiq.txt" "https://raw.githubusercontent.com/hoshsadiq/adblock-nocoin-list/master/nocoin.txt"
 cat "$RULESET_DIR/hoshsadiq.txt" >> "$RULESET_DIR/geosite-adguard.txt"
 
+parse "category-public-tracker" "$RULESET_DIR/geosite-adguard.txt" "true"
+
 echo "/(airbrake|bugsnag|clarity|datadoghq|doubleclick|errorreporting|fastclick|freshmarketer|tagmanager|honeybadger|hotjar|logrocket|luckyorange|mouseflow|newrelic|openreplay|raygun|rollbar|sentry|siftscience|webengage|yandex|analytics|metrics)/" >> "$RULESET_DIR/geosite-adguard.txt"
 
 compile "geosite-adguard"
