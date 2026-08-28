@@ -190,7 +190,7 @@ passwall() {
 dns_config() {
   info "dns_rebind_protection"
   uci set dhcp.@dnsmasq[0].rebind_protection='0'
-  uci set dhcp.@dnsmasq[0].dns_forward_max='1500'
+  uci set dhcp.@dnsmasq[0].dnsforwardmax='1500'
   uci commit dhcp
   /etc/init.d/dnsmasq restart
 }
