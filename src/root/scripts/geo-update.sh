@@ -1,6 +1,6 @@
 #!/bin/bash
 
-XRAY_DIR="/usr/bin/"
+XRAY_DIR="/usr/bin"
 V2RAY_DIR="/usr/share/v2ray"
 SINGBOX_DIR="/usr/share/singbox"
 RULESET_DIR="$SINGBOX_DIR/rule-set"
