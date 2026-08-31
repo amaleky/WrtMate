@@ -27,9 +27,8 @@ test_serverless() {
   if test_socks_port "10808" "https://www.youtube.com"; then
     echo "✅ serverless connectivity test passed"
   else
-    i=$(jq '. | length' "$SERVERLESS_SUBSCRIPTION")
-    while [ "$i" -gt 0 ]; do
-      i=$((i - 1))
+    i=0
+    while [ "$i" -lt "$(jq 'length' "$SERVERLESS_SUBSCRIPTION")" ]; do
       jq ".[$i]" "$SERVERLESS_SUBSCRIPTION" > "$SERVERLESS_CONFIG"
       echo "Testing serverless [$(jq -r '.remarks' "$SERVERLESS_CONFIG")]"
       /etc/init.d/"$SERVICE" restart
@@ -38,6 +37,7 @@ test_serverless() {
         echo "✅ serverless connectivity test passed"
         break
       fi
+      i=$((i + 1))
     done
   fi
 }
