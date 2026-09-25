@@ -103,7 +103,7 @@ config global
 	option dns_hosts 'cloudflare-dns.com 1.1.1.1'
 	option log_node '1'
 	option loglevel 'error'
-	option dns_redirect '0'
+	option dns_redirect '1'
 	option node_socks_bind_local '0'
 
 config global_haproxy
@@ -152,5 +152,5 @@ config global_subscribe
 	option hysteria2_type 'xray'
 
 config global_singbox
-	option record_fragment '0'
+	option record_fragment '1'
 	option fragment '0'
