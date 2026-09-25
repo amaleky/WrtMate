@@ -6,15 +6,6 @@ SINGBOX_DIR="/usr/share/singbox"
 RULESET_DIR="$SINGBOX_DIR/rule-set"
 RESOURCE_DIRECTORY="/tmp/domain-list-community-master/data"
 
-if [ ! -d "$V2RAY_DIR" ]; then mkdir -p "$V2RAY_DIR"; fi
-if [ ! -d "$SINGBOX_DIR" ]; then mkdir -p "$SINGBOX_DIR"; fi
-if [ ! -d "$RULESET_DIR" ]; then mkdir -p "$RULESET_DIR"; fi
-
-if [ ! -f "/usr/bin/sing-box" ]; then
-  apk update
-  apk add sing-box
-fi
-
 download() {
   local FILE="$1"
   local URL="$2"
@@ -69,21 +60,52 @@ parse() {
   done < "$RESOURCE_DIRECTORY/$FILE"
 }
 
+sanitize_rules() {
+  sed \
+    -e "s/$(printf '\357\273\277')//g" \
+    -e "s/$(printf '\342\200\213')//g" \
+    -e "s/$(printf '\342\200\214')//g" \
+    -e "s/$(printf '\342\200\215')//g" \
+    -e "s/$(printf '\302\240')/ /g" \
+    -e 's/\r$//' \
+    -e 's/&#[xX]20;/ /g' \
+    -e 's/&#32;/ /g' \
+    -e 's/&nbsp;/ /g' \
+    -e 's/#.*$//' \
+    -e 's/[[:space:]][[:space:]]*@[^[:space:]][^[:space:]]*[[:space:]]*$//' \
+    -e 's/^[[:space:]]*//' \
+    -e 's/[[:space:]]*$//' \
+  | grep -vE "(^$|##|/|^[[:space:]\!\?\[\.\*\$\-]|^@@|^\|\|@@|include:|^(regexp|keyword):|.+\.ir$)" \
+  | sed 's/^www\./\^/; s/\$.*$//; s/\^.*$/\^/; /^||/! s/^/||/; /[^ ^]$/ s/$/^/; s/full://g; s/domain://g; s/geoip://g; s/geosite://g' \
+  | grep -vF '||^' \
+  | grep -vE '([0-9]{1,3}\.){3}[0-9]{1,3}' \
+  | sort -u
+}
+
 compile() {
   local FILE="$1"
+  local STATUS
+  local TEMP_COMPILE_FILE
 
   echo "Compiling $FILE"
 
   TEMP_COMPILE_FILE="$(mktemp)"
 
-  cat "$RULESET_DIR/$FILE.txt" \
-  | grep -vE "(##|/|^[[:space:]\!\?\[\.\*\$\-]|include:|.+\.ir$)" \
-  | sed 's/^www\./\^/; s/$websocket.*//; s/$third-party.*//; s/$script.*//; s/\^.*$/\^/; s/#.*//g; /^||/! s/^/||/; /[^ ^]$/ s/$/^/; s/full://g; s/domain://g; s/geoip://g; s/geosite://g; s/ @ads//g; s/ @cn//g; s/ @!cn//g' \
-  | grep -vF '||^' \
-  | grep -vE '([0-9]{1,3}\.){3}[0-9]{1,3}' \
-  | sort -u > "$TEMP_COMPILE_FILE"
+  sanitize_rules < "$RULESET_DIR/$FILE.txt" > "$TEMP_COMPILE_FILE"
   sing-box rule-set convert --type adguard --output "$RULESET_DIR/$FILE.srs" "$TEMP_COMPILE_FILE"
+  STATUS=$?
+  rm -f "$TEMP_COMPILE_FILE"
+  return "$STATUS"
 }
+
+if [ ! -d "$V2RAY_DIR" ]; then mkdir -p "$V2RAY_DIR"; fi
+if [ ! -d "$SINGBOX_DIR" ]; then mkdir -p "$SINGBOX_DIR"; fi
+if [ ! -d "$RULESET_DIR" ]; then mkdir -p "$RULESET_DIR"; fi
+
+if [ ! -f "/usr/bin/sing-box" ]; then
+  apk update
+  apk add sing-box
+fi
 
 # Global
 download "$V2RAY_DIR/geoip.dat" "https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geoip-lite.dat" "false"
