@@ -126,7 +126,6 @@ config global
 	option socks_enabled '0'
 	option acl_enable '0'
 	option node 'Splitter'
-	option direct_dns_protocol 'auto'
 	option direct_dns_query_strategy 'UseIPv4'
 	option remote_dns_protocol 'doh'
 	option remote_rewrite_ttl '30'
@@ -136,7 +135,6 @@ config global
 	option dns_hosts 'cloudflare-dns.com 1.1.1.1'
 	option log_node '1'
 	option loglevel 'error'
-	option write_ipset_direct '0'
 	option dns_redirect '0'
 	option node_socks_bind_local '0'
 
@@ -148,8 +146,6 @@ config global_delay
 	option start_delay '10'
 
 config global_forwarding
-	option tcp_no_redir_ports 'disable'
-	option udp_no_redir_ports 'disable'
 	option tcp_redir_ports '21,22,25,53,143,465,587,853,993,995,80,443,9339'
 	option udp_redir_ports '53,80,443'
 	option accept_icmp '0'
@@ -168,18 +164,15 @@ config global_other
 	option url_test_url 'https://www.gstatic.com/generate_204'
 
 config global_rules
-	option auto_update '0'
 	option geosite_update '1'
 	option geoip_update '1'
 	option v2ray_location_asset '/usr/share/v2ray/'
 	option geoip_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geoip-lite.dat'
 	option geosite_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geosite-lite.dat'
-	option enable_geoview '1'
 
 config global_app
 	option geoview_file '/usr/bin/geoview'
 	option xray_file '/usr/bin/xray'
-	option hysteria_file '/usr/bin/hysteria'
 	option sing_box_file '/usr/bin/sing-box'
 
 config global_subscribe
@@ -189,13 +182,7 @@ config global_subscribe
 	option vmess_type 'xray'
 	option vless_type 'xray'
 	option hysteria2_type 'xray'
-	option domain_strategy 'prefer_ipv4'
 
 config global_singbox
-	option sniff_override_destination '0'
-	option geoip_path '/usr/share/singbox/geoip.db'
-	option geoip_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-sing-box-rules@release/geoip-lite.db'
-	option geosite_path '/usr/share/singbox/geosite.db'
-	option geosite_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-sing-box-rules@release/geosite-lite.db'
 	option record_fragment '0'
 	option fragment '0'

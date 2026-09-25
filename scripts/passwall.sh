@@ -152,15 +152,15 @@ geo_update() {
 
 passwall() {
   info "passwall"
-  RELEASES="$(curl -s -L "https://api.github.com/repos/Openwrt-Passwall/openwrt-passwall2/releases")"
-  REMOTE_VERSION="$(echo "$RELEASES" | jq -r '.[0].tag_name')"
+  RELEASES="$(curl -s -L "https://api.github.com/repos/Openwrt-Passwall/openwrt-passwall2/releases/latest")"
+  REMOTE_VERSION="$(echo "$RELEASES" | jq -r '.tag_name')"
   LOCAL_VERSION="$(cat "/root/.cache/.passwall_version" 2>/dev/null || echo 'none')"
 
   if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ]; then
-    apk del dnsmasq luci-app-passwall
+    apk del dnsmasq luci-app-passwall 2>/dev/null || true
     ensure_packages "dnsmasq-full kmod-nft-socket kmod-nft-tproxy binutils"
 
-    curl -L -o "/tmp/packages.zip" "$(echo "$RELEASES" | jq -r ".[] | .assets[].browser_download_url | select(endswith(\"passwall_packages_apk_$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2).zip\"))" | head -n1)" || error "Failed to download passwall packages."
+    curl -L -o "/tmp/packages.zip" "$(echo "$RELEASES" | jq -r ".assets[].browser_download_url | select(endswith(\"packages_apk_$(grep DISTRIB_ARCH /etc/openwrt_release | cut -d"'" -f2).zip\"))" | head -n1)" || error "Failed to download passwall packages."
     unzip -o "/tmp/packages.zip" -d "/tmp/passwall" >/dev/null 2>&1
     rm -f "/tmp/packages.zip"
     for pkg in /tmp/passwall/*.apk;
@@ -168,7 +168,7 @@ passwall() {
       rm -f "$pkg"
     done
 
-    curl -L -o "/tmp/passwall.apk" "$(echo "$RELEASES" | jq -r '.[] | .assets[].browser_download_url | select(contains("luci-app-passwall2-") and endswith(".apk"))' | head -n1)" || error "Failed to download passwall package."
+    curl -L -o "/tmp/passwall.apk" "$(echo "$RELEASES" | jq -r '.assets[].browser_download_url | select(contains("luci-app-passwall2-") and endswith(".apk"))' | head -n1)" || error "Failed to download passwall package."
     apk add --allow-untrusted "/tmp/passwall.apk" || error "Failed to install Passwall."
     rm -f "/tmp/passwall.apk"
 
@@ -177,6 +177,7 @@ passwall() {
     fi
   fi
 
+  mkdir -p "/usr/lib/lua/luci/view/passwall2/global"
   curl -s -L -o "/usr/lib/lua/luci/view/passwall2/global/status.htm" "${REPO_URL}/src/usr/lib/lua/luci/view/passwall2/global/status.htm" || error "Failed to download passwall status header."
   curl -s -L -o "/etc/config/passwall2" "${REPO_URL}/src/etc/config/passwall2" || error "Failed to download passwall config."
   uci commit passwall2
