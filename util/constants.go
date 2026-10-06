@@ -33,7 +33,6 @@ var SUBSCRIPTIONS = []string{
 	"https://raw.githubusercontent.com/sinavm/SVM/main/subscriptions/xray/normal/mix",
 	"https://raw.githubusercontent.com/itsyebekhe/PSG/main/subscriptions/xray/mix",
 	"https://raw.githubusercontent.com/Firmfox/Proxify/main/v2ray_configs/separated_by_protocol/trojan.txt",
-	"https://raw.githubusercontent.com/nscl5/5/main/configs/all.txt",
 	"https://raw.githubusercontent.com/ShatakVPN/ConfigForge-V2Ray/main/configs/all.txt",
 	"https://raw.githubusercontent.com/hamedp-71/Sub_Checker_Creator/main/final.txt",
 	"https://raw.githubusercontent.com/F0rc3Run/F0rc3Run/main/Best-Results/proxies.txt",
