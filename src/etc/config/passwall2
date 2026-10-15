@@ -10,6 +10,7 @@ config shunt_rules 'Direct'
 	option network 'tcp,udp'
 	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-direct.srs
 rule-set:local:/usr/share/singbox/rule-set/geosite-game.srs
+domain:lmstudio.ai
 domain:meet.google.com
 domain:dl.playstation.net
 domain:update.playstation.net
