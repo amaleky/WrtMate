@@ -55,6 +55,7 @@ var SUBSCRIPTIONS = []string{
 	"https://raw.githubusercontent.com/giromo/Collector/main/All_Configs_Sub.txt",
 	"https://raw.githubusercontent.com/Argh94/V2RayAutoConfig/main/configs/Trojan.txt",
 	"https://raw.githubusercontent.com/Danialsamadi/v2go/main/AllConfigsSub.txt",
+	"https://raw.githubusercontent.com/0xRadikal/Free-v2ray-Configs/main/verified/configs.txt",
 	//"https://raw.githubusercontent.com/Leon406/SubCrawler/main/sub/share/vless",
 	//"https://raw.githubusercontent.com/Argh94/V2RayAutoConfig/main/configs/ShadowSocks.txt",
 	//"https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/all_extracted_configs.txt",
