@@ -108,23 +108,23 @@ if [ ! -f "/usr/bin/sing-box" ]; then
 fi
 
 # Global
-download "$V2RAY_DIR/geoip.dat" "https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geoip-lite.dat" "false"
-download "$SINGBOX_DIR/geoip.db" "https://github.com/Chocolate4U/Iran-sing-box-rules/releases/latest/download/geoip-lite.db" "false"
-download "$XRAY_DIR/geoip.dat" "https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geoip.dat" "false"
-download "$XRAY_DIR/geosite.dat" "https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geosite.dat" "false"
-download "$V2RAY_DIR/geosite.dat" "https://github.com/Chocolate4U/Iran-v2ray-rules/releases/latest/download/geosite-lite.dat" "false"
-download "$SINGBOX_DIR/geosite.db" "https://github.com/Chocolate4U/Iran-sing-box-rules/releases/latest/download/geosite-lite.db" "false"
+download "$V2RAY_DIR/geoip.dat" "https://cdn.jsdelivr.net/gh/Chocolate4U/Iran-v2ray-rules@release/geoip-lite.dat" "false"
+download "$SINGBOX_DIR/geoip.db" "https://cdn.jsdelivr.net/gh/Chocolate4U/Iran-sing-box-rules@release/geoip-lite.db" "false"
+download "$XRAY_DIR/geoip.dat" "https://cdn.jsdelivr.net/gh/Chocolate4U/Iran-v2ray-rules@release/geoip.dat" "false"
+download "$XRAY_DIR/geosite.dat" "https://cdn.jsdelivr.net/gh/Chocolate4U/Iran-v2ray-rules@release/geosite.dat" "false"
+download "$V2RAY_DIR/geosite.dat" "https://cdn.jsdelivr.net/gh/Chocolate4U/Iran-v2ray-rules@release/geosite-lite.dat" "false"
+download "$SINGBOX_DIR/geosite.db" "https://cdn.jsdelivr.net/gh/Chocolate4U/Iran-sing-box-rules@release/geosite-lite.db" "false"
 
 # Direct
 rm -f "$RULESET_DIR/geosite-direct.txt"
 
-download "$RULESET_DIR/geoip-ir.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geoip-ir.srs"
-download "$RULESET_DIR/geoip-private.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geoip-private.srs"
+download "$RULESET_DIR/geoip-ir.srs" "https://cdn.jsdelivr.net/gh/chocolate4u/Iran-sing-box-rules@rule-set/geoip-ir.srs"
+download "$RULESET_DIR/geoip-private.srs" "https://cdn.jsdelivr.net/gh/chocolate4u/Iran-sing-box-rules@rule-set/geoip-private.srs"
 
-download "$RULESET_DIR/domains-ir.txt" "https://github.com/bootmortis/iran-hosted-domains/releases/latest/download/domains.txt"
+download "$RULESET_DIR/domains-ir.txt" "https://cdn.jsdelivr.net/gh/bootmortis/iran-hosted-domains@release/domains.txt"
 cat "$RULESET_DIR/domains-ir.txt" >> "$RULESET_DIR/geosite-direct.txt"
 
-download "$RULESET_DIR/iran_domains_direct.txt" "https://raw.githubusercontent.com/liketolivefree/iran_domain-ip/main/iran_domains_direct.txt"
+download "$RULESET_DIR/iran_domains_direct.txt" "https://cdn.jsdelivr.net/gh/liketolivefree/iran_domain-ip@latest/iran_domains_direct.txt"
 cat "$RULESET_DIR/iran_domains_direct.txt" >> "$RULESET_DIR/geosite-direct.txt"
 
 for DOMAIN in "ir" "isaco.app" "indllserver.info"; do
@@ -141,22 +141,48 @@ compile "geosite-game"
 # Block
 rm -f "$RULESET_DIR/geosite-adguard.txt"
 
-download "$RULESET_DIR/geoip-malware.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geoip-malware.srs"
-download "$RULESET_DIR/geoip-phishing.srs" "https://raw.githubusercontent.com/Chocolate4U/Iran-sing-box-rules/rule-set/geoip-phishing.srs"
+download "$RULESET_DIR/geoip-malware.srs" "https://cdn.jsdelivr.net/gh/chocolate4u/Iran-sing-box-rules@rule-set/geoip-malware.srs"
+download "$RULESET_DIR/geoip-phishing.srs" "https://cdn.jsdelivr.net/gh/chocolate4u/Iran-sing-box-rules@rule-set/geoip-phishing.srs"
 
-download "$RULESET_DIR/blocklistproject.txt" "https://raw.githubusercontent.com/blocklistproject/Lists/master/adguard/tracking-ags.txt"
+download "$RULESET_DIR/blocklistproject.txt" "https://cdn.jsdelivr.net/gh/blocklistproject/Lists@latest/adguard/tracking-ags.txt"
 cat "$RULESET_DIR/blocklistproject.txt" >> "$RULESET_DIR/geosite-adguard.txt"
 
-download "$RULESET_DIR/d3host.txt" "https://raw.githubusercontent.com/Turtlecute33/toolz/master/src/d3host.adblock"
+download "$RULESET_DIR/d3host.txt" "https://cdn.jsdelivr.net/gh/Turtlecute33/toolz@latest/src/d3host.adblock"
 cat "$RULESET_DIR/d3host.txt" >> "$RULESET_DIR/geosite-adguard.txt"
 
-download "$RULESET_DIR/goodbyeads.txt" "https://raw.githubusercontent.com/8680/GOODBYEADS/master/data/mod/adblock.txt"
+download "$RULESET_DIR/goodbyeads.txt" "https://cdn.jsdelivr.net/gh/8680/GOODBYEADS@latest/data/mod/adblock.txt"
 cat "$RULESET_DIR/goodbyeads.txt" >> "$RULESET_DIR/geosite-adguard.txt"
 
-download "$RULESET_DIR/hagezi.txt" "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/ultimate.mini.txt"
-cat "$RULESET_DIR/hagezi.txt" >> "$RULESET_DIR/geosite-adguard.txt"
+if [ "$(($(grep MemTotal /proc/meminfo | awk '{print $2}') / 1024))" -gt "600" ]; then
+  download "$RULESET_DIR/ultimate.mini.txt" "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/ultimate.txt"
+else
+  download "$RULESET_DIR/ultimate.mini.txt" "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/ultimate.mini.txt"
+fi
+cat "$RULESET_DIR/ultimate.mini.txt" >> "$RULESET_DIR/geosite-adguard.txt"
+download "$RULESET_DIR/native.tiktok.txt" "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/native.tiktok.txt"
+cat "$RULESET_DIR/native.tiktok.txt" >> "$RULESET_DIR/geosite-adguard.txt"
+download "$RULESET_DIR/native.amazon.txt" "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/native.amazon.txt"
+cat "$RULESET_DIR/native.amazon.txt" >> "$RULESET_DIR/geosite-adguard.txt"
+download "$RULESET_DIR/native.apple.txt" "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/native.apple.txt"
+cat "$RULESET_DIR/native.apple.txt" >> "$RULESET_DIR/geosite-adguard.txt"
+download "$RULESET_DIR/native.huawei.txt" "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/native.huawei.txt"
+cat "$RULESET_DIR/native.huawei.txt" >> "$RULESET_DIR/geosite-adguard.txt"
+download "$RULESET_DIR/native.winoffice.txt" "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/native.winoffice.txt"
+cat "$RULESET_DIR/native.winoffice.txt" >> "$RULESET_DIR/geosite-adguard.txt"
+download "$RULESET_DIR/native.samsung.txt" "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/native.samsung.txt"
+cat "$RULESET_DIR/native.samsung.txt" >> "$RULESET_DIR/geosite-adguard.txt"
+download "$RULESET_DIR/native.lgwebos.txt" "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/native.lgwebos.txt"
+cat "$RULESET_DIR/native.lgwebos.txt" >> "$RULESET_DIR/geosite-adguard.txt"
+download "$RULESET_DIR/native.roku.txt" "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/native.roku.txt"
+cat "$RULESET_DIR/native.roku.txt" >> "$RULESET_DIR/geosite-adguard.txt"
+download "$RULESET_DIR/native.vivo.txt" "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/native.vivo.txt"
+cat "$RULESET_DIR/native.vivo.txt" >> "$RULESET_DIR/geosite-adguard.txt"
+download "$RULESET_DIR/native.oppo-realme.txt" "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/native.oppo-realme.txt"
+cat "$RULESET_DIR/native.oppo-realme.txt" >> "$RULESET_DIR/geosite-adguard.txt"
+download "$RULESET_DIR/native.xiaomi.txt" "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/native.xiaomi.txt"
+cat "$RULESET_DIR/native.xiaomi.txt" >> "$RULESET_DIR/geosite-adguard.txt"
 
-download "$RULESET_DIR/hoshsadiq.txt" "https://raw.githubusercontent.com/hoshsadiq/adblock-nocoin-list/master/nocoin.txt"
+download "$RULESET_DIR/hoshsadiq.txt" "https://cdn.jsdelivr.net/gh/hoshsadiq/adblock-nocoin-list@latest/nocoin.txt"
 cat "$RULESET_DIR/hoshsadiq.txt" >> "$RULESET_DIR/geosite-adguard.txt"
 
 parse "category-public-tracker" "$RULESET_DIR/geosite-adguard.txt" "true"
