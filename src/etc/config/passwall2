@@ -1,32 +1,55 @@
 config shunt_rules 'Block'
 	option remarks 'Block'
 	option network 'tcp,udp'
-	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-adguard.srs'
-	option ip_list 'rule-set:local:/usr/share/singbox/rule-set/geoip-malware.srs
-rule-set:local:/usr/share/singbox/rule-set/geoip-phishing.srs'
+	option domain_list 'geosite:malware
+geosite:phishing
+geosite:cryptominers
+geosite:category-ads-all
+geosite:category-telemetry
+geosite:category-public-tracker
+regexp:^ads..*
+regexp:^adservice..*
+regexp:(advertis|airbrake|bugsnag|clarity|datadoghq|doubleclick|errorreporting|fastclick|freshmarketer|googleadservices|tagmanager|honeybadger|hotjar|googleads|logrocket|luckyorange|mouseflow|newrelic|openreplay|raygun|rollbar|sentry|siftscience|webengage|yandex|analytics|metrics|telemetry)'
+	option ip_list 'geoip:malware
+geoip:phishing'
 
 config shunt_rules 'Direct'
 	option remarks 'Direct'
 	option network 'tcp,udp'
-	option domain_list 'rule-set:local:/usr/share/singbox/rule-set/geosite-direct.srs
-rule-set:local:/usr/share/singbox/rule-set/geosite-game.srs
+	option domain_list 'geosite:riot
+geosite:category-ir
+geosite:category-game-platforms-download
+domain:ir
 domain:lmstudio.ai
 domain:meet.google.com
 domain:dl.playstation.net
 domain:update.playstation.net
-domain:updates.cdn-apple.com'
-	option ip_list 'rule-set:local:/usr/share/singbox/rule-set/geoip-ir.srs
-rule-set:local:/usr/share/singbox/rule-set/geoip-private.srs'
+domain:updates.cdn-apple.com
+domain:myqcloud.com
+domain:qq.com
+domain:activisionblizzard.com
+domain:activision.com
+domain:demonware.net
+domain:callofduty.com
+domain:callofdutyleague.com
+domain:codmwest.com
+domain:appsflyersdk.com
+domain:isaco.app
+domain:indllserver.info'
+	option ip_list 'geoip:ir
+geoip:private'
 
 config nodes 'Splitter'
 	option remarks 'Splitter'
-	option type 'sing-box'
-	option protocol '_shunt'
+	option type 'Xray'
 	option default_node 'Auto'
 	option Block '_blackhole'
 	option Direct '_direct'
 	option write_ipset_direct '0'
 	option enable_geoview_ip '1'
+	option protocol '_shunt'
+	option domainStrategy 'IPIfNonMatch'
+	option domainMatcher 'hybrid'
 
 config nodes 'Auto'
 	option type 'sing-box'
@@ -115,7 +138,7 @@ config global
 	option remote_dns_detour 'remote'
 	option dns_hosts 'cloudflare-dns.com 1.1.1.1'
 	option log_node '1'
-	option loglevel 'error'
+	option loglevel 'warn'
 	option dns_redirect '1'
 	option node_socks_bind_local '0'
 
@@ -148,8 +171,8 @@ config global_rules
 	option geosite_update '1'
 	option geoip_update '1'
 	option v2ray_location_asset '/usr/share/v2ray/'
-	option geoip_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geoip-lite.dat'
-	option geosite_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geosite-lite.dat'
+	option geoip_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geoip.dat'
+	option geosite_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geosite.dat'
 
 config global_app
 	option geoview_file '/usr/bin/geoview'

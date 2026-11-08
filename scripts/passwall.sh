@@ -145,9 +145,8 @@ url_test() {
 
 geo_update() {
   info "geo_update"
-  curl -s -L -o "/root/scripts/geo-update.sh" "${REPO_URL}/src/root/scripts/geo-update.sh" || error "Failed to download geo-update.sh."
-  chmod +x /root/scripts/geo-update.sh
-  /root/scripts/geo-update.sh
+  curl -s -L -o "/usr/share/v2ray/geoip.dat" "https://cdn.jsdelivr.net/gh/Chocolate4U/Iran-v2ray-rules@release/geoip.dat" || error "Failed to download geoip."
+  curl -s -L -o "/usr/share/v2ray/geosite.dat" "https://cdn.jsdelivr.net/gh/Chocolate4U/Iran-v2ray-rules@release/geosite.dat" || error "Failed to download geosite."
 }
 
 passwall() {
@@ -208,7 +207,9 @@ main() {
   geo_update
   passwall
   ssh_proxy
-  tor
+  if confirm "Do you want to install tor?"; then
+    tor
+  fi
   dns_config
 
   success "PassWall configuration completed successfully"
