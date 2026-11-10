@@ -144,9 +144,10 @@ url_test() {
 }
 
 geo_update() {
-  info "geo_update"
-  curl -s -L -o "/usr/share/v2ray/geoip.dat" "https://cdn.jsdelivr.net/gh/Chocolate4U/Iran-v2ray-rules@release/geoip.dat" || error "Failed to download geoip."
-  curl -s -L -o "/usr/share/v2ray/geosite.dat" "https://cdn.jsdelivr.net/gh/Chocolate4U/Iran-v2ray-rules@release/geosite.dat" || error "Failed to download geosite."
+  info "Downloading geoip"
+  curl -L -o "/usr/share/v2ray/geoip.dat" "https://cdn.jsdelivr.net/gh/Chocolate4U/Iran-v2ray-rules@release/geoip-lite.dat" || error "Failed to download geoip."
+  info "Downloading geosite"
+  curl -L -o "/usr/share/v2ray/geosite.dat" "https://cdn.jsdelivr.net/gh/Chocolate4U/Iran-v2ray-rules@release/geosite.dat" || error "Failed to download geosite."
 }
 
 passwall() {

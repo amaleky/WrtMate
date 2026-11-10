@@ -10,8 +10,6 @@ geosite:category-public-tracker
 regexp:^ads..*
 regexp:^adservice..*
 regexp:(advertis|airbrake|bugsnag|clarity|datadoghq|doubleclick|errorreporting|fastclick|freshmarketer|googleadservices|tagmanager|honeybadger|hotjar|googleads|logrocket|luckyorange|mouseflow|newrelic|openreplay|raygun|rollbar|sentry|siftscience|webengage|yandex|analytics|metrics|telemetry)'
-	option ip_list 'geoip:malware
-geoip:phishing'
 
 config shunt_rules 'Direct'
 	option remarks 'Direct'
@@ -133,7 +131,7 @@ config global
 	option direct_dns_query_strategy 'UseIPv4'
 	option remote_dns_protocol 'tcp'
 	option remote_rewrite_ttl '30'
-	option remote_dns '9.9.9.9'
+	option remote_dns '1.1.1.1'
 	option remote_dns_query_strategy 'UseIPv4'
 	option remote_dns_detour 'remote'
 	option dns_hosts 'cloudflare-dns.com 1.1.1.1'
