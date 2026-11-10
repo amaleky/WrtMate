@@ -18,13 +18,13 @@ config shunt_rules 'Direct'
 	option network 'tcp,udp'
 	option domain_list 'geosite:riot
 geosite:category-ir
+geosite:apple-update
 geosite:category-game-platforms-download
 domain:ir
 domain:lmstudio.ai
 domain:meet.google.com
 domain:dl.playstation.net
 domain:update.playstation.net
-domain:updates.cdn-apple.com
 domain:myqcloud.com
 domain:qq.com
 domain:activisionblizzard.com
