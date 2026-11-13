@@ -131,7 +131,7 @@ config global
 	option direct_dns_query_strategy 'UseIPv4'
 	option remote_dns_protocol 'tcp'
 	option remote_rewrite_ttl '30'
-	option remote_dns '1.1.1.1'
+	option remote_dns '208.67.222.2'
 	option remote_dns_query_strategy 'UseIPv4'
 	option remote_dns_detour 'remote'
 	option dns_hosts 'cloudflare-dns.com 1.1.1.1'
