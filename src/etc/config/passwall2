@@ -136,7 +136,7 @@ config global
 	option remote_dns_detour 'remote'
 	option dns_hosts 'cloudflare-dns.com 1.1.1.1'
 	option log_node '1'
-	option loglevel 'warn'
+	option loglevel 'error'
 	option dns_redirect '1'
 	option node_socks_bind_local '0'
 
@@ -169,8 +169,8 @@ config global_rules
 	option geosite_update '1'
 	option geoip_update '1'
 	option v2ray_location_asset '/usr/share/v2ray/'
-	option geoip_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geoip.dat'
-	option geosite_url 'https://cdn.jsdelivr.net/gh/chocolate4u/Iran-v2ray-rules@release/geosite.dat'
+	option geoip_url 'https://cdn.jsdelivr.net/gh/Chocolate4U/Iran-v2ray-rules@release/geoip-lite.dat'
+	option geosite_url 'https://cdn.jsdelivr.net/gh/Chocolate4U/Iran-v2ray-rules@release/geosite.dat'
 
 config global_app
 	option geoview_file '/usr/bin/geoview'
